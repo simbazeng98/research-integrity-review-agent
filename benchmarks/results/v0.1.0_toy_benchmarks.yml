@@ -1,0 +1,63 @@
+benchmark_id: v0.1.0_toy_benchmarks
+date: 2026-07-05
+commit: v0.1.0_tag_target
+python: 3.11.15
+scope: synthetic toy fixtures only
+not_a_claim: These counts are workflow and contract checks, not misconduct-classification accuracy.
+results:
+  - suite: rule_runtime
+    input: examples/toy_rule_package
+    command: python -m integrity_agent run-rules examples/toy_rule_package
+    output: outputs/rule_findings.jsonl
+    observed_records: 3
+  - suite: image_intake_similarity
+    input: examples/toy_image_package/images
+    commands:
+      - python -m integrity_agent image-intake examples/toy_image_package/images
+      - python -m integrity_agent image-similarity outputs/image_intake/image_manifest.jsonl
+    outputs:
+      image_manifest: outputs/image_intake/image_manifest.jsonl
+      similarity_candidates: outputs/image_intake/image_similarity_candidates.jsonl
+    observed_records:
+      image_manifest_rows: 6
+      similarity_candidates: 2
+  - suite: table_numeric_review
+    input: examples/toy_table_package
+    commands:
+      - python -m integrity_agent table-intake examples/toy_table_package
+      - python -m integrity_agent table-numeric-review outputs/table_intake/table_manifest.jsonl
+    outputs:
+      table_manifest: outputs/table_intake/table_manifest.jsonl
+      numeric_findings: outputs/table_intake/table_numeric_findings.jsonl
+    observed_records:
+      table_manifest_rows: 5
+      numeric_findings: 5
+  - suite: photovoltaics_domain
+    input: examples/toy_pv_package
+    commands:
+      - python -m integrity_agent table-intake examples/toy_pv_package
+      - python -m integrity_agent pv-domain-review outputs/table_intake/table_manifest.jsonl --column-profiles outputs/table_intake/column_profiles.jsonl
+    outputs:
+      table_manifest: outputs/table_intake/table_manifest.jsonl
+      pv_findings: outputs/pv_domain/pv_findings.jsonl
+    observed_records:
+      table_manifest_rows: 9
+      pv_findings: 22
+  - suite: raw_pv_reconciliation
+    input: examples/toy_raw_pv_package
+    command: python -m integrity_agent raw-pv-reconcile examples/toy_raw_pv_package
+    output: outputs/raw_pv/raw_pv_findings.jsonl
+    observed_records: 13
+  - suite: unified_review_package
+    input: examples/toy_review_package
+    command: python -m integrity_agent review-package examples/toy_review_package
+    output: outputs/review_package/unified_evidence_index.jsonl
+    observed_records: 44
+safety_checks:
+  pytest: 197 passed
+  generated_outputs_private_path_scan: zero hits
+  generated_outputs_forbidden_verdict_scan: zero hits
+limitations:
+  - Toy data is synthetic and small.
+  - Counts are expected contract outputs, not precision or recall metrics.
+  - Manual verification and false-positive review remain required.

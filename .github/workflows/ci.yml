@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Python ${{ matrix.python-version }} tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . pytest
+
+      - name: Run tests
+        run: python -m pytest -q
+
+  offline-smoke:
+    name: Offline CLI smoke
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Run offline toy workflows
+        run: |
+          python -m integrity_agent run-rules examples/toy_rule_package
+          python -m integrity_agent image-intake examples/toy_image_package/images
+          python -m integrity_agent image-similarity outputs/image_intake/image_manifest.jsonl
+          python -m integrity_agent table-intake examples/toy_table_package
+          python -m integrity_agent table-numeric-review outputs/table_intake/table_manifest.jsonl
+          python -m integrity_agent table-intake examples/toy_pv_package
+          python -m integrity_agent pv-domain-review outputs/table_intake/table_manifest.jsonl --column-profiles outputs/table_intake/column_profiles.jsonl
+          python -m integrity_agent raw-pv-reconcile examples/toy_raw_pv_package
+          python -m integrity_agent review-package examples/toy_review_package
+          python -m integrity_agent geng-video-safety-check knowledge_base/cases/geng_video_cases

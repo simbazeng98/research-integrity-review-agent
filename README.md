@@ -1,5 +1,9 @@
 # Research Integrity Evidence Review Agent
 
+[![CI](https://github.com/simbazeng98/research-integrity-review-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/simbazeng98/research-integrity-review-agent/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
+
 Local-first tooling for turning research papers, source data, figures, tables,
 metadata, and policy context into a reviewable evidence ledger.
 
@@ -8,6 +12,22 @@ author committed fraud or research misconduct. It produces risk signals,
 traceable evidence items, alternative benign explanations, missing-evidence
 notes, and verification questions for human review.
 
+## What It Produces
+
+```text
+Input:  DOI / PDF package / source tables / figures / raw PV measurements
+Output: evidence ledger + risk signals + verification questions + reader report
+```
+
+Every finding is designed to preserve:
+
+- input provenance;
+- rule or workflow ID;
+- evidence location;
+- manual verification requirements;
+- false-positive risks and benign alternatives;
+- safe report language.
+
 ## Modes
 
 - Self-Audit Mode: helps authors and groups check a paper package before
@@ -15,21 +35,24 @@ notes, and verification questions for human review.
 - Reader Review Mode: helps readers, reviewers, and research-integrity bloggers
   organize visible risk signals without overclaiming.
 
-## MVP Boundary
+## Current Capabilities
 
-The first version focuses on:
-
-- DOI/PDF/folder intake design.
-- Evidence ledger JSONL records.
-- Case-to-rule knowledge base.
-- Toy case distillation CLI.
-- Future image and numeric detectors with explicit manual-review gates.
+- DOI and batch metadata intake, including offline-safe Crossref adapters.
+- Rule runtime for detector specs and toy/stub execution.
+- Image intake and same-package similarity candidates.
+- Table/source-data intake with numeric anomaly routing.
+- Reader review report and unified evidence package runner.
+- Photovoltaics/materials plugin for PCE, EQE/J-V, Voc loss, stability,
+  materials-characterization metadata, tandem checks, and raw PV recalculation.
+- Bilibili-derived methodology cards with private transcript boundaries and
+  public safe-language validation.
 
 No cloud service is used by default, and user papers are not uploaded.
 
 ## Quick Start
 
 ```bash
+python -m pip install -e .
 python -m pytest -q
 python -m integrity_agent case-distill examples/toy_case.md
 python -m integrity_agent review-package examples/toy_review_package
@@ -38,6 +61,23 @@ python -m integrity_agent review-package examples/toy_review_package
 The second command writes `outputs/evidence_ledger.jsonl` unless `--output` is
 provided. The review-package command writes to `outputs/review_package/` unless
 `--output-dir` is provided.
+
+## Toy Benchmark Snapshot
+
+The current benchmark snapshot uses only synthetic fixtures:
+
+| Suite | Input | Observed output |
+| --- | --- | --- |
+| Rule runtime | `examples/toy_rule_package` | 3 rule findings |
+| Image intake + similarity | `examples/toy_image_package/images` | 6 image rows, 2 similarity candidates |
+| Table numeric review | `examples/toy_table_package` | 5 table rows, 5 numeric findings |
+| PV domain plugin | `examples/toy_pv_package` | 9 table rows, 22 PV findings |
+| Raw PV reconciliation | `examples/toy_raw_pv_package` | 13 raw PV findings |
+| Unified review package | `examples/toy_review_package` | 44 unified evidence records |
+
+See `docs/BENCHMARKS.md` and
+`benchmarks/results/v0.1.0_toy_benchmarks.yml`. These are workflow-contract
+benchmarks, not claims about real-world misconduct detection accuracy.
 
 ## CLI and Release Docs
 
@@ -50,6 +90,8 @@ Default workflows are offline and local-first. `--allow-network` is available on
 ## Project Layout
 
 ```text
+.github/workflows/    CI for pytest and offline CLI smoke checks
+benchmarks/           synthetic benchmark result snapshots
 docs/                 ethics, architecture, and reporting language
 knowledge_base/       cases, policies, detector specs, domain rules
 integrity_agent/      CLI, core schema, workflows, detectors, domains
@@ -72,3 +114,10 @@ This project may learn from tools such as `academic-integrity-skill`,
 `Anti-Autoresearch`, `PubPeer Zotero plugin`, and `imagededup`, but it is not a
 fork of those projects. The distinguishing goal is a case-driven taxonomy plus
 traceable evidence ledger and safe reporting language.
+
+## Safety Boundary
+
+This repository intentionally does not include real paper PDFs, real source
+data, complete Bilibili transcripts, screenshots, comments, danmaku, private
+notes, or private communications. Public Bilibili-derived cards keep raw titles
+and transcripts out of the repo and preserve only method/risk-signal summaries.
