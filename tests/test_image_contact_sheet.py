@@ -9,10 +9,7 @@ import pytest
 from integrity_agent.workflows.report_image_contact_sheet import generate_image_contact_sheet
 
 
-def test_generate_image_contact_sheet(tmp_path):
-    manifest_jsonl = tmp_path / "image_manifest.jsonl"
-    html_file = tmp_path / "contact_sheet.html"
-    
+def _write_mock_image_manifest(manifest_jsonl: Path) -> None:
     mock_items = [
         {
             "image_id": "img-001",
@@ -48,11 +45,17 @@ def test_generate_image_contact_sheet(tmp_path):
             "warnings": ["Failed to read"]
         }
     ]
-    
-    # Write mock manifest
+
     with manifest_jsonl.open("w", encoding="utf-8") as f:
         for item in mock_items:
             f.write(json.dumps(item) + "\n")
+
+
+def test_generate_image_contact_sheet(tmp_path):
+    manifest_jsonl = tmp_path / "image_manifest.jsonl"
+    html_file = tmp_path / "contact_sheet.html"
+
+    _write_mock_image_manifest(manifest_jsonl)
             
     out_path = generate_image_contact_sheet(manifest_jsonl, output_path=html_file)
     assert out_path.exists()
@@ -76,8 +79,9 @@ def test_generate_image_contact_sheet(tmp_path):
 
 def test_contact_sheet_cli(tmp_path):
     project_root = Path(__file__).resolve().parents[1]
-    
-    manifest_jsonl = project_root / "outputs" / "image_intake" / "image_manifest.jsonl"
+
+    manifest_jsonl = tmp_path / "image_manifest.jsonl"
+    _write_mock_image_manifest(manifest_jsonl)
     html_path = tmp_path / "contact_sheet_test.html"
     
     # Run CLI command

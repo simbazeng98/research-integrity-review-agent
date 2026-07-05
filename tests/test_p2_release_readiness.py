@@ -47,6 +47,40 @@ ALLOW_NETWORK_COMMANDS = {"run-rules", "reader-intake", "batch-intake", "review-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _run_cli(args: list[str]) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(
+        [sys.executable, "-m", "integrity_agent", *args],
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    return result
+
+
+def _ensure_rule_findings() -> Path:
+    _run_cli(["run-rules", "examples/toy_rule_package"])
+    findings = REPO_ROOT / "outputs" / "rule_findings.jsonl"
+    assert findings.exists()
+    return findings
+
+
+def _ensure_reader_review_report() -> Path:
+    _ensure_rule_findings()
+    _run_cli(["report-reader-review", "outputs/rule_findings.jsonl"])
+    report = REPO_ROOT / "outputs" / "reader_review_report.md"
+    assert report.exists()
+    return report
+
+
+def _ensure_review_package_summary() -> Path:
+    _run_cli(["review-package", "examples/toy_review_package"])
+    summary = REPO_ROOT / "outputs" / "review_package" / "review_package_summary.md"
+    assert summary.exists()
+    return summary
+
+
 def _safe_geng_card(detector_candidates: list[str]) -> dict[str, object]:
     return {
         "case_id": "case_cli_legacy",
@@ -194,6 +228,9 @@ def test_public_geng_video_titles_are_redacted_for_release():
 
 
 def test_generated_reports_use_repo_relative_posix_paths():
+    _ensure_reader_review_report()
+    _ensure_review_package_summary()
+
     report_paths = [
         REPO_ROOT / "outputs" / "reader_review_report.md",
         REPO_ROOT / "outputs" / "review_package" / "review_package_summary.md",
@@ -210,14 +247,8 @@ def test_generated_reports_use_repo_relative_posix_paths():
 
 
 def test_report_reader_review_cli_stdout_uses_posix_relative_paths():
-    result = subprocess.run(
-        [sys.executable, "-m", "integrity_agent", "report-reader-review", "outputs/rule_findings.jsonl"],
-        cwd=REPO_ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    assert result.returncode == 0, result.stderr
+    _ensure_rule_findings()
+    result = _run_cli(["report-reader-review", "outputs/rule_findings.jsonl"])
     assert "outputs/reader_review_report.md" in result.stdout
     assert "D:" not in result.stdout
     assert "\\" not in result.stdout
