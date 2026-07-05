@@ -1,0 +1,37 @@
+case_id: hindawi_paper_mill_mass_retractions_2023
+title: Hindawi/Wiley paper-mill mass retraction cluster
+priority: P0
+field: publication_integrity_metadata
+source_type: retraction_watch_news
+source_title: Hindawi reveals process for retracting more than 8,000 paper mill articles
+source_url: https://retractionwatch.com/2023/12/19/hindawi-reveals-process-for-retracting-more-than-8000-paper-mill-articles/
+source_accessed: '2026-07-04'
+public_status: mass_retraction
+summary: >
+  Retraction Watch reported Hindawi/Wiley at-scale paper-mill retractions and
+  process changes. The detector lesson is metadata and text-pattern triage, not
+  individual misconduct determination.
+evidence_patterns:
+  - mass_retraction_cluster
+  - compromised_peer_review
+  - paper_mill_indicators
+  - publisher_scale_investigation
+detector_candidates:
+  - retraction_metadata_check
+  - paper_mill_tortured_phrase
+policy_anchors:
+  - cope_retraction_guidelines
+  - crossref_retraction_watch_metadata
+manual_verification_needed:
+  - article DOI retraction metadata
+  - publisher retraction notice text
+  - journal issue and article provenance
+  - Crossref/Retraction Watch status synchronization
+false_positive_risks:
+  - retraction reason can be metadata-level and not author-level misconduct
+  - publisher bulk notices may mix different causes
+  - paper-mill patterns can overlap with low-quality but legitimate manuscripts
+safe_report_language: >
+  This case supports a metadata-level risk signal for mass-retraction context and
+  compromised-review indicators; individual articles require notice-level
+  verification.

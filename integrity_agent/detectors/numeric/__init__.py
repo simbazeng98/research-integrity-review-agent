@@ -1,0 +1,1 @@
+"""Numeric-pattern candidate detectors."""

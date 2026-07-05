@@ -1,0 +1,39 @@
+rule_id: retraction_metadata_check
+status: draft_spec_only
+linked_cases:
+- hindawi_paper_mill_mass_retractions_2023
+- ranga_dias_superconductivity_data_reliability
+- withdrarxiv_withdrawal_taxonomy
+- dana_farber_image_duplication_cluster
+input_required:
+- doi_or_arxiv_id
+fields_required:
+- identifier
+- publisher_status
+- notice_url_optional
+risk_signal: publication has public retraction, withdrawal, correction, expression-of-concern,
+  or mass-retraction context
+detection_idea:
+- query Crossref/Retraction Watch metadata where allowed
+- check publisher notice URL
+- for arXiv parse withdrawal comments and version history
+manual_verification:
+- publisher notice text
+- Crossref relation metadata
+- Retraction Watch database entry when licensed/available
+- arXiv withdrawal comment
+false_positive_risks:
+- metadata lag or mismatch
+- withdrawal for benign replacement
+- correction mistaken for retraction
+- mass notice not specific to all claims
+safe_report_language: Public-status metadata signal only; verify notice text before
+  reporting case status.
+runtime_status: active
+execution_mode: hybrid
+toy_fixture: toy_metadata_mock.yml
+detector_module: integrity_agent.detectors.metadata.crossref_retraction_check
+detector_function: check_retraction_metadata
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium

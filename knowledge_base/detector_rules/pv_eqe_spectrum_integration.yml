@@ -1,0 +1,35 @@
+rule_id: pv_eqe_spectrum_integration
+status: active
+linked_cases: []
+input_required:
+  - eqe_spectrum
+fields_required:
+  - wavelength_nm
+  - eqe_fraction
+risk_signal: recalculated integrated Jsc differs from reported J-V or reported EQE current
+detection_idea:
+  - read raw EQE spectrum files
+  - integrate EQE against reference AM1.5G spectrum
+  - compare integrated Jsc with J-V Jsc and reported values
+manual_verification:
+  - inspect raw EQE spectral response curves and integration files
+  - review solar simulator calibration and spectral mismatch correction logs
+  - verify cell area aperture/mask dimensions under a microscope
+  - verify exact dates and environmental conditions of both measurements
+false_positive_risks:
+  - Typical physical variations (up to 5-10%) between different measurement setups
+  - Instrument calibration differences on the day of testing
+  - Refractive index or reflection losses on the cell surface
+traceability:
+  - file
+  - coordinate
+safe_report_language: "Candidate EQE vs J–V current density mismatch: recomputed integrated EQE Jsc differs from J-V Jsc. Verify spectral mismatch correction, simulator calibration, and measurement delays."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_raw_pv_package
+detector_module: integrity_agent.domains.photovoltaics.raw_measurements.eqe_integration
+detector_function: integrate_eqe_jsc
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+accepted_input_types: ["eqe_spectrum_csv", "eqe_spectrum_tsv", "eqe_spectrum_txt"]

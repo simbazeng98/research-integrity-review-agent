@@ -1,0 +1,1 @@
+"""Image-similarity candidate detectors."""

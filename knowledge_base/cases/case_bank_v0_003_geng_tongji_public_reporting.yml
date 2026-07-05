@@ -1,0 +1,39 @@
+case_id: case_bank_v0_003_geng_tongji_public_reporting
+priority: P0
+source_type: news
+source_url: https://www.news.cn/politics/20260526/d2df1d7e979649faa221a7f37e44f13b/c.html
+field: biomedical_numeric_integrity
+paper_doi: null
+public_status: public_reporting_with_institutional_follow_up
+case_summary: >
+  Xinhua public reporting described reader-side detection of unusual numerical
+  patterns in a high-profile paper, including terminal digits and fixed
+  differences between columns, while noting university investigation and
+  follow-up actions for some reported cases.
+evidence_patterns:
+  - terminal_digit_anomaly
+  - fixed_delta_between_columns
+  - measurement_precision_anomaly
+  - large_table_sanity_check
+  - source_data_request_workflow
+detector_candidates:
+  - terminal_digit_distribution_check
+  - repeated_column_delta_check
+  - decimal_precision_consistency_check
+  - table_scale_outlier_scan
+  - reader_review_verification_question_generator
+manual_verification_needed:
+  - original_source_tables
+  - unit_and_rounding_rules
+  - data_collection_protocol
+  - statistical_analysis_script
+  - institution_or_journal_final_notice_if_available
+false_positive_risks:
+  - rounded_or_binned_measurements
+  - copied_formula_columns
+  - unit_conversion_or_offset_correction
+  - spreadsheet_export_formatting
+safe_report_language: >
+  These are candidate numeric risk signals that justify source-data and
+  rounding-protocol requests; they should not be worded as a misconduct finding
+  without official findings or raw-data review.

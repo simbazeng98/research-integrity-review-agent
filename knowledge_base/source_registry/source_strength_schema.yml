@@ -1,0 +1,42 @@
+source_strengths:
+  - id: official_institutional
+    description: Formal institutional, government, or administrative source.
+  - id: journal_notice
+    description: Journal retraction, correction, expression-of-concern, or article notice.
+  - id: crossref_retraction_watch
+    description: Crossref or Retraction Watch publication-status metadata context.
+  - id: publisher_policy
+    description: Publisher or journal policy document.
+  - id: peer_review_platform
+    description: Public peer-review, screening, method, preprint, or benchmark source.
+  - id: news_report
+    description: Public reporting by a news organization or research-news outlet.
+  - id: video_public_claim
+    description: Public video claim or public reader-review narrative requiring extra caution.
+  - id: toy_or_synthetic
+    description: Synthetic fixture or toy example used only for local tests.
+
+source_type_map:
+  ori_case: official_institutional
+  official_or_institutional_source: official_institutional
+  justice_department_notice: official_institutional
+  retraction_notice: journal_notice
+  publisher_article: journal_notice
+  retraction_watch_and_review: crossref_retraction_watch
+  retraction_watch_news: crossref_retraction_watch
+  publisher_policy: publisher_policy
+  news: news_report
+  science_news_and_retraction_context: news_report
+  science_news_investigation: news_report
+  bilibili_video: video_public_claim
+  video_public_claim: video_public_claim
+  peer_review_platform: peer_review_platform
+  tool_and_text_signal: peer_review_platform
+  dataset: peer_review_platform
+  detector_risk_study: peer_review_platform
+  method_benchmark: peer_review_platform
+  preprint_or_method_paper: peer_review_platform
+  peer_reviewed_or_pmc_method_paper: peer_review_platform
+  preprint_dataset: peer_review_platform
+  toy_case: toy_or_synthetic
+  toy_or_synthetic: toy_or_synthetic

@@ -1,0 +1,25 @@
+rule_id: "image_exact_duplicate_sha256"
+input_required:
+  - "image_folder"
+fields_required:
+  - "sha256"
+risk_signal: "Exact duplicate image files detected; verify whether reuse is expected, disclosed, or part of figure assembly."
+manual_verification:
+  - "original image files"
+  - "figure legends"
+  - "source data / acquisition metadata"
+  - "author explanation"
+false_positive_risks:
+  - "repeated control image"
+  - "intentionally reused schematic"
+  - "duplicated export"
+  - "toy duplicate fixture"
+safe_report_language: "Exact duplicate image files detected; verify whether reuse is expected, disclosed, or part of figure assembly."
+runtime_status: "active"
+execution_mode: "offline"
+toy_fixture: "examples/toy_image_package/images"
+detector_module: "integrity_agent.detectors.image.exact_duplicate"
+detector_function: "detect_exact_duplicates"
+requires_network: false
+requires_private_data: false
+risk_ceiling: "medium"

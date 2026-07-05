@@ -1,0 +1,36 @@
+rule_id: paper_mill_tortured_phrase
+status: draft_spec_only
+linked_cases:
+- problematic_paper_screener_tortured_phrases
+- hindawi_paper_mill_mass_retractions_2023
+input_required:
+- article_text_excerpt_or_abstract
+fields_required:
+- sentences
+- domain_terms
+risk_signal: nonsensical synonym substitutions or tortured phrases appear in scientific
+  text
+detection_idea:
+- match curated tortured-phrase lexicon
+- score sentence context
+- link to DOI-level metadata and PubPeer/PPS references when available
+manual_verification:
+- full sentence context
+- disciplinary terminology check
+- publisher status
+- human reading for translation artifacts
+false_positive_risks:
+- translation artifacts
+- OCR errors
+- legitimate neologisms
+- non-native English phrasing
+safe_report_language: Candidate paper-mill text risk signal; phrase matches alone
+  are not evidence of misconduct.
+runtime_status: draft_spec_only
+execution_mode: offline
+toy_fixture: null
+detector_module: null
+detector_function: null
+requires_network: false
+requires_private_data: false
+risk_ceiling: high

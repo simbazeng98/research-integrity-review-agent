@@ -1,0 +1,41 @@
+case_id: alzheimer_abeta56_image_integrity
+title: "Aβ*56 Alzheimer image-integrity allegations: media-sourced image pattern card"
+priority: P1
+field: biomedical_image_integrity
+source_type: science_news_investigation
+source_title: Potential fabrication in research images threatens key theory of Alzheimer’s disease
+source_url: https://www.science.org/content/article/potential-fabrication-research-images-threatens-key-theory-alzheimers-disease
+source_accessed: '2026-07-04'
+public_status: allegation
+limitations:
+  - not independently verified
+  - Science news reporting is a secondary source; verify journal notices, institutional findings, and raw images before reuse.
+summary: >
+  Science news investigation raised image-integrity concerns around Aβ*56-related
+  Alzheimer research. This case remains allegation-level in the case bank unless
+  an official finding is added.
+evidence_patterns:
+  - western_blot_or_gel_image_similarity
+  - possible_splicing_or_duplication
+  - high_citation_downstream_reliance
+  - secondary_media_source
+detector_candidates:
+  - image_lane_duplication_flip
+  - image_cut_paste_noise_pattern
+  - retraction_metadata_check
+policy_anchors:
+  - pubpeer_discussion
+  - cope_retraction_guidelines
+manual_verification_needed:
+  - original figures and raw gels/blots
+  - journal expressions of concern/corrections/retractions
+  - institutional investigation outcomes if public
+  - independent expert image review
+false_positive_risks:
+  - similar bands from related samples
+  - low-resolution historical figures
+  - image compression and scanning artifacts
+  - media summary may compress technical nuance
+safe_report_language: >
+  This card is allegation-level. Use only candidate image-integrity risk signal
+  language and require original image files and official status checks.

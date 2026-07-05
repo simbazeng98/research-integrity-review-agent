@@ -1,0 +1,32 @@
+rule_id: pv_tandem_current_matching
+status: active
+linked_cases: []
+input_required:
+  - table_manifest
+fields_required:
+  - voc_v
+risk_signal: tandem subcell mismatch or PCE inconsistency in 2T/4T configurations
+detection_idea:
+  - extract subcell parameters and compute current mismatch (2T) or efficiency sum (4T)
+manual_verification:
+  - Inspect tandem series/parallel connection architecture
+  - Review subcell EQE spectra and integrated currents under bias light
+  - Verify bias illumination spectra and filter dimensions used in testing
+false_positive_risks:
+  - Subcells are electrically connected in parallel (rare for 2T, but possible in specific designs)
+  - Wrongly mapped columns for subcell Jsc
+traceability:
+  - file
+  - sheet
+  - row
+  - column
+safe_report_language: "Candidate tandem PV consistency signal: parsed tandem metrics indicate a possible current-matching or reporting-completeness issue. Verify subcell EQE, bias illumination/voltage, filtered measurements, area basis, and whether the device is 2T or 4T."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_pv_package
+detector_module: integrity_agent.domains.photovoltaics.tandem_consistency
+detector_function: run_tandem_consistency_check
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+accepted_input_types: ["table_manifest", "csv", "tsv", "xlsx_sheet", "markdown_table"]

@@ -1,0 +1,33 @@
+case_id: case_bank_v0_010_withdrarxiv
+priority: P2
+source_type: dataset
+source_url: https://arxiv.org/html/2412.03775v1
+field: arxiv_withdrawal_taxonomy
+paper_doi: null
+public_status: withdrawal_reason_dataset_not_misconduct_label
+case_summary: >
+  WithdrarXiv is a large-scale dataset of withdrawn arXiv papers with withdrawal
+  comments and reason taxonomy. Withdrawal reasons should not be treated as
+  equivalent to misconduct labels.
+evidence_patterns:
+  - withdrawn_reason_taxonomy
+  - author_comment_parsing
+  - withdrawal_metadata_classification
+  - non_misconduct_withdrawal_reasons
+detector_candidates:
+  - withdrawal_reason_classifier
+  - arxiv_comment_parser
+  - taxonomy_mapping_for_reader_context
+  - non_misconduct_label_guardrail
+manual_verification_needed:
+  - original_arxiv_withdrawal_comment
+  - paper_version_history
+  - author_explanation
+  - downstream_publication_status
+false_positive_risks:
+  - withdrawal_for_journal_policy_or_duplicate_submission
+  - author_error_correction_without_misconduct
+  - withdrawn_preprint_later_published_after_revision
+safe_report_language: >
+  A withdrawn arXiv record is a candidate metadata context signal, not evidence
+  of misconduct by itself.

@@ -1,0 +1,37 @@
+rule_id: pv_excel_formula_audit
+status: active
+linked_cases: []
+input_required:
+  - excel_workbook
+fields_required:
+  - sheet_name
+  - cell_coordinate
+risk_signal: Excel hardcoded cells, formula overwrites, external references or formula value mismatches
+detection_idea:
+  - load Excel workbooks and extract formulas and cached values
+  - check for hardcoded cells in calculated rows/columns and evaluate simple math formulas
+manual_verification:
+  - original workbook
+  - formula-preserving workbook
+  - raw instrument exports
+  - analysis script
+  - author explanation
+  - version history if available
+false_positive_risks:
+  - Standard copying/pasting of metrics to summary tab
+  - Legitimate manual entry of baseline constants
+  - Parser unable to parse complicated nested Excel formulas
+traceability:
+  - file
+  - sheet
+  - coordinate
+safe_report_language: "Candidate spreadsheet formula audit signal: formula patterns or hardcoded values may require verification. This does not determine data fabrication; verify spreadsheet formulas, raw data provenance, and analysis workflow."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_raw_pv_package
+detector_module: integrity_agent.domains.photovoltaics.raw_measurements.excel_formula_audit
+detector_function: audit_excel_formulas
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+accepted_input_types: ["excel_workbook"]

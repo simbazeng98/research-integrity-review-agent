@@ -1,0 +1,37 @@
+rule_id: measurement_precision_anomaly
+status: draft_spec_only
+linked_cases:
+- geng_tongji_numeric_anomaly_2026
+- ranga_dias_superconductivity_data_reliability
+input_required:
+- numeric_table
+- methods_or_instrument_precision_note
+fields_required:
+- reported_values
+- units
+- measurement_context
+risk_signal: reported precision is inconsistent with instrument resolution, replicate
+  variance, or stated calculation pipeline
+detection_idea:
+- extract decimal places by column
+- compare precision to methods/instrument notes
+- flag abrupt precision changes across related values
+manual_verification:
+- instrument export files
+- uncertainty calculations
+- rounding protocol
+- lab notebook context
+false_positive_risks:
+- software default formatting
+- post-hoc significant figure cleanup
+- mixed measured and calculated quantities
+safe_report_language: Candidate measurement-precision risk signal; requires methods
+  and raw-export verification.
+runtime_status: draft_spec_only
+execution_mode: offline
+toy_fixture: null
+detector_module: null
+detector_function: null
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium

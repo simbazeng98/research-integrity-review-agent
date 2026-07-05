@@ -1,0 +1,40 @@
+case_id: ori_ke_2026_western_blot_microscopy
+title: "ORI Ke case: western blot and microscopy image reuse/relabeling patterns"
+priority: P0
+field: biomedical_image_integrity
+source_type: official_or_institutional_source
+source_title: "Case Summary: Ke, Chen-Yeh “George” | ORI"
+source_url: https://ori.hhs.gov/content/case-summary-ke-chen-yeh
+source_accessed: '2026-07-04'
+public_status: confirmed_misconduct
+official_or_institutional_source: https://ori.hhs.gov/content/case-summary-ke-chen-yeh
+summary: >
+  Official ORI case summary describes falsified/fabricated western blot,
+  microscopy, and calcium cellular imaging data in an unpublished manuscript and
+  NIH progress reports. The card extracts reusable image-pattern lessons, not
+  personal accusations beyond the ORI finding.
+evidence_patterns:
+  - western_blot_band_reuse
+  - spliced_or_reassembled_blot_lanes
+  - microscopy_panel_duplication
+  - relabeling_single_image_as_multiple_conditions
+detector_candidates:
+  - image_lane_duplication_flip
+  - image_cut_paste_noise_pattern
+  - relabeled_source_data
+policy_anchors:
+  - ori_42_cfr_part_93
+manual_verification_needed:
+  - unprocessed blot images
+  - uncropped microscopy files
+  - figure assembly history
+  - grant/report figure provenance
+false_positive_risks:
+  - shared loading controls disclosed in legend
+  - legitimate replicate cropping with clear labels
+  - template figure assembly before final source-data replacement
+  - compression artifacts after manuscript export
+safe_report_language: >
+  This official source can seed detector drafts for candidate risk signal
+  patterns such as duplicated or relabeled image regions; any new target still
+  requires source-data verification.

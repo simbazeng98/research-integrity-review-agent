@@ -1,0 +1,35 @@
+case_id: case_bank_v0_005_nejm_ai_clinical_image
+priority: P1
+source_type: retraction_notice
+source_url: https://www.nejm.org/doi/full/10.1056/NEJMc2605962
+field: clinical_image_integrity
+paper_doi: 10.1056/NEJMc2605962
+public_status: retraction
+case_summary: >
+  NEJM published a 2026 retraction notice for an Images in Clinical Medicine
+  item after authors stated that an AI tool had been used to alter the image
+  presentation.
+evidence_patterns:
+  - clinical_image_ai_alteration
+  - undisclosed_or_late_disclosed_ai_image_edit
+  - image_policy_awareness_failure
+  - raw_image_request_needed
+detector_candidates:
+  - figure_ai_edit_disclosure_checker
+  - clinical_image_metadata_request_template
+  - visual_scale_object_consistency_review
+  - journal_policy_alignment_check
+manual_verification_needed:
+  - original_clinical_photo
+  - image_editing_history
+  - author_disclosure_statement
+  - journal_image_policy_at_submission_date
+false_positive_risks:
+  - disclosed_non_generative_annotation
+  - legitimate_crop_or_brightness_adjustment_with_audit_trail
+  - editorial_layout_changes_not_affecting_source_image
+safe_report_language: >
+  The report should call this a candidate AI-image-provenance risk signal and
+  request raw image provenance, not assume clinical observations were altered.
+supporting_sources:
+  - https://retractionwatch.com/2026/05/01/nejm-retracts-case-study-for-ai-manipulated-imagery/

@@ -1,0 +1,38 @@
+rule_id: ai_modified_clinical_image
+status: draft_spec_only
+linked_cases:
+- nejm_ai_manipulated_clinical_image_2026
+- western_blot_ai_detector_limitations
+input_required:
+- clinical_or_scientific_image
+- provenance_metadata
+fields_required:
+- image_pixels
+- acquisition_or_export_metadata
+- declared_synthetic_or_edited_status
+risk_signal: image may contain AI-generated or AI-modified regions that could affect
+  interpretation
+detection_idea:
+- combine metadata checks with validated domain-specific detectors
+- flag only as triage
+- require expert review before reporting
+manual_verification:
+- original acquisition file
+- de-identification workflow
+- clinical expert review
+- model validation documentation
+false_positive_risks:
+- legitimate de-identification
+- teaching/synthetic images labeled as such
+- vendor enhancement artifacts
+- unvalidated generic AI detectors
+safe_report_language: Candidate AI-modified image risk signal; do not use as a standalone
+  conclusion.
+runtime_status: draft_spec_only
+execution_mode: offline
+toy_fixture: null
+detector_module: null
+detector_function: null
+requires_network: false
+requires_private_data: false
+risk_ceiling: high

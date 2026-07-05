@@ -1,0 +1,4 @@
+device_id,architecture,top_jsc,bottom_jsc,top_pce,bottom_pce,total_pce
+dev-tandem-1,2T,20.0,15.0,,,
+dev-tandem-2,4T,,,15.0,10.0,25.0
+dev-tandem-3,4T,,,15.0,10.0,27.0

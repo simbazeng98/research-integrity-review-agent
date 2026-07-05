@@ -1,0 +1,29 @@
+rule_id: "image_perceptual_similarity_candidate"
+input_required:
+  - "image_folder"
+fields_required:
+  - "dhash"
+risk_signal: "Candidate visual similarity signal detected; verify whether reuse is expected, disclosed, transformed, or part of figure assembly."
+manual_verification:
+  - "original unprocessed image files"
+  - "acquisition metadata"
+  - "figure legends"
+  - "source data"
+  - "author explanation"
+false_positive_risks:
+  - "small/simple synthetic images"
+  - "low-texture microscopy fields"
+  - "schematic figures"
+  - "common scale bars or backgrounds"
+  - "threshold sensitivity"
+safe_report_language: "Candidate visual similarity signal detected; verify whether reuse is expected, disclosed, transformed, or part of figure assembly."
+runtime_status: "active"
+execution_mode: "offline"
+toy_fixture: "examples/toy_image_package/images"
+detector_module: "integrity_agent.detectors.image.perceptual_similarity"
+detector_function: "detect_perceptual_similarity"
+requires_network: false
+requires_private_data: false
+risk_ceiling: "medium"
+limitations:
+  - "checks only global layout similarity and may yield false positives on simple or patterned images."

@@ -1,0 +1,69 @@
+schema_id: research_integrity_case_card_v0
+description: >
+  Safe, source-anchored case-card schema for detector-spec drafting. It preserves
+  public evidence patterns without asserting misconduct beyond formal findings.
+required_fields:
+  - case_id
+  - priority
+  - source_type
+  - source_url
+  - field
+  - public_status
+  - evidence_patterns
+  - detector_candidates
+  - manual_verification_needed
+  - false_positive_risks
+  - safe_report_language
+public_status_enum:
+  - confirmed_misconduct
+  - allegation
+  - investigation_started
+  - retracted
+  - mass_retraction
+  - settlement_or_legal_resolution
+  - published_method
+  - public_method_example
+  - methodology_only
+  - policy_resource
+  - unresolved
+status_rules:
+  confirmed_misconduct: Allowed only when an official or institutional source is recorded in official_or_institutional_source.
+  allegation: "Must include limitation: not independently verified. Do not state that misconduct occurred."
+  investigation_started: Use when a journal, institution, funder, or accountable body has publicly acknowledged an investigation or review.
+  retracted: Use for publisher retraction/withdrawal metadata; does not by itself prove intent.
+  mass_retraction: Use for publisher-level or database-level grouped retractions, normally paper-mill or compromised-review clusters.
+  published_method: Use for detector/method papers and datasets, not misconduct cases.
+  public_method_example: Use for public examples illustrating a risk pattern without alleging misconduct.
+  methodology_only: Use for methodology videos or notes that describe review workflow but do not assert a paper-specific status.
+policy_anchors:
+  - anchor_id: ori_42_cfr_part_93
+    name: ORI / 42 CFR Part 93 research misconduct standard
+    url: https://ori.hhs.gov/definition-research-misconduct
+  - anchor_id: cope_retraction_guidelines
+    name: COPE Retraction Guidelines
+    url: https://publicationethics.org/retraction-guidelines
+  - anchor_id: crossref_retraction_watch_metadata
+    name: Crossref Retraction Watch metadata integration
+    url: https://www.crossref.org/blog/news-crossref-and-retraction-watch/
+  - anchor_id: pubpeer_discussion
+    name: PubPeer public post-publication discussion
+    url: https://pubpeer.com/
+  - anchor_id: bilibili_public_video_boundary
+    name: Bilibili video/video-transcript handling boundary
+    url: https://www.bilibili.com/
+prohibited_public_content:
+  - bilibili_video_transcripts
+  - full copyrighted article text
+  - unverified personal accusations stated as fact
+  - private source data or reviewer files
+allowed_public_content:
+  - structured summaries
+  - source URLs
+  - brief fair-use quotes if needed
+  - timestamps without full transcript
+  - detector-spec drafts
+  - manual verification questions
+reporting_contract:
+  - Output risk_signal / requires_verification / public_status.
+  - Do not output misconduct proven or equivalent accusation unless quoting a formal public finding.
+  - Always include false-positive risks and manual verification needs.

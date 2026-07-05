@@ -1,0 +1,30 @@
+rule_id: pv_stability_reporting_completeness
+status: active
+linked_cases: []
+input_required:
+  - table_manifest
+fields_required:
+  - t80_h
+risk_signal: stability-related stress-test conditions are missing from tables
+detection_idea:
+  - scan for stability fields and cross-check for temperature, RH, illumination, load, encapsulation
+manual_verification:
+  - Verify the aging setup parameters (temperature, RH, electrical load, light spectrum) in the methods section
+  - Check for supplementary data sheets containing raw time-series degradation logs
+  - Confirm if the aging experiment aligns with standard ISOS protocols (e.g. ISOS-D-1, ISOS-L-1)
+false_positive_risks:
+  - The table summarizes outcomes from standard ISOS protocols described fully in the literature references
+  - Data represents early screening tests rather than standardized stability runs
+traceability:
+  - file
+  - sheet
+safe_report_language: "PV stability reporting completeness signal: stability-related values are present, but one or more stress-test conditions appear missing from the parsed tables. Verify the manuscript methods, SI, and raw ageing logs."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_pv_package
+detector_module: integrity_agent.domains.photovoltaics.stability_reporting
+detector_function: run_pv_stability_reporting_check
+requires_network: false
+requires_private_data: false
+risk_ceiling: low
+accepted_input_types: ["table_manifest", "csv", "tsv", "xlsx_sheet", "markdown_table"]

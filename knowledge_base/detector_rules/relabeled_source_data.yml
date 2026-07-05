@@ -1,0 +1,37 @@
+rule_id: relabeled_source_data
+status: draft_spec_only
+linked_cases:
+- ori_andrade_2026_relabeling_grant_data
+- ori_ke_2026_western_blot_microscopy
+input_required:
+- source_data_files
+- reported_figure_or_table
+fields_required:
+- sample_labels
+- file_metadata
+- reported_condition_labels
+risk_signal: same source file or measurement appears under incompatible sample/condition
+  labels
+detection_idea:
+- hash and metadata-match source files
+- map source labels to reported labels
+- flag one-to-many label reuse without disclosure
+manual_verification:
+- sample tracking sheet
+- instrument metadata
+- analysis script
+- author/institution explanation
+false_positive_risks:
+- blinded labels later decoded
+- representative image reused with clear disclosure
+- renamed files during analysis but traceable in metadata
+safe_report_language: Candidate relabeled-source-data risk signal; requires provenance
+  mapping and lab-record verification.
+runtime_status: draft_spec_only
+execution_mode: offline
+toy_fixture: null
+detector_module: null
+detector_function: null
+requires_network: false
+requires_private_data: false
+risk_ceiling: high

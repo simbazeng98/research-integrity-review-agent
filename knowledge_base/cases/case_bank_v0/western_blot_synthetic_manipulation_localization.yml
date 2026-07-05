@@ -1,0 +1,36 @@
+case_id: western_blot_synthetic_manipulation_localization
+title: "Localization of synthetic manipulations in western blot images: method card"
+priority: P1
+field: western_blot_image_forensics
+source_type: preprint_or_method_paper
+source_title: Localization of Synthetic Manipulations in Western Blot Images
+source_url: https://arxiv.org/abs/2408.13786
+source_accessed: '2026-07-04'
+public_status: published_method
+summary: >
+  This method paper frames localization of synthetic manipulations in western
+  blot images. The case-bank use is detector-spec drafting, not deployment or
+  public accusation.
+evidence_patterns:
+  - localized_synthetic_patch
+  - western_blot_splice_region
+  - heatmap_localization_requires_calibration
+  - synthetic_training_data_domain_shift
+detector_candidates:
+  - image_cut_paste_noise_pattern
+  - image_lane_duplication_flip
+policy_anchors:
+  - cope_retraction_guidelines
+manual_verification_needed:
+  - input image resolution and preprocessing
+  - localization heatmap threshold rationale
+  - raw blot comparison
+  - expert review of highlighted regions
+false_positive_risks:
+  - normal background heterogeneity
+  - scanner seams or exposure gradients
+  - cropping boundaries from legitimate figure assembly
+  - synthetic benchmark may not match journal images
+safe_report_language: >
+  Treat localization output as a candidate risk signal that identifies regions
+  for manual inspection, not as a conclusion.

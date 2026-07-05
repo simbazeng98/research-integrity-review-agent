@@ -1,0 +1,1 @@
+"""Statistical-consistency candidate detectors."""

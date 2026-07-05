@@ -1,0 +1,37 @@
+rule_id: pv_jv_hysteresis_candidate
+status: active
+linked_cases: []
+input_required:
+  - jv_curve
+fields_required:
+  - voltage_v
+  - current_density_ma_cm2
+risk_signal: forward and reverse J-V sweep mismatch
+detection_idea:
+  - pair forward and reverse sweeps of the same device
+  - compute hysteresis index and absolute PCE delta
+manual_verification:
+  - raw forward/reverse J–V files
+  - scan protocol
+  - scan rate
+  - delay time
+  - preconditioning
+  - MPP tracking
+  - measurement order
+  - device ID mapping
+false_positive_risks:
+  - Legitimate high hysteresis in perovskite solar cells without any data inconsistency
+  - Measurement delay or scan speed settings causing standard capacitive current variations
+traceability:
+  - file
+  - coordinate
+safe_report_language: "Candidate J–V hysteresis signal: forward and reverse scans for the same parsed device yield different recalculated PCE values. Verify scan direction, scan rate, preconditioning, delay time, stabilization, and whether the reported metric is scan-derived or stabilized."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_raw_pv_package
+detector_module: integrity_agent.domains.photovoltaics.raw_measurements.jv_hysteresis
+detector_function: run_jv_hysteresis_check
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+accepted_input_types: ["jv_curve_csv", "jv_curve_tsv", "jv_curve_txt"]

@@ -1,0 +1,29 @@
+rule_id: pv_reporting_completeness
+status: active
+linked_cases: []
+input_required:
+  - table_manifest
+fields_required:
+  - voc_v
+risk_signal: recommended PV characterization parameters are missing from tables
+detection_idea:
+  - verify presence of key reporting guidelines (area, scan details, calibration)
+manual_verification:
+  - Check the main text and supplementary materials of the manuscript for the missing details
+  - Verify the original instrument files and measurement logs
+false_positive_risks:
+  - The experiment did not require certain measurements (e.g. no stability testing performed)
+  - Data is from a legacy dataset where certain parameters were not recorded
+traceability:
+  - file
+  - sheet
+safe_report_language: "PV reporting completeness gap detected. This does not imply data fabrication; it identifies missing or unparsed information that may be needed to reproduce or compare device characterization."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_pv_package
+detector_module: integrity_agent.domains.photovoltaics.reporting_completeness
+detector_function: run_pv_reporting_completeness_check
+requires_network: false
+requires_private_data: false
+risk_ceiling: low
+accepted_input_types: ["table_manifest", "csv", "tsv", "xlsx_sheet", "markdown_table"]

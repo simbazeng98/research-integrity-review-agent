@@ -1,0 +1,35 @@
+case_id: case_bank_v0_011_ai_detector_western_blot_risk
+priority: P2
+source_type: detector_risk_study
+source_url: https://pmc.ncbi.nlm.nih.gov/articles/PMC11847483/
+field: biomedical_image_detector_validation
+paper_doi: null
+public_status: method_evaluation_not_case_of_misconduct
+case_summary: >
+  A study of free AI detectors for western blot images reported wide variation
+  in sensitivity and specificity and low positive predictive value under low
+  prevalence assumptions.
+evidence_patterns:
+  - detector_ppv_risk
+  - sensitivity_specificity_variability
+  - prevalence_dependent_false_positive_risk
+  - single_detector_overreliance
+detector_candidates:
+  - detector_output_calibration_guardrail
+  - ppv_under_prevalence_reporter
+  - multi_signal_review_requirement
+  - image_detector_limitations_section
+manual_verification_needed:
+  - validation_dataset_description
+  - detector_version_and_settings
+  - estimated_prevalence_assumption
+  - human_image_integrity_review
+false_positive_risks:
+  - applying_general_ai_detectors_to_scientific_images
+  - reporting_classifier_score_without_base_rate
+  - confusing_generated_image_detection_with_manipulation_detection
+safe_report_language: >
+  Detector scores are candidate triage signals only; reports must include
+  uncertainty, base-rate assumptions, and manual verification needs.
+supporting_sources:
+  - https://arxiv.org/abs/2407.10308

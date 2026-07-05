@@ -1,0 +1,34 @@
+case_id: case_bank_v0_012_western_blot_synthetic_localization
+priority: P2
+source_type: method_benchmark
+source_url: https://arxiv.org/html/2408.13786v1
+field: biomedical_image_benchmark
+paper_doi: null
+public_status: benchmark_candidate_not_article_level_finding
+case_summary: >
+  Work on localization of synthetic manipulations in western blot images
+  proposes patch-level detection and tampering heatmaps for scientific images.
+evidence_patterns:
+  - synthetic_manipulation_localization
+  - patch_level_tampering_heatmap
+  - scientific_image_specific_detector
+  - benchmark_ground_truth_masks
+detector_candidates:
+  - western_blot_patch_heatmap_benchmark
+  - synthetic_tamper_localization_metric
+  - manipulated_patch_candidate_export
+  - benchmark_driven_image_detector_evaluation
+manual_verification_needed:
+  - benchmark_license_and_data_access
+  - ground_truth_mask_quality_review
+  - out_of_distribution_testing
+  - expert_review_of_heatmap_regions
+false_positive_risks:
+  - heatmap_artifacts_from_compression
+  - model_overfit_to_synthetic_generation_method
+  - patch_detector_missing_global_context
+safe_report_language: >
+  Patch heatmaps are candidate localization aids for expert review and should
+  not be presented as standalone proof of figure manipulation.
+supporting_sources:
+  - https://github.com/polimi-ispl/western-blot-synthetic-manipulation-localization

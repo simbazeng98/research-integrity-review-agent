@@ -1,0 +1,37 @@
+case_id: case_bank_v0_004_hindawi_wiley_paper_mill
+priority: P0
+source_type: retraction_watch_and_review
+source_url: https://retractionwatch.com/2023/12/19/hindawi-reveals-process-for-retracting-more-than-8000-paper-mill-articles/
+field: paper_mill_publication_integrity
+paper_doi: null
+public_status: publisher_scale_mass_retractions
+case_summary: >
+  Public reporting and later reviews describe Hindawi/Wiley mass retractions
+  connected to paper-mill activity and compromised special-issue workflows.
+evidence_patterns:
+  - special_issue_infiltration
+  - paper_mill_template_patterns
+  - bulk_retraction_cluster
+  - peer_review_process_irregularity
+  - publisher_scale_detection
+detector_candidates:
+  - journal_issue_cluster_risk_model
+  - special_issue_editorial_network_check
+  - template_language_similarity_scan
+  - suspicious_reviewer_pattern_signal
+  - mass_retraction_metadata_linker
+manual_verification_needed:
+  - publisher_retraction_notices
+  - article_level_retraction_metadata
+  - special_issue_editor_and_reviewer_records
+  - author_contribution_and_data_availability_statements
+false_positive_risks:
+  - legitimate_special_issue_article_clusters
+  - broad_retraction_for_process_reasons_without_article_level_fabrication
+  - shared_templates_required_by_journal_format
+safe_report_language: >
+  A paper-mill context should be reported as a candidate publication-process
+  risk signal and paired with article-level evidence before judging any single
+  manuscript.
+supporting_sources:
+  - https://www.sciencedirect.com/science/article/pii/S0895435624003056

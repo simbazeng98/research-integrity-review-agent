@@ -1,0 +1,35 @@
+case_id: nejm_ai_manipulated_clinical_image_2026
+title: "NEJM AI scientific-integrity discussion: AI-enabled image manipulation risk framing"
+priority: P1
+field: clinical_ai_image_integrity
+source_type: publisher_article
+source_title: "The H-Index of Suspicion: How Culture, Incentives, and AI Challenge Scientific Integrity"
+source_url: https://doi.org/10.1056/aie2501273
+source_accessed: '2026-07-04'
+public_status: public_method_example
+summary: >
+  NEJM AI article is used as a policy/method anchor for AI-era
+  scientific-integrity risks. This is not a misconduct case; it seeds safe
+  language for manipulated clinical/scientific image detection.
+evidence_patterns:
+  - ai_enabled_image_manipulation_risk
+  - clinical_image_authenticity_question
+  - need_for_human_review
+detector_candidates:
+  - ai_modified_clinical_image
+  - image_cut_paste_noise_pattern
+policy_anchors:
+  - cope_retraction_guidelines
+manual_verification_needed:
+  - publisher article context
+  - image provenance and acquisition metadata
+  - clinical de-identification checks
+  - expert radiology/clinical review before action
+false_positive_risks:
+  - legitimate de-identification or annotation
+  - image enhancement for teaching with disclosure
+  - synthetic training image clearly labeled as synthetic
+  - clinical export software artifacts
+safe_report_language: >
+  This is a public method/policy example: describe only a candidate AI-modified
+  clinical image risk signal and require provenance and expert verification.

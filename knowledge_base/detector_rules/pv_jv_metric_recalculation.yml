@@ -1,0 +1,34 @@
+rule_id: pv_jv_metric_recalculation
+status: active
+linked_cases: []
+input_required:
+  - jv_curve
+fields_required:
+  - voltage_v
+  - current_density_ma_cm2
+risk_signal: recalculated J-V metrics from raw sweep data
+detection_idea:
+  - read raw J-V sweep files
+  - recompute Voc, Jsc, FF, PCE via linear interpolation and maximum power point search
+manual_verification:
+  - Retrieve and inspect raw forward/reverse J-V sweep text files
+  - Verify whether reported summary values correspond to forward scan, reverse scan, or stabilized MPP tracking
+  - Review instrument measurement logs for preconditioning delays, scan rate, and aperture mask dimensions
+  - Confirm the solar simulator calibration and light intensity logs on the day of measurement
+false_positive_risks:
+  - Slight discrepancy due to linear interpolation vs polynomial curve fitting on noisy curves
+  - Different sign convention or current direction conventions of instrument software
+  - Incorrect active area scaling applied in raw instrument file vs final publication
+traceability:
+  - file
+  - coordinate
+safe_report_language: "Candidate J–V metric recalculation signal: metrics were recalculated from supplied sweep data using linear interpolation and maximum-power-point extraction. Verify instrument export format, sign convention, area basis, illumination intensity, scan direction, and preprocessing."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_raw_pv_package
+detector_module: integrity_agent.domains.photovoltaics.raw_measurements.jv_metrics
+detector_function: extract_jv_metrics
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+accepted_input_types: ["jv_curve_csv", "jv_curve_tsv", "jv_curve_txt"]

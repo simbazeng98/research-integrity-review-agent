@@ -1,0 +1,44 @@
+rule_id: numeric_terminal_digit_anomaly
+status: draft_spec_only
+linked_cases:
+- geng_tongji_numeric_anomaly_2026
+input_required:
+- numeric_table_or_extracted_csv
+fields_required:
+- numeric_values
+- row_labels
+- column_labels
+risk_signal: terminal digits or decimal-place endings are implausibly concentrated
+  relative to measurement context
+detection_idea:
+- profile last digits by column and measurement type
+- compare against expected precision and rounding policy
+- flag only when sample size and context are sufficient
+manual_verification:
+- raw measurements
+- rounding/significant-figure policy
+- instrument export precision
+- formula/derived-column audit
+false_positive_risks:
+- small sample size
+- rounded values
+- instrument precision constraints
+- derived or normalized data
+safe_report_language: Candidate numeric terminal-digit risk signal; requires raw-data
+  and rounding-policy verification.
+runtime_status: active
+execution_mode: offline
+toy_fixture: toy_terminal_digit_anomaly.csv
+detector_module: integrity_agent.detectors.numeric.terminal_digit
+detector_function: detect_terminal_digits
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+accepted_input_types: ["csv", "tsv", "xlsx_sheet", "markdown_table", "table_manifest"]
+minimum_sample_size: 5
+field_requirements:
+  - "numeric values"
+known_false_positive_contexts:
+  - "small samples"
+  - "binned measurements"
+  - "instrument rounding policies"

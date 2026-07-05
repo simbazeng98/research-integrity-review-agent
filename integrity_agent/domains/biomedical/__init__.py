@@ -1,0 +1,1 @@
+"""Biomedical integrity rule stubs."""

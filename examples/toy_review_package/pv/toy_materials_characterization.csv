@@ -1,0 +1,3 @@
+sample_id,xrd_2theta,xps_binding_energy,pl_wavelength,sem_image
+samp-mc-1,14.1,284.8,780,image1.png
+samp-mc-2,14.2,285.0,775,image2.png

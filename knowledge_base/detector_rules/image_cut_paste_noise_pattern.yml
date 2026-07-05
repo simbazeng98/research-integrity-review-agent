@@ -1,0 +1,38 @@
+rule_id: image_cut_paste_noise_pattern
+status: draft_spec_only
+linked_cases:
+- ori_ke_2026_western_blot_microscopy
+- ori_andrade_2026_relabeling_grant_data
+- dana_farber_image_duplication_cluster
+- western_blot_synthetic_manipulation_localization
+input_required:
+- figure_image
+fields_required:
+- pixel_array
+- candidate_panel_boundaries
+risk_signal: abrupt background/noise discontinuity or seam suggests possible cut-paste/splice
+  region
+detection_idea:
+- estimate local noise statistics
+- detect seam-like discontinuities
+- compare against expected panel boundaries and compression artifacts
+manual_verification:
+- raw image
+- figure assembly file
+- export/compression history
+- author explanation for legitimate splicing
+false_positive_risks:
+- legitimate gel splicing with disclosure
+- scanner illumination gradients
+- jpeg block artifacts
+- panel boundary from layout software
+safe_report_language: Candidate cut-paste/noise-pattern risk signal; verify against
+  raw image and disclosed figure assembly.
+runtime_status: draft_spec_only
+execution_mode: offline
+toy_fixture: null
+detector_module: null
+detector_function: null
+requires_network: false
+requires_private_data: false
+risk_ceiling: high

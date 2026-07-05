@@ -1,0 +1,26 @@
+policy_id: core_research_integrity_scope_001
+title: Core research integrity review boundaries
+sources:
+  - name: ORI definition of research misconduct
+    source_url: https://ori.hhs.gov/definition-research-misconduct
+    anchor: fabrication_falsification_plagiarism_boundary
+  - name: COPE retraction guidelines
+    source_url: https://publicationethics.org/guidance/guideline/retraction-guidelines
+    anchor: correction_of_literature_record
+  - name: Nature Portfolio image integrity and standards
+    source_url: https://www.nature.com/nature-portfolio/editorial-policies/image-integrity
+    anchor: unprocessed_image_data_and_minimal_processing
+  - name: Crossref Retraction Watch documentation
+    source_url: https://www.crossref.org/documentation/retrieve-metadata/retraction-watch/
+    anchor: retraction_watch_metadata_access
+scope_rules:
+  - Tools produce risk signals, not misconduct verdicts.
+  - Findings need traceable evidence locations.
+  - Retraction, correction, and expression-of-concern metadata are context, not
+    proof of author intent.
+  - Unprocessed images and source data are often required for final evaluation.
+safe_report_language:
+  - candidate risk signal
+  - needs manual verification
+  - original data requested
+  - alternative benign explanation

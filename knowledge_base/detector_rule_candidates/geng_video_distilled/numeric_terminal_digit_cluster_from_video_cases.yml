@@ -1,0 +1,42 @@
+candidate_id: numeric_terminal_digit_cluster_from_video_cases
+source_case_ids:
+- geng_video_bv1d7ec6se2f
+- geng_video_bv1fkdsbve8o
+- geng_video_bv1giblbtefu
+- geng_video_bv1h3dcbfebf
+- geng_video_bv1j9jg6kewx
+- geng_video_bv1jer4bje6x
+- geng_video_bv1k3lh6ueby
+- geng_video_bv1kzokbgexz
+- geng_video_bv1m37j6eekn
+- geng_video_bv1nednbbeka
+- geng_video_bv1o65a6keyh
+- geng_video_bv1owo9bre25
+- geng_video_bv1ppqjblest
+- geng_video_bv1uvej6vem5
+- geng_video_bv1vjd8b7efx
+- geng_video_bv1xyrib8erl
+source_case_relationship: distillation_context_or_methodology_only
+evidence_pattern: numeric_terminal_digit_cluster
+observed_video_patterns: []
+input_required:
+- extracted numeric table
+- paper/table locator
+- measurement context
+algorithm_sketch:
+- profile terminal digits by numeric column
+- compare against expected rounding/precision context
+- emit only table-cell coordinates and uncertainty notes
+risk_ceiling: risk_signal_only
+false_positive_risks:
+- Bilibili/video-raised examples are not official findings
+- detector candidates can be triggered by benign rounding, transformations, shared controls, or extraction errors
+- manual source-data review is required before reporting
+manual_verification_needed:
+- turn the video-derived method into an explicit detector/checklist
+- validate on independent positive examples and benign controls
+- only if the method is later applied to a specific paper, inspect that paper/source data separately
+safe_report_language: This detector candidate is a method distilled from Geng videos; it must not be used as a paper-specific conclusion without a separate source-data review.
+implementation_priority: P0
+distillation_mode: methodology_only
+excluded_scope: original-paper retraction status, official-announcement interpretation, and paper-specific misconduct conclusion

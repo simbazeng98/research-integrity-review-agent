@@ -1,0 +1,39 @@
+rule_id: image_lane_duplication_flip
+status: draft_spec_only
+linked_cases:
+- ori_ke_2026_western_blot_microscopy
+- alzheimer_abeta56_image_integrity
+- dana_farber_image_duplication_cluster
+- western_blot_synthetic_manipulation_localization
+input_required:
+- figure_image
+- panel_coordinates_optional
+fields_required:
+- image_pixels
+- panel_or_lane_regions
+risk_signal: lanes, bands, or panels appear duplicated after translation, scaling,
+  rotation, or flip
+detection_idea:
+- segment lanes/panels
+- compare perceptual hashes and feature matches under flips/transforms
+- emit matched regions with coordinates
+manual_verification:
+- uncropped original image
+- figure legend disclosure
+- loading control reuse explanation
+- expert review
+false_positive_risks:
+- biologically similar bands
+- shared controls disclosed in legend
+- low-resolution compression
+- template panel reuse before final export
+safe_report_language: Candidate duplicated-lane/panel risk signal; coordinates identify
+  areas requiring manual source-image review.
+runtime_status: draft_spec_only
+execution_mode: offline
+toy_fixture: null
+detector_module: null
+detector_function: null
+requires_network: false
+requires_private_data: false
+risk_ceiling: high

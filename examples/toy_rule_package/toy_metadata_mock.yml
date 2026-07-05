@@ -1,0 +1,5 @@
+identifier: 10.0000/toy-rule-runtime
+mock_public_status: expression_of_concern
+notice_url: https://example.invalid/toy-notice
+source_strength: toy_or_synthetic
+note: Synthetic metadata fixture; no network lookup and no real article status.

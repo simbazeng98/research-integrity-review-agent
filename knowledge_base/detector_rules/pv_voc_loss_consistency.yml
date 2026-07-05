@@ -1,0 +1,36 @@
+rule_id: pv_voc_loss_consistency
+status: active
+linked_cases: []
+input_required:
+  - table_manifest
+fields_required:
+  - voc_v
+  - bandgap_ev
+risk_signal: reported bandgap and Voc imply unusual or physical Voc loss
+detection_idea:
+  - compute Voc loss as Eg - Voc
+  - flag near-zero/negative losses or extremely high Voc losses
+manual_verification:
+  - Check the absorption/PL/Tauc plot source data to verify the bandgap extraction
+  - Inspect raw J-V curves for the correct Voc value
+  - Confirm the device structure and scan protocols
+  - Verify if bandgap and Voc are from the exact same device and film composition
+false_positive_risks:
+  - High-efficiency tandems or multi-junction devices
+  - Alternative definitions of bandgap (e.g. high-energy PL peak)
+  - Data mapping error from non-PV metric column
+traceability:
+  - file
+  - sheet
+  - row
+  - column
+safe_report_language: "Candidate PV physical-consistency signal: reported bandgap and Voc imply an unusual Voc loss. Verify units, field mapping, bandgap measurement method, device architecture, and whether Voc corresponds to the same device."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_pv_package
+detector_module: integrity_agent.domains.photovoltaics.voc_loss
+detector_function: run_voc_loss_check
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+accepted_input_types: ["table_manifest", "csv", "tsv", "xlsx_sheet", "markdown_table"]

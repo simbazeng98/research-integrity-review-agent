@@ -1,0 +1,22 @@
+case_id: toy_source_data_mismatch_001
+source_type: toy_case
+source_url: examples/toy_case.md
+field: materials_characterization
+paper_doi: null
+public_status: unresolved
+evidence_patterns:
+  - source_data_mismatch
+detector_candidates:
+  - source_table_to_reported_value_consistency
+manual_verification_needed:
+  - original source data
+  - analysis script or spreadsheet formula
+  - author explanation for any transformed values
+false_positive_risks:
+  - rounded values
+  - normalized values
+  - unit conversion
+  - derived columns
+safe_report_language: >
+  The toy case contains a candidate source-data mismatch that should be
+  checked against original data and analysis steps before drawing conclusions.

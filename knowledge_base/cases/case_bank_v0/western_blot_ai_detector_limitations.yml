@@ -1,0 +1,36 @@
+case_id: western_blot_ai_detector_limitations
+title: "AI detectors are poor western blot classifiers: limitation card"
+priority: P1
+field: western_blot_ai_detection
+source_type: peer_reviewed_or_pmc_method_paper
+source_title: "AI detectors are poor western blot classifiers: a study of accuracy and predictive values"
+source_url: https://pmc.ncbi.nlm.nih.gov/articles/PMC11847483/
+source_accessed: '2026-07-04'
+public_status: published_method
+summary: >
+  This method paper evaluates AI detectors for western blot classification and is
+  used as a limitation anchor: detector output must not be treated as a
+  definitive finding.
+evidence_patterns:
+  - ai_detector_false_positive_risk
+  - ai_detector_false_negative_risk
+  - western_blot_classifier_calibration_needed
+  - predictive_value_depends_on_prevalence
+detector_candidates:
+  - ai_modified_clinical_image
+  - image_lane_duplication_flip
+policy_anchors:
+  - cope_retraction_guidelines
+manual_verification_needed:
+  - model validation dataset match
+  - confusion matrix and calibration
+  - raw blot provenance
+  - human image-forensics review
+false_positive_risks:
+  - scanner noise and compression
+  - low-resolution western blot images
+  - domain shift from detector training set
+  - AI-generated image detector not validated on scientific figures
+safe_report_language: >
+  Use AI detector output only as a candidate risk signal; manual verification and
+  source data are required.

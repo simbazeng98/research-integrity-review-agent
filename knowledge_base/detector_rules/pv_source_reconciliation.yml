@@ -1,0 +1,39 @@
+rule_id: pv_source_reconciliation
+status: active
+linked_cases: []
+input_required:
+  - reported_metrics
+fields_required:
+  - device_id
+  - voc_v
+  - jsc_ma_cm2
+  - ff
+  - pce_percent
+risk_signal: recomputed raw measurement metrics differ from reported metrics
+detection_idea:
+  - compare recalculated J-V and EQE values with reported summary tables
+  - flag discrepancies beyond tolerance bounds
+manual_verification:
+  - raw J–V files
+  - reported metric table
+  - spreadsheet formulas
+  - device ID mapping
+  - measurement protocol
+false_positive_risks:
+  - Standard rounding differences in manual summary tables
+  - PCE derived from stabilized maximum power point output rather than dynamic J-V scan
+  - Custom device naming mapping errors or typos
+traceability:
+  - file
+  - sheet
+  - row
+safe_report_language: "Candidate raw/source-data reconciliation signal: recalculated raw measurement metrics differ from reported table metrics beyond configured tolerance. Verify device mapping, units, sign convention, formulas, measurement protocol, and whether reported values are scan-derived or stabilized."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_raw_pv_package
+detector_module: integrity_agent.domains.photovoltaics.raw_measurements.source_reconciliation
+detector_function: reconcile_jv_metrics_with_reported
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+accepted_input_types: ["reported_metrics"]

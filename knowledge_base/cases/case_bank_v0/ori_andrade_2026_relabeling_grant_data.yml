@@ -1,0 +1,37 @@
+case_id: ori_andrade_2026_relabeling_grant_data
+title: "ORI Andrade case: relabeled NTA, western blot composite, and TEM source-data patterns"
+priority: P0
+field: biomedical_source_data_integrity
+source_type: official_or_institutional_source
+source_title: "Case Summary: Andrade, Daniel | ORI"
+source_url: https://ori.hhs.gov/content/case-summary-andrade-daniel
+source_accessed: '2026-07-04'
+public_status: confirmed_misconduct
+official_or_institutional_source: https://ori.hhs.gov/content/case-summary-andrade-daniel
+summary: >
+  Official ORI case summary describes relabeling of exosome NTA data, spliced
+  western blot panels from unrelated experiments, and TEM image source
+  misreporting in grant applications.
+evidence_patterns:
+  - source_data_relabeling
+  - grant_figure_source_mismatch
+  - western_blot_composite_from_unrelated_experiments
+  - tem_image_source_misreporting
+detector_candidates:
+  - relabeled_source_data
+  - image_cut_paste_noise_pattern
+  - image_lane_duplication_flip
+policy_anchors:
+  - ori_42_cfr_part_93
+manual_verification_needed:
+  - original NTA exports
+  - cell line and PDO sample provenance
+  - western blot raw files from each component panel
+  - TEM acquisition metadata
+false_positive_risks:
+  - legitimate representative image with disclosed provenance
+  - composite figure explicitly marked as schematic or montage
+  - sample labels changed during blinded analysis but traceable in lab records
+safe_report_language: >
+  This official case supports a candidate risk signal for relabeled or composited
+  source data; new reports should request provenance before drawing conclusions.

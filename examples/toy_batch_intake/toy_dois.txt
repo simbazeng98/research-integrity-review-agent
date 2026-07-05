@@ -1,0 +1,4 @@
+10.0000/toy-retracted
+10.0000/toy-no-update
+10.0000/toy-corrected
+invalid-doi-here

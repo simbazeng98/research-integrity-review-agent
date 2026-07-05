@@ -1,0 +1,35 @@
+case_id: withdrarxiv_withdrawal_taxonomy
+title: WithdrarXiv withdrawal taxonomy and metadata normalization
+priority: P1
+field: withdrawal_retraction_metadata
+source_type: preprint_dataset
+source_title: "WithdrarXiv: A Large-Scale Dataset for Retraction Study"
+source_url: https://arxiv.org/abs/2412.03775
+related_data_url: https://github.com/darpa-scify/withdrarxiv
+source_accessed: '2026-07-04'
+public_status: published_method
+summary: >
+  WithdrarXiv provides a taxonomy for arXiv withdrawals/retraction comments. This
+  case card seeds metadata parsing and reason-taxonomy normalization.
+evidence_patterns:
+  - withdrawal_reason_taxonomy
+  - author_comment_metadata
+  - preprint_status_change
+  - reason_category_mapping
+detector_candidates:
+  - retraction_metadata_check
+policy_anchors:
+  - crossref_retraction_watch_metadata
+  - cope_retraction_guidelines
+manual_verification_needed:
+  - current arXiv withdrawal comment
+  - version history
+  - journal publication/retraction linkage
+  - taxonomy category review
+false_positive_risks:
+  - withdrawal can be benign replacement or journal policy
+  - author comments may be incomplete
+  - preprint withdrawal is not necessarily misconduct
+safe_report_language: >
+  Report withdrawal metadata as public_status context and a candidate taxonomy
+  label, not as proof of misconduct.

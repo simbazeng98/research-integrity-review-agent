@@ -1,0 +1,117 @@
+from __future__ import annotations
+
+from integrity_agent.domains.photovoltaics.schema import PVMetricRow, PVConsistencyFinding
+
+def run_pce_consistency_check(
+    rows: list[PVMetricRow],
+    tolerance_abs: float = 0.3,
+    tolerance_rel: float = 0.03
+) -> list[PVConsistencyFinding]:
+    findings: list[PVConsistencyFinding] = []
+    finding_idx = 1
+
+    for row in rows:
+        # Check if all required fields are present
+        if (row.voc_v is None or row.jsc_ma_cm2 is None or 
+            row.ff is None or row.pce_percent is None):
+            continue
+
+        # Determine light intensity
+        light_intensity = 100.0
+        is_non_standard_light = False
+        if row.light_intensity_mw_cm2 is not None and row.light_intensity_mw_cm2 > 0:
+            light_intensity = row.light_intensity_mw_cm2
+            if abs(light_intensity - 100.0) > 1e-3:
+                is_non_standard_light = True
+
+        # Recompute PCE: Voc(V) * Jsc(mA/cm2) * FF(fraction) / Pin(mW/cm2) * 100%
+        # If FF is reported as fraction (0.55), Voc * Jsc * FF is in mW/cm2.
+        # PCE (%) = (Voc * Jsc * FF / light_intensity) * 100.0
+        recomputed_pce = (row.voc_v * row.jsc_ma_cm2 * row.ff / light_intensity) * 100.0
+        
+        abs_diff = abs(row.pce_percent - recomputed_pce)
+        rel_diff = abs_diff / max(abs(row.pce_percent), 1e-6)
+
+        if abs_diff > tolerance_abs or rel_diff > tolerance_rel:
+            observed = {
+                "voc_v": row.voc_v,
+                "jsc_ma_cm2": row.jsc_ma_cm2,
+                "ff": row.ff,
+                "ff_unit": row.ff_unit,
+                "pce_percent": row.pce_percent,
+                "light_intensity_mw_cm2": row.light_intensity_mw_cm2
+            }
+            recomputed = {
+                "pce_percent": recomputed_pce
+            }
+
+            intensity_msg = f"under the assumed 100 mW/cm² illumination basis"
+            if is_non_standard_light:
+                intensity_msg = f"under the specified {light_intensity} mW/cm² illumination basis"
+
+            safe_lang = (
+                f"Candidate PV metric consistency signal: reported PCE ({row.pce_percent}%) differs from "
+                f"recomputed Voc × Jsc × FF ({recomputed_pce:.2f}%) {intensity_msg}. "
+                f"Verify units, FF convention, area basis, rounding, and whether the value is stabilized or scan-specific."
+            )
+
+            evidence_items = [{
+                "location": f"Row {row.row_index}",
+                "message": (
+                    f"Reported PCE: {row.pce_percent}%, Recomputed: {recomputed_pce:.4f}% "
+                    f"(Voc={row.voc_v}V, Jsc={row.jsc_ma_cm2}mA/cm2, FF={row.ff:.4f}, Pin={light_intensity}mW/cm2)"
+                )
+            }]
+
+            finding = PVConsistencyFinding(
+                finding_id=f"PV-PCE-FIND-{finding_idx:03d}",
+                rule_id="pv_pce_consistency",
+                detector_id="pce_consistency",
+                risk_level="medium",
+                risk_ceiling="medium",
+                source_file=row.source_file,
+                table_id=row.table_id,
+                row_index=row.row_index,
+                device_id=row.device_id,
+                observed_values=observed,
+                recomputed_values=recomputed,
+                tolerance={"abs": tolerance_abs, "rel": tolerance_rel},
+                evidence_items=evidence_items,
+                safe_report_language=safe_lang,
+                alternative_explanations=[
+                    "FF reported as percent vs fraction in raw spreadsheet calculations",
+                    "PCE derived from stabilized power output rather than scan-derived J-V curves",
+                    "PCE and J-V metrics extracted from different scan directions (forward vs reverse)",
+                    "Severe rounding errors in reported values",
+                    "Differences in device area definitions used for Jsc vs PCE calculations",
+                    "Non-1-sun illumination intensity used in measurement but not adjusted in formula",
+                    "Typographical errors during table manual transcription",
+                    "Unit conversion mismatch during data aggregation"
+                ],
+                false_positive_risks=[
+                    "Rounding differences when values are printed to few significant digits",
+                    "Stabilized power conversion efficiency reported alongside initial scan-based Voc/Jsc/FF",
+                    "Misidentified column mapping for fill factor or current density",
+                    "Correctly reported parameters for non-standard testing conditions"
+                ],
+                manual_verification=[
+                    "Retrieve raw J-V curves and re-evaluate parameters",
+                    "Check spreadsheet formulas for conversion factors or hidden calculations",
+                    "Verify the active and aperture area definitions",
+                    "Confirm the light simulator intensity calibration logs",
+                    "Verify whether PCE corresponds to champion device J-V scan or stabilized MPP tracking"
+                ],
+                limitations=[
+                    "This test relies on the correctness of field mappings",
+                    "Assumes standard solar simulator illumination unless light intensity is explicitly column-profiled"
+                ],
+                metadata={
+                    "abs_diff": abs_diff,
+                    "rel_diff": rel_diff,
+                    "is_non_standard_light": is_non_standard_light
+                }
+            )
+            findings.append(finding)
+            finding_idx += 1
+
+    return findings

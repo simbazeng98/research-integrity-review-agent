@@ -1,0 +1,19 @@
+domain_id: photovoltaics
+first_version_rules:
+  - rule_id: pce_formula_consistency
+    description: Check whether PCE is consistent with Voc, Jsc, and FF units.
+  - rule_id: ff_percent_fraction_consistency
+    description: Check whether FF is treated consistently as percent or fraction.
+  - rule_id: eqe_integrated_jsc_vs_jv_jsc
+    description: Compare EQE-integrated Jsc with J-V Jsc when both are available.
+  - rule_id: voc_loss_sanity
+    description: Check whether bandgap and Voc imply a plausible voltage loss.
+  - rule_id: area_definition_consistency
+    description: Track active area, aperture area, and mask area usage.
+  - rule_id: scan_mode_consistency
+    description: Separate reverse scan, forward scan, and stabilized PCE.
+  - rule_id: stability_condition_completeness
+    description: Check temperature, humidity, illumination, MPP, and encapsulation metadata.
+reporting_note: >
+  Photovoltaics rules are domain consistency checks. They should not be reported
+  as misconduct findings without raw data, device metadata, and author context.

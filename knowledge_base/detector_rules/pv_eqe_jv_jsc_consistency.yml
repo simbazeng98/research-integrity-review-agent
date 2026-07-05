@@ -1,0 +1,37 @@
+rule_id: pv_eqe_jv_jsc_consistency
+status: active
+linked_cases: []
+input_required:
+  - table_manifest
+fields_required:
+  - jsc_ma_cm2
+  - eqe_jsc_ma_cm2
+risk_signal: integrated EQE-derived Jsc differs from J-V Jsc beyond threshold
+detection_idea:
+  - extract current density from J-V metrics and EQE spectrum integration
+  - flag relative differences larger than 10%
+manual_verification:
+  - Inspect raw EQE spectral response curves and integration files
+  - Review the solar simulator calibration and spectral mismatch correction logs
+  - Verify cell area aperture/mask dimensions under a microscope or calibrated imaging system
+  - Compare J-V curves with EQE-derived currents across multiple devices
+  - Verify the exact dates and environmental conditions of both measurements
+false_positive_risks:
+  - Normal physical variations (up to 5-10%) between different measurement setups
+  - Minor mismatch due to rounded values in the summary table
+  - Intentional non-standard testing for specific research questions
+traceability:
+  - file
+  - sheet
+  - row
+  - column
+safe_report_language: "Candidate EQE/J–V current-density consistency signal: integrated EQE-derived Jsc differs from J–V Jsc beyond the configured threshold. Verify spectral mismatch correction, light calibration, integration spectrum, device area, and scan/stabilization conditions."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_pv_package
+detector_module: integrity_agent.domains.photovoltaics.eqe_jv_consistency
+detector_function: run_eqe_jv_jsc_consistency_check
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+accepted_input_types: ["table_manifest", "csv", "tsv", "xlsx_sheet", "markdown_table"]

@@ -1,0 +1,41 @@
+candidate_id: microscopy_field_reuse_candidate
+source_case_ids:
+- geng_video_bv1d7ec6se2f
+- geng_video_bv1fkdsbve8o
+- geng_video_bv1giblbtefu
+- geng_video_bv1j9jg6kewx
+- geng_video_bv1jer4bje6x
+- geng_video_bv1m37j6eekn
+- geng_video_bv1nednbbeka
+- geng_video_bv1o65a6keyh
+- geng_video_bv1owo9bre25
+- geng_video_bv1vjd8b7efx
+- geng_video_bv1xyrib8erl
+source_case_relationship: direct_video_pattern
+evidence_pattern: microscopy_field_reuse_candidate
+observed_video_patterns:
+- microscopy_field_reuse_candidate
+- same_panel_recolored_or_relabelled
+- source_data_vs_figure_mismatch
+- western_blot_lane_reuse_candidate
+input_required:
+- microscopy panels
+- condition labels
+- pixel data
+algorithm_sketch:
+- match keypoints across microscopy panels
+- test rotation/translation/crop transforms
+- report candidate reused fields with required raw-image request
+risk_ceiling: risk_signal_only
+false_positive_risks:
+- Bilibili/video-raised examples are not official findings
+- detector candidates can be triggered by benign rounding, transformations, shared controls, or extraction errors
+- manual source-data review is required before reporting
+manual_verification_needed:
+- turn the video-derived method into an explicit detector/checklist
+- validate on independent positive examples and benign controls
+- only if the method is later applied to a specific paper, inspect that paper/source data separately
+safe_report_language: This detector candidate is a method distilled from Geng videos; it must not be used as a paper-specific conclusion without a separate source-data review.
+implementation_priority: P1
+distillation_mode: methodology_only
+excluded_scope: original-paper retraction status, official-announcement interpretation, and paper-specific misconduct conclusion

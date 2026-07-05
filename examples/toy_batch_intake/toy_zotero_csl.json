@@ -1,0 +1,22 @@
+[
+  {
+    "id": "zotero-item-1",
+    "type": "article-journal",
+    "title": "Room Temp Superconductivity",
+    "container-title": "Journal of Materials",
+    "DOI": "10.0000/toy-eoc",
+    "issued": {
+      "date-parts": [[2026, 1, 15]]
+    }
+  },
+  {
+    "id": "zotero-item-2",
+    "type": "article-journal",
+    "title": "A Stable Synthesis",
+    "container-title": "Journal of Chemistry",
+    "DOI": "10.0000/toy-no-update",
+    "issued": {
+      "date-parts": [[2024]]
+    }
+  }
+]

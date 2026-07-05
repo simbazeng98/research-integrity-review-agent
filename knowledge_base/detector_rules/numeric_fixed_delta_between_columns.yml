@@ -1,0 +1,48 @@
+rule_id: numeric_fixed_delta_between_columns
+status: draft_spec_only
+linked_cases:
+- geng_tongji_numeric_anomaly_2026
+- ranga_dias_superconductivity_data_reliability
+input_required:
+- source_table
+fields_required:
+- numeric_matrix
+risk_signal: repeated algebraic relation across columns that are reported as independent
+  measurements
+detection_idea:
+- compute pairwise column differences/ratios
+- look for repeated constant offsets after rounding
+- separate derived columns from independent measurements
+manual_verification:
+- raw data
+- analysis script
+- spreadsheet formulas
+- author explanation
+false_positive_risks:
+- normalized data
+- derived columns
+- rounded values
+- unit conversion
+traceability:
+- file
+- sheet
+- row
+- column
+safe_report_language: Candidate fixed-delta risk signal; verify whether columns are
+  derived, rounded, normalized, or unit-converted.
+runtime_status: active
+execution_mode: offline
+toy_fixture: toy_numeric_fixed_delta.csv
+detector_module: integrity_agent.detectors.numeric.fixed_delta
+detector_function: detect_fixed_delta
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+accepted_input_types: ["csv", "tsv", "xlsx_sheet", "markdown_table", "table_manifest"]
+minimum_sample_size: 3
+field_requirements:
+  - "numeric columns"
+known_false_positive_contexts:
+  - "normalized measurements"
+  - "unit conversions"
+  - "disclosed formula columns"

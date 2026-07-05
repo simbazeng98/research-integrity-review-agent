@@ -1,0 +1,36 @@
+case_id: case_bank_v0_006_ranga_dias_superconductivity
+priority: P1
+source_type: science_news_and_retraction_context
+source_url: https://www.nature.com/articles/d41586-024-00716-2
+field: physics_materials_high_stakes_claims
+paper_doi: null
+public_status: retracted_high_profile_claims_with_institutional_red_flags
+case_summary: >
+  Nature News reported on the Ranga Dias room-temperature superconductivity
+  scandal, including retracted high-stakes claims, data-reliability concerns,
+  reproducibility problems, and missed institutional warning signs.
+evidence_patterns:
+  - high_stakes_claim_red_flags
+  - raw_data_availability_gap
+  - reproducibility_failure
+  - data_reliability_dispute
+  - institutional_process_red_flags
+detector_candidates:
+  - high_stakes_claim_review_checklist
+  - raw_data_availability_tracker
+  - independent_replication_status_tracker
+  - extraordinary_claim_evidence_strength_matrix
+manual_verification_needed:
+  - raw_measurement_data
+  - sample_preparation_records
+  - instrument_logs
+  - independent_replication_attempts
+  - journal_retraction_notices
+false_positive_risks:
+  - early_stage_claims_under_active_replication
+  - negative_replication_due_to_material_variability
+  - incomplete_public_data_for_legitimate_confidentiality_reasons
+safe_report_language: >
+  For extraordinary materials claims, report candidate reproducibility and
+  data-availability risk signals while separating them from formal misconduct
+  determinations.

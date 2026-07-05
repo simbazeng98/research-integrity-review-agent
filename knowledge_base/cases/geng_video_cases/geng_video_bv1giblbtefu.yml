@@ -1,0 +1,50 @@
+case_id: geng_video_bv1giblbtefu
+source_type: bilibili_video
+source_url: https://www.bilibili.com/video/BV1GiBLBtEFu/
+bv_id: BV1GiBLBtEFu
+video_title: Geng Bilibili video BV1GiBLBtEFu (original title withheld for safe public release)
+title_redaction: original title withheld for safe public release
+uploader: 耿同学讲故事
+publish_date: '2025-12-24'
+duration_seconds: 471
+transcript_confidence: private_local_asr_faster_whisper_small_machine_generated
+case_kind: methodology_distillation_from_geng_video
+method_source_case_kind: multi_case_video
+field: image_integrity
+paper_identifiers: []
+methodology_reuse_scope: extract Geng-style review methods, detector patterns, and false-positive controls only
+excluded_scope: original-paper retraction status, official-announcement interpretation, and any paper-specific misconduct conclusion
+video_raised_risk_signals:
+- ASR/title raises a candidate figure/image or source-data consistency concern requiring original figure/source-image review
+- This card intentionally distills Geng's repeatable checking method only; it does not evaluate the original paper's retraction or official-announcement status.
+evidence_patterns:
+- same_panel_recolored_or_relabelled
+- microscopy_field_reuse_candidate
+- western_blot_lane_reuse_candidate
+- source_data_vs_figure_mismatch
+detector_candidates:
+- image_same_panel_recolored_or_relabelled
+- microscopy_field_reuse_candidate
+- western_blot_lane_reuse_candidate
+- source_data_vs_figure_mismatch
+- methodology_triage_workflow_from_geng_videos
+manual_verification_needed:
+- 'method transfer only: confirm the risk-signal pattern can be operationalized without asserting the original-paper outcome'
+- validate the candidate method on independent positive examples and benign controls
+- if later used for a paper-specific report, verify original paper/source data separately
+false_positive_risks:
+- ASR may misrecognize names, institutions, figure labels, or technical terms
+- video narration may omit context, corrections, or alternative explanations
+- visible numeric/image similarity can arise from rounding, shared controls, templates, legitimate transformations, or metadata loss
+- a method that works on one narrated example may fail on benign controls or a different field
+safe_report_language: This video is used only to distill a repeatable review method or detector idea; it does not establish any paper-specific status.
+public_status: methodology_only
+public_status_basis: Methodology-only distillation by user instruction; original-paper outcome and official-status claims are intentionally not evaluated in this batch.
+limitations:
+- 'Method reuse only: this card does not claim whether any named original paper was retracted, corrected, reliable, or unreliable.'
+- Bilibili video content and ASR transcript are not official investigation conclusions.
+- Private ASR transcript may contain recognition errors; verify against the original video before extracting a method.
+- Comments and danmaku were not used as factual evidence.
+- No full transcript, long quote, screenshots, comments, or danmaku are stored in this public case card.
+private_notes_reference: local_private_note_available_not_public
+private_notes_available: true

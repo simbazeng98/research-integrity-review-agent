@@ -1,0 +1,38 @@
+case_id: case_bank_v0_008_dana_farber_image_cluster
+priority: P1
+source_type: justice_department_notice
+source_url: https://www.justice.gov/usao-ma/pr/dana-farber-cancer-institute-agrees-pay-15-million-settle-fraud-allegations-related
+field: cancer_biology_image_integrity
+paper_doi: null
+public_status: settlement_with_admissions
+case_summary: >
+  The U.S. Department of Justice reported a settlement in which Dana-Farber
+  admitted that some publications reused, duplicated, rotated, magnified, or
+  stretched images in ways tied to different experimental conditions or grant
+  support.
+evidence_patterns:
+  - image_reuse_across_conditions
+  - duplicated_image_or_data
+  - rotated_magnified_or_stretched_image
+  - grant_application_image_misrepresentation
+  - public_sleuth_triggered_institutional_review
+detector_candidates:
+  - transformed_image_similarity_search
+  - cross_paper_image_reuse_candidate
+  - grant_application_publication_overlap_audit
+  - institution_response_timeline_tracker
+manual_verification_needed:
+  - original_image_files
+  - grant_application_figures
+  - publication_figure_versions
+  - correction_or_retraction_notices
+  - institutional_review_outcomes
+false_positive_risks:
+  - disclosed_reuse_of_representative_images
+  - shared_method_illustrations_not_experimental_data
+  - benign_resizing_or_rotation_in_layout
+safe_report_language: >
+  Report as candidate image-reuse or grant-figure provenance risk signals and
+  tie each claim to specific files, notices, or admissions.
+supporting_sources:
+  - https://retractionwatch.com/2025/12/16/dana-farber-settlement-false-claims-act-image-manipulation/

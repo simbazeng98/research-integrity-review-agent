@@ -1,0 +1,36 @@
+case_id: problematic_paper_screener_tortured_phrases
+title: Problematic Paper Screener tortured-phrase method seed
+priority: P1
+field: paper_mill_text_integrity
+source_type: preprint_or_method_paper
+source_title: "Tortured phrases: A dubious writing style emerging in science"
+source_url: https://arxiv.org/abs/2107.06751
+source_accessed: '2026-07-04'
+public_status: published_method
+summary: >
+  The tortured-phrases literature and Problematic Paper Screener motivate
+  text-pattern triage for nonsensical paraphrases often linked to paper-mill
+  workflows.
+evidence_patterns:
+  - tortured_phrase
+  - semantic_synonym_substitution
+  - paper_mill_text_fingerprint
+  - requires_human_context_review
+detector_candidates:
+  - paper_mill_tortured_phrase
+policy_anchors:
+  - pubpeer_discussion
+  - cope_retraction_guidelines
+manual_verification_needed:
+  - full sentence context
+  - domain-specific term normalization
+  - publisher correction/retraction status
+  - manual review for legitimate jargon
+false_positive_risks:
+  - non-native English phrasing
+  - translation artifacts
+  - legitimate rare terminology
+  - OCR or PDF extraction errors
+safe_report_language: >
+  Flag only a candidate paper-mill text risk signal; tortured phrases alone are
+  insufficient for misconduct claims.

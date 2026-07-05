@@ -1,0 +1,37 @@
+case_id: dana_farber_image_duplication_cluster
+title: Dana-Farber image/data duplication cluster and settlement reporting
+priority: P1
+field: biomedical_image_integrity
+source_type: retraction_watch_news
+source_title: Dana-Farber settles suit alleging image manipulation for $15 million
+source_url: https://retractionwatch.com/2025/12/16/dana-farber-settlement-false-claims-act-image-manipulation/
+source_accessed: '2026-07-04'
+public_status: settlement_or_legal_resolution
+summary: >
+  Retraction Watch reported a legal settlement involving allegations of
+  misrepresented/duplicated images and data. The case-bank lesson is
+  cluster-level image duplication triage with conservative legal/status language.
+evidence_patterns:
+  - image_duplication_cluster
+  - grant_supporting_data_question
+  - legal_settlement_not_misconduct_finding
+  - multiple_article_corrections_or_retractions
+detector_candidates:
+  - image_lane_duplication_flip
+  - image_cut_paste_noise_pattern
+  - retraction_metadata_check
+policy_anchors:
+  - crossref_retraction_watch_metadata
+  - cope_retraction_guidelines
+manual_verification_needed:
+  - official settlement documents if public
+  - affected paper DOI-level notices
+  - original image files
+  - journal correction/retraction status
+false_positive_risks:
+  - settlement language is not the same as a research-misconduct finding
+  - duplicated representative images can be corrected without intent inference
+  - cluster reports may include papers with different statuses
+safe_report_language: >
+  Use settlement/status language only: candidate image/data duplication risk
+  signal requiring DOI-level notice and source-file verification.

@@ -1,0 +1,35 @@
+case_id: case_bank_v0_002_ori_daniel_andrade
+priority: P0
+source_type: ori_case
+source_url: https://ori.hhs.gov/content/case-summary-andrade-daniel
+field: biomedical_grant_data_integrity
+paper_doi: null
+public_status: official_research_misconduct_finding
+case_summary: >
+  ORI reported findings involving falsified or fabricated data in grant
+  applications, including provenance problems in NTA data and composite western
+  blot imagery from unrelated materials.
+evidence_patterns:
+  - source_provenance_mismatch
+  - relabeled_dataset
+  - grant_application_figure_mismatch
+  - composite_western_blot_from_unrelated_sources
+detector_candidates:
+  - source_file_to_figure_provenance_check
+  - label_consistency_across_exports
+  - grant_figure_reuse_audit
+  - unrelated_cell_line_metadata_conflict
+manual_verification_needed:
+  - original_NTA_export_files
+  - raw_western_blot_images
+  - cell_line_metadata
+  - grant_application_version_history
+  - investigator_explanation_for_relabeling
+false_positive_risks:
+  - legitimate_reanalysis_with_clear_relabeling
+  - anonymized_or_blinded_labels_during_review
+  - composite_figures_with_disclosed_source_boundaries
+safe_report_language: >
+  The case motivates a candidate source-provenance risk signal; the report must
+  ask for raw files and version history rather than infer intent from labels
+  alone.

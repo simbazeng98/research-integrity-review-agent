@@ -1,0 +1,30 @@
+rule_id: pv_materials_characterization_metadata
+status: active
+linked_cases: []
+input_required:
+  - table_manifest
+fields_required:
+  - voc_v
+risk_signal: materials characterization metadata details are missing from tables
+detection_idea:
+  - check for XRD, XPS, PL, UV-vis, SEM, AFM, GIWAXS columns and verify standard metadata presence
+manual_verification:
+  - Inspect the manuscript Methods section and Supplementary Information for instrument metadata
+  - Verify the original instrument raw files (.raw, .txt, .xrdml, etc.) for embedded header metadata
+  - Confirm the calibration references and fitting scripts used for peak extraction
+false_positive_risks:
+  - Non-standard reporting styles or abbreviated column names used by the authors
+  - The metadata is mentioned in figure captions or supplementary captions not parsed by the tool
+traceability:
+  - file
+  - sheet
+safe_report_language: "Materials characterization reporting completeness signal: parsed characterization metadata appears incomplete. This does not determine manipulation; it identifies missing context required for reproducibility and interpretation."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_pv_package
+detector_module: integrity_agent.domains.photovoltaics.materials_characterization
+detector_function: run_materials_characterization_check
+requires_network: false
+requires_private_data: false
+risk_ceiling: low
+accepted_input_types: ["table_manifest", "csv", "tsv", "xlsx_sheet", "markdown_table"]

@@ -1,0 +1,35 @@
+case_id: case_bank_v0_007_abeta56_alzheimer_retraction
+priority: P1
+source_type: retraction_notice
+source_url: https://www.nature.com/articles/s41586-024-07691-8
+field: neuroscience_image_integrity
+paper_doi: 10.1038/nature04533
+public_status: retraction
+case_summary: >
+  Nature retracted the 2006 Abeta*56 article after concerns about image
+  manipulation in figures, including splicing, duplication, and eraser-tool
+  use; the notice stated that the data could not be verified from records.
+evidence_patterns:
+  - western_blot_or_gel_like_image_scrutiny
+  - image_splicing
+  - image_duplication
+  - eraser_tool_artifact
+  - long_latency_retraction
+detector_candidates:
+  - blot_splice_boundary_candidate
+  - duplicated_region_search
+  - local_erasure_artifact_review
+  - high_citation_retraction_metadata_flag
+manual_verification_needed:
+  - original_image_records
+  - uncropped_blot_or_gel_files
+  - figure_assembly_files
+  - author_or_journal_retraction_notice
+false_positive_risks:
+  - legitimate_splicing_with_clear_divider_lines
+  - compression_artifacts_mimicking_boundaries
+  - historical_record_loss_without_intent_evidence
+safe_report_language: >
+  This case supports candidate image-manipulation risk signals and record
+  availability checks; reports should cite the retraction notice and avoid
+  extending it beyond the documented figures.

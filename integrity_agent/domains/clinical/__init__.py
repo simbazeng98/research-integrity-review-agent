@@ -1,0 +1,1 @@
+"""Clinical consistency rule stubs."""

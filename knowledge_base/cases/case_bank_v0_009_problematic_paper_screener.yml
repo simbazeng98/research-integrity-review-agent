@@ -1,0 +1,37 @@
+case_id: case_bank_v0_009_problematic_paper_screener
+priority: P1
+source_type: tool_and_text_signal
+source_url: https://peerreviewcongress.org/abstract/screening-articles-for-tortured-phrases-with-a-regular-expressions-based-detector/
+field: paper_mill_text_signals
+paper_doi: null
+public_status: screening_signal_not_formal_finding
+case_summary: >
+  Problematic Paper Screener work uses detectors such as tortured phrases to
+  flag potentially problematic publications for human evaluation.
+evidence_patterns:
+  - tortured_phrase
+  - odd_synonym_substitution
+  - nonsensical_term
+  - templated_abstract_signal
+  - suspicious_citation_context
+detector_candidates:
+  - tortured_phrase_dictionary_scan
+  - abnormal_paraphrase_candidate
+  - paper_mill_text_signal_score
+  - citation_context_semantic_mismatch_check
+manual_verification_needed:
+  - full_article_context
+  - author_language_background_consideration
+  - domain_expert_review
+  - citation_context_review
+false_positive_risks:
+  - non_native_english_translation_artifact
+  - discipline_specific_jargon
+  - OCR_or_pdf_text_extraction_error
+  - harmless_machine_translation
+safe_report_language: >
+  Tortured phrases are candidate text risk signals for prioritization and must
+  be reviewed manually before being linked to paper-mill concerns.
+supporting_sources:
+  - https://research-signals.com/2024/06/20/problematic-paper-screener/
+  - https://www.science.org/content/article/software-detects-tortured-acronyms-in-research-papers

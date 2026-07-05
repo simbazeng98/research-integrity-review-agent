@@ -1,0 +1,40 @@
+rule_id: pv_pce_consistency
+status: active
+linked_cases: []
+input_required:
+  - table_manifest
+fields_required:
+  - voc_v
+  - jsc_ma_cm2
+  - ff
+  - pce_percent
+risk_signal: reported PCE differs from recomputed Voc × Jsc × FF
+detection_idea:
+  - extract solar cell metrics
+  - verify algebraic self-consistency under standard or specified illumination
+manual_verification:
+  - Retrieve raw J-V curves and re-evaluate parameters
+  - Check spreadsheet formulas for conversion factors or hidden calculations
+  - Verify the active and aperture area definitions
+  - Confirm the light simulator intensity calibration logs
+  - Verify whether PCE corresponds to champion device J-V scan or stabilized MPP tracking
+false_positive_risks:
+  - Rounding differences when values are printed to few significant digits
+  - Stabilized power conversion efficiency reported alongside initial scan-based Voc/Jsc/FF
+  - Misidentified column mapping for fill factor or current density
+  - Correctly reported parameters for non-standard testing conditions
+traceability:
+  - file
+  - sheet
+  - row
+  - column
+safe_report_language: "Candidate PV metric consistency signal: reported PCE differs from recomputed Voc × Jsc × FF under the assumed 100 mW/cm² illumination basis. Verify units, FF convention, area basis, rounding, and whether the value is stabilized or scan-specific."
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_pv_package
+detector_module: integrity_agent.domains.photovoltaics.pce_consistency
+detector_function: run_pce_consistency_check
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+accepted_input_types: ["table_manifest", "csv", "tsv", "xlsx_sheet", "markdown_table"]

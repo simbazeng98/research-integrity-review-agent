@@ -1,0 +1,38 @@
+case_id: ranga_dias_superconductivity_data_reliability
+title: "Ranga Dias superconductivity papers: data reliability and retraction metadata pattern"
+priority: P1
+field: materials_physics_data_integrity
+source_type: retraction_watch_news
+source_title: Superconductor researcher loses fifth paper
+source_url: https://retractionwatch.com/2024/06/21/superconductor-researcher-loses-fifth-paper/
+source_accessed: '2026-07-04'
+public_status: retracted
+summary: >
+  Retraction Watch reported multiple retractions around room-temperature
+  superconductivity work after data concerns. This card focuses on source-data
+  reliability, not a misconduct conclusion.
+evidence_patterns:
+  - multiple_retractions_same_research_line
+  - coauthor_data_concerns
+  - raw_data_availability_question
+  - high_impact_claim_requires_reproducibility
+detector_candidates:
+  - retraction_metadata_check
+  - numeric_fixed_delta_between_columns
+  - measurement_precision_anomaly
+policy_anchors:
+  - cope_retraction_guidelines
+  - crossref_retraction_watch_metadata
+manual_verification_needed:
+  - publisher retraction notices
+  - raw measurement files
+  - independent replication record
+  - institutional investigation outcome if public
+false_positive_risks:
+  - failed replication does not prove manipulation
+  - materials synthesis variability
+  - pressure calibration differences
+  - journal retraction reason may be narrower than media coverage
+safe_report_language: >
+  Report this as a public retraction/data-reliability context and a candidate
+  risk signal requiring source-data and metadata verification.

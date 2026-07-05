@@ -1,0 +1,39 @@
+case_id: case_bank_v0_001_ori_ke_chen_yeh
+priority: P0
+source_type: ori_case
+source_url: https://ori.hhs.gov/content/case-summary-ke-chen-yeh
+field: biomedical_image_integrity
+paper_doi: null
+public_status: official_research_misconduct_finding
+case_summary: >
+  ORI reported findings involving falsified or fabricated western blot images,
+  microscopy images representing different experiments, and calcium cellular
+  imaging in PHS-supported research materials.
+evidence_patterns:
+  - western_blot_band_reuse
+  - lane_duplication
+  - horizontal_flipping
+  - cut_paste_panel_assembly
+  - microscopy_image_represented_as_different_experiments
+  - calcium_imaging_manipulation
+detector_candidates:
+  - intra_figure_blot_similarity_candidate
+  - lane_level_duplicate_search
+  - horizontal_flip_similarity_search
+  - microscopy_panel_reuse_candidate
+  - image_noise_pattern_similarity
+manual_verification_needed:
+  - original_uncropped_blot_images
+  - original_microscopy_files
+  - acquisition_metadata
+  - figure_assembly_history
+  - experiment_log_mapping_each_panel_to_condition
+false_positive_risks:
+  - shared_control_disclosed_in_caption
+  - repeated_loading_control_with_permission
+  - visually_similar_low_texture_blot_lanes
+  - compression_or_pdf_extraction_artifacts
+safe_report_language: >
+  This pattern should be reported as a candidate image-integrity risk signal
+  requiring original images and experiment-condition mapping before any
+  stronger conclusion is considered.

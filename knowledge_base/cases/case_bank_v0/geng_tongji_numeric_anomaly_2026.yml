@@ -1,0 +1,43 @@
+case_id: geng_tongji_numeric_anomaly_2026
+title: "Bilibili-discussed Tongji numeric anomaly allegation: safe numeric-detector seed"
+priority: P1
+field: numeric_table_integrity
+source_type: bilibili_video
+source_title: 用AI复核同济被举报造假论文 结论不同
+source_url: https://www.bilibili.com/video/BV13E7q6qEZq/
+source_accessed: '2026-07-04'
+public_status: allegation
+limitations:
+  - not independently verified
+  - Bilibili video subtitles must remain local intermediate material only; public repo stores only structured summary and timestamps.
+summary: >
+  Public video/search result discusses AI-assisted review of a reported Tongji
+  paper issue. This card is limited to numeric anomaly patterns and must not
+  publish unverified personal allegations or full subtitles.
+evidence_patterns:
+  - terminal_digit_anomaly
+  - fixed_delta_between_columns
+  - measurement_precision_inconsistency
+  - claims_depend_on_video_or_secondary_summary
+detector_candidates:
+  - numeric_terminal_digit_anomaly
+  - numeric_fixed_delta_between_columns
+  - measurement_precision_anomaly
+policy_anchors:
+  - bilibili_public_video_boundary
+  - pubpeer_discussion
+manual_verification_needed:
+  - original paper tables or author-supplied data
+  - journal correction/retraction/investigation status
+  - independent recalculation from raw measurements
+  - local timestamped notes without storing full transcript publicly
+false_positive_risks:
+  - rounded derived quantities
+  - copy-forward templates in supplementary tables
+  - common baseline subtraction
+  - small-n tables with non-random terminal digits
+  - video commentary may omit context
+safe_report_language: >
+  The public video is an allegation-level source only. Report a candidate numeric
+  risk signal requiring verification against original tables, raw data, and
+  institutional or journal status.
