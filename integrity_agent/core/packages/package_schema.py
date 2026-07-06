@@ -66,7 +66,7 @@ class ReviewPackageManifest:
         package_id: str,
         inputs: ReviewPackageInput,
         created_at: float | None = None,
-        version: str = "v0.12",
+        version: str = "v0.2.0",
         metadata_info: dict[str, Any] | None = None,
     ):
         self.package_id = package_id
@@ -92,18 +92,29 @@ class ReviewPackageRunSummary:
         overall_status: str = "success",
         total_runtime_seconds: float = 0.0,
         findings_summary: dict[str, int] | None = None,
+        mrpi: float | None = None,
+        mrpi_notice: str | None = None,
     ):
         self.manifest = manifest
         self.module_statuses = module_statuses
         self.overall_status = overall_status
         self.total_runtime_seconds = total_runtime_seconds
         self.findings_summary = findings_summary or {"low": 0, "medium": 0, "high": 0}
+        self.mrpi = mrpi
+        self.mrpi_notice = mrpi_notice or (
+            "Manual Review Priority Index (MRPI) is an estimated density of candidate anomaly signals "
+            "intended for manual verification prioritization. It does NOT represent a probability of research misconduct."
+        )
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        res = {
             "manifest": self.manifest.to_dict(),
             "module_statuses": [s.to_dict() for s in self.module_statuses],
             "overall_status": self.overall_status,
             "total_runtime_seconds": self.total_runtime_seconds,
             "findings_summary": self.findings_summary,
         }
+        if self.mrpi is not None:
+            res["mrpi"] = self.mrpi
+            res["mrpi_notice"] = self.mrpi_notice
+        return res

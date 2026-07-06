@@ -5,6 +5,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from integrity_agent.core.evidence.schema import (
+    BilingualText,
+    resolve_bilingual_list,
+    resolve_bilingual_string,
+)
+
 
 @dataclass(frozen=True)
 class RuleInputRequirement:
@@ -37,6 +43,39 @@ class DetectorRule:
     minimum_sample_size: int | None = None
     field_requirements: list[str] = field(default_factory=list)
     known_false_positive_contexts: list[str] = field(default_factory=list)
+    title: dict[str, str] = field(default_factory=dict)
+    description: dict[str, str] = field(default_factory=dict)
+    risk_signal_i18n: BilingualText | None = None
+    manual_verification_i18n: list[BilingualText] = field(default_factory=list)
+    false_positive_risks_i18n: list[BilingualText] = field(default_factory=list)
+    safe_report_language_i18n: BilingualText | None = None
+
+    def title_for(self, locale: str = "en") -> str:
+        return resolve_bilingual_string(self.title or self.rule_id, locale)
+
+    def description_for(self, locale: str = "en") -> str:
+        return resolve_bilingual_string(self.description or "", locale)
+
+    def risk_signal_for(self, locale: str = "en") -> str:
+        return resolve_bilingual_string(self.risk_signal_i18n or self.risk_signal, locale)
+
+    def manual_verification_for(self, locale: str = "en") -> list[str]:
+        return resolve_bilingual_list(
+            self.manual_verification_i18n or self.manual_verification,
+            locale,
+        )
+
+    def false_positive_risks_for(self, locale: str = "en") -> list[str]:
+        return resolve_bilingual_list(
+            self.false_positive_risks_i18n or self.false_positive_risks,
+            locale,
+        )
+
+    def safe_report_language_for(self, locale: str = "en") -> str:
+        return resolve_bilingual_string(
+            self.safe_report_language_i18n or self.safe_report_language,
+            locale,
+        )
 
 
 @dataclass(frozen=True)

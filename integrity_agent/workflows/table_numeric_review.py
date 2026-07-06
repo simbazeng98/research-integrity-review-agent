@@ -163,6 +163,34 @@ def run_table_numeric_review(
 
         options = {"manifest_item": item, "table_id": item.table_id}
 
+        # Run Domain Routing
+        from integrity_agent.domains import route_table_columns
+        matches = route_table_columns(item.columns)
+        if matches and matches[0].score > 0:
+            best_match = matches[0]
+            finding = TableEvidenceFinding(
+                finding_id=f"TBL-FIND-{finding_idx:03d}",
+                rule_id=f"domain_routing_{best_match.domain_id}",
+                risk_level="low",
+                table_id=item.table_id,
+                source_file=item.source_file,
+                column_names=list(best_match.matched_fields.values()),
+                row_range="all",
+                safe_report_language=f"Table routed to domain '{best_match.domain_id}' (status: routing_only / not_implemented). Matched columns: {list(best_match.matched_fields.keys())}.",
+                alternative_explanations=["Benign metadata match with domain schema templates without data issues."],
+                false_positive_risks=["Columns match domain patterns by coincidence."],
+                manual_verification=[f"Verify if the table metrics belong to domain '{best_match.domain_id}' and require domain-specific analysis."],
+                metadata={
+                    "domain_id": best_match.domain_id,
+                    "score": best_match.score,
+                    "matched_fields": best_match.matched_fields,
+                    "status": "routing_only",
+                    "not_implemented": True
+                }
+            )
+            findings.append(finding)
+            finding_idx += 1
+
         # Run Fixed Delta Detector
         if rule_fd:
             fd_results = detect_fixed_delta(file_path, rule_fd, options)

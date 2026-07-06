@@ -233,13 +233,111 @@ def build_parser() -> argparse.ArgumentParser:
     rev_pkg_parser.add_argument("--skip-raw-pv", action="store_true", help="Skip raw PV recalculation module.")
     rev_pkg_parser.add_argument("--allow-network", action="store_true", help="Allow network requests for metadata checks.")
     rev_pkg_parser.add_argument("-o", "--output-dir", type=Path, default=Path("outputs/review_package"), help="Directory to write output files.")
+    rev_pkg_parser.add_argument("--lang", choices=["en", "zh"], default="en", help="Dashboard language.")
+    rev_pkg_parser.add_argument("--view", action="store_true", help="Open the generated local dashboard in a browser.")
 
     # report-review-package-html
     rev_html_parser = subparsers.add_parser("report-review-package-html", help="Generate a static HTML review dashboard from unified findings.")
     rev_html_parser.add_argument("unified_index", type=Path, help="Path to unified_evidence_index.jsonl.")
     rev_html_parser.add_argument("-o", "--output", type=Path, default=Path("outputs/review_package/review_package_dashboard.html"), help="Path to write dashboard HTML.")
+    rev_html_parser.add_argument("--lang", choices=["en", "zh"], default="en", help="Dashboard language.")
+    rev_html_parser.add_argument("--view", action="store_true", help="Open the generated local dashboard in a browser.")
+
+    view_parser = subparsers.add_parser("view", help="Serve an existing local report folder and open it in a browser.")
+    view_parser.add_argument("output_dir", type=Path, help="Folder containing a generated HTML report.")
+    view_parser.add_argument("--report-name", type=str, help="Specific HTML report file to open.")
+    view_parser.add_argument("--port", type=int, default=8080, help="Preferred local port.")
+    view_parser.add_argument("--lang", choices=["en", "zh"], default="en", help="Viewer message language.")
+
+    wizard_parser = subparsers.add_parser("wizard", help="Guided bilingual setup for reviewing a local paper package.")
+    wizard_parser.add_argument("--lang", choices=["en", "zh"], default="en", help="Wizard language.")
+    wizard_parser.add_argument("--package-dir", type=Path, help="Directory containing paper materials.")
+    wizard_parser.add_argument("-o", "--output-dir", type=Path, default=Path("outputs/review_package"), help="Directory to write output files.")
+    wizard_parser.add_argument("--dry-run", action="store_true", help="Preview the wizard plan without running detectors.")
+    wizard_parser.add_argument("--view", action="store_true", help="Open the generated local dashboard in a browser.")
 
     return parser
+
+
+def _run_wizard(args: argparse.Namespace) -> int:
+    from integrity_agent.core.i18n import I18nManager
+
+    manager = I18nManager()
+    manager.set_locale(args.lang)
+    print(manager.translate("wizard.title"))
+    print(manager.translate("wizard.no_upload"))
+
+    package_dir = args.package_dir
+    if package_dir is None:
+        raw = input(f"{manager.translate('wizard.package_dir')}: ").strip()
+        package_dir = Path(raw)
+
+    print(f"{manager.translate('wizard.will_analyze')}: {display_path(package_dir)}")
+    print(f"{manager.translate('wizard.output_dir')}: {display_path(args.output_dir)}")
+
+    metadata_exists = (package_dir / "metadata").is_dir()
+    images_exists = (package_dir / "images").is_dir()
+    tables_exists = (package_dir / "tables").is_dir()
+    pv_exists = (package_dir / "pv").is_dir()
+    raw_pv_exists = (package_dir / "raw_pv").is_dir()
+
+    if args.dry_run:
+        print(f"\n{manager.translate('wizard.detected_subdirs')}:")
+        status_metadata = manager.translate('wizard.detected') if metadata_exists else manager.translate('wizard.not_detected')
+        status_images = manager.translate('wizard.detected') if images_exists else manager.translate('wizard.not_detected')
+        status_tables = manager.translate('wizard.detected') if tables_exists else manager.translate('wizard.not_detected')
+        status_pv = manager.translate('wizard.detected') if pv_exists else manager.translate('wizard.not_detected')
+        status_raw_pv = manager.translate('wizard.detected') if raw_pv_exists else manager.translate('wizard.not_detected')
+
+        print(f"  - metadata: {status_metadata}")
+        print(f"  - images: {status_images}")
+        print(f"  - tables: {status_tables}")
+        print(f"  - pv: {status_pv}")
+        print(f"  - raw_pv: {status_raw_pv}")
+
+        print(f"\n{manager.translate('wizard.module_plan')}:")
+        has_doi = (package_dir / "metadata" / "doi.txt").exists()
+        run_reader = manager.translate('wizard.will_run') if (metadata_exists and has_doi) else manager.translate('wizard.will_skip')
+        run_images = manager.translate('wizard.will_run') if images_exists else manager.translate('wizard.will_skip')
+        run_tables = manager.translate('wizard.will_run') if tables_exists else manager.translate('wizard.will_skip')
+        run_pv = manager.translate('wizard.will_run') if pv_exists else manager.translate('wizard.will_skip')
+        run_raw_pv = manager.translate('wizard.will_run') if raw_pv_exists else manager.translate('wizard.will_skip')
+
+        print(f"  - reader-intake: {run_reader}")
+        print(f"  - image-intake: {run_images}")
+        print(f"  - image-similarity: {run_images}")
+        print(f"  - table-intake: {run_tables}")
+        print(f"  - table-numeric-review: {run_tables}")
+        print(f"  - pv-domain-review: {run_pv}")
+        print(f"  - raw-pv-reconcile: {run_raw_pv}")
+
+        print(f"\n{manager.translate('wizard.local_info')}")
+        print(manager.translate("wizard.dry_run"))
+        return 0
+
+    from integrity_agent.workflows.review_package import run_review_package
+
+    run_review_package(
+        package_dir=str(package_dir),
+        output_dir=str(args.output_dir),
+        locale=args.lang,
+    )
+    dashboard = args.output_dir / "review_package_dashboard.html"
+    print(f"{manager.translate('wizard.next_step')}: integrity-agent view {display_path(args.output_dir)}")
+
+    if args.view:
+        from integrity_agent.workflows.report_viewer import start_server_and_open_browser
+
+        viewer = start_server_and_open_browser(
+            args.output_dir,
+            report_name="review_package_dashboard.html",
+            locale=args.lang,
+        )
+        try:
+            input("Press Enter to stop the local report server...")
+        finally:
+            viewer.shutdown()
+    return 0
 
 
 
@@ -478,17 +576,58 @@ def main(argv: Sequence[str] | None = None) -> int:
             skip_pv=args.skip_pv,
             skip_raw_pv=args.skip_raw_pv,
             allow_network=args.allow_network,
-            output_dir=str(args.output_dir)
+            output_dir=str(args.output_dir),
+            locale=args.lang,
         )
+        if args.view:
+            from integrity_agent.workflows.report_viewer import start_server_and_open_browser
+            viewer = start_server_and_open_browser(
+                args.output_dir,
+                report_name="review_package_dashboard.html",
+                locale=args.lang,
+            )
+            try:
+                input("Press Enter to stop the local report server...")
+            finally:
+                viewer.shutdown()
         return 0
 
     if args.command == "report-review-package-html":
         from integrity_agent.workflows.report_review_package_html import run_report_review_package_html
         run_report_review_package_html(
             unified_index=str(args.unified_index),
-            output_path=str(args.output)
+            output_path=str(args.output),
+            locale=args.lang,
         )
+        if args.view:
+            from integrity_agent.workflows.report_viewer import start_server_and_open_browser
+            viewer = start_server_and_open_browser(
+                args.output.parent,
+                report_name=args.output.name,
+                locale=args.lang,
+            )
+            try:
+                input("Press Enter to stop the local report server...")
+            finally:
+                viewer.shutdown()
         return 0
+
+    if args.command == "view":
+        from integrity_agent.workflows.report_viewer import start_server_and_open_browser
+        viewer = start_server_and_open_browser(
+            args.output_dir,
+            port=args.port,
+            report_name=args.report_name,
+            locale=args.lang,
+        )
+        try:
+            input("Press Enter to stop the local report server...")
+        finally:
+            viewer.shutdown()
+        return 0
+
+    if args.command == "wizard":
+        return _run_wizard(args)
 
     parser.error(f"Unknown command: {args.command}")
     return 2

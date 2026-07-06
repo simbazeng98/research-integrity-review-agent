@@ -52,13 +52,29 @@ No cloud service is used by default, and user papers are not uploaded.
 ## Quick Start
 
 ```bash
+# Install the package locally
 python -m pip install -e .
+
+# Run the test suite
 python -m pytest -q
+
+# Convert a case note draft into a unified ledger entry
 python -m integrity_agent case-distill examples/toy_case.md
+
+# Run the paper-level evidence review package scanner
 python -m integrity_agent review-package examples/toy_review_package
+
+# Or run it with bilingual/Chinese output localization
+python -m integrity_agent review-package examples/toy_review_package --lang zh
+
+# Serve and open the generated local HTML review dashboard in a browser
+python -m integrity_agent view outputs/review_package
+
+# Start the bilingual interactive onboarding wizard
+python -m integrity_agent wizard --lang zh
 ```
 
-The second command writes `outputs/evidence_ledger.jsonl` unless `--output` is
+The case-distill command writes `outputs/evidence_ledger.jsonl` unless `--output` is
 provided. The review-package command writes to `outputs/review_package/` unless
 `--output-dir` is provided.
 

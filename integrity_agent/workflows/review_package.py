@@ -62,6 +62,7 @@ def run_review_package(
     skip_raw_pv: bool = False,
     allow_network: bool = False,
     output_dir: str = "outputs/review_package",
+    locale: str = "en",
 ) -> ReviewPackageRunSummary:
     start_time = time.time()
     
@@ -486,7 +487,8 @@ def run_review_package(
     try:
         run_report_review_package_html(
             unified_index=str(unified_index_path),
-            output_path=str(dashboard_html_path)
+            output_path=str(dashboard_html_path),
+            locale=locale,
         )
         module_statuses.append(EvidenceModuleStatus(
             module_name="report-review-package-html",
@@ -495,6 +497,12 @@ def run_review_package(
             output_paths=[str(dashboard_html_path)],
             runtime_seconds=time.time() - dash_start
         ))
+        if summary_md_path.exists():
+            with open(summary_md_path, "a", encoding="utf-8") as f_summary:
+                f_summary.write(
+                    "\n## Interactive Review Dashboard\n"
+                    f"- A bilingual interactive web dashboard has been generated at: `{dashboard_html_path.name}`\n"
+                )
     except Exception as e:
         module_statuses.append(EvidenceModuleStatus(
             module_name="report-review-package-html",
@@ -512,12 +520,16 @@ def run_review_package(
     elif any(s.status == "warning" for s in module_statuses):
         overall_status = "warning"
 
+    from integrity_agent.core.risk_model import calculate_mrpi
+    calculated_mrpi = calculate_mrpi(unified_findings)
+
     run_summary = ReviewPackageRunSummary(
         manifest=manifest,
         module_statuses=module_statuses,
         overall_status=overall_status,
         total_runtime_seconds=total_runtime,
-        findings_summary=findings_summary
+        findings_summary=findings_summary,
+        mrpi=calculated_mrpi,
     )
 
     # Write review_package_manifest.json
@@ -533,6 +545,8 @@ def run_review_package(
 
     print(f"Wrote unified package manifest: {display_path(manifest_json_path)}")
     print(f"Wrote module statuses: {display_path(module_status_path)}")
+    if dashboard_html_path.exists():
+        print(f"Wrote interactive dashboard: {display_path(dashboard_html_path)}")
     print(f"Unified evidence review completed in {total_runtime:.2f}s with status {overall_status}.")
     return run_summary
 

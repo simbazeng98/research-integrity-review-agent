@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "research-integrity-review-agent"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local-first evidence ledger tooling for research integrity review."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -24,6 +24,12 @@ integrity-agent = "integrity_agent.__main__:main"
 
 [tool.setuptools.packages.find]
 include = ["integrity_agent*"]
+
+[tool.setuptools.package-data]
+integrity_agent = [
+  "core/i18n/locales/*.yml",
+  "core/reporting/templates/*.html",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

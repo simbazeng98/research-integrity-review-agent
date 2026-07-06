@@ -5,6 +5,11 @@ from typing import Any
 
 import yaml
 
+from integrity_agent.core.evidence.schema import (
+    BilingualText,
+    resolve_bilingual_list,
+    resolve_bilingual_string,
+)
 from integrity_agent.core.rules.schema import DetectorRule, RuleInputRequirement
 
 
@@ -31,10 +36,32 @@ REQUIRED_RULE_FIELDS = {
 }
 
 
-def _as_list(value: Any, field_name: str, path: Path) -> list[str]:
+def _as_bilingual_text(value: Any, field_name: str, path: Path) -> BilingualText:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        normalized = {str(k): str(v) for k, v in value.items() if v is not None}
+        if normalized:
+            return normalized
+    raise RuleRegistryError(f"{path.name}: {field_name} must be a string or locale mapping")
+
+
+def _as_bilingual_list(value: Any, field_name: str, path: Path) -> list[BilingualText]:
     if not isinstance(value, list) or not value:
         raise RuleRegistryError(f"{path.name}: {field_name} must be a non-empty list")
-    return [str(item) for item in value]
+    return [_as_bilingual_text(item, field_name, path) for item in value]
+
+
+def _as_list(value: Any, field_name: str, path: Path) -> list[str]:
+    return resolve_bilingual_list(_as_bilingual_list(value, field_name, path), "en")
+
+
+def _as_optional_locale_map(value: Any) -> dict[str, str]:
+    if isinstance(value, dict):
+        return {str(k): str(v) for k, v in value.items() if v is not None}
+    if isinstance(value, str) and value.strip():
+        return {"en": value.strip(), "zh": value.strip()}
+    return {}
 
 
 def _load_rule(path: Path) -> DetectorRule:
@@ -50,9 +77,18 @@ def _load_rule(path: Path) -> DetectorRule:
     if not rule_id:
         raise RuleRegistryError(f"{path.name}: rule_id must not be empty")
 
-    safe_language = str(data["safe_report_language"]).strip()
+    safe_language_i18n = _as_bilingual_text(data["safe_report_language"], "safe_report_language", path)
+    safe_language = resolve_bilingual_string(safe_language_i18n, "en").strip()
     if not safe_language:
         raise RuleRegistryError(f"{path.name}: safe_report_language must not be empty")
+
+    risk_signal_i18n = _as_bilingual_text(data["risk_signal"], "risk_signal", path)
+    manual_verification_i18n = _as_bilingual_list(
+        data["manual_verification"], "manual_verification", path
+    )
+    false_positive_risks_i18n = _as_bilingual_list(
+        data["false_positive_risks"], "false_positive_risks", path
+    )
 
     return DetectorRule(
         rule_id=rule_id,
@@ -62,14 +98,10 @@ def _load_rule(path: Path) -> DetectorRule:
             input_required=_as_list(data["input_required"], "input_required", path),
             fields_required=_as_list(data["fields_required"], "fields_required", path),
         ),
-        risk_signal=str(data["risk_signal"]),
+        risk_signal=resolve_bilingual_string(risk_signal_i18n, "en"),
         detection_idea=[str(item) for item in data.get("detection_idea", [])],
-        manual_verification=_as_list(
-            data["manual_verification"], "manual_verification", path
-        ),
-        false_positive_risks=_as_list(
-            data["false_positive_risks"], "false_positive_risks", path
-        ),
+        manual_verification=resolve_bilingual_list(manual_verification_i18n, "en"),
+        false_positive_risks=resolve_bilingual_list(false_positive_risks_i18n, "en"),
         safe_report_language=safe_language,
         runtime_status=str(data["runtime_status"]),
         execution_mode=str(data["execution_mode"]),
@@ -85,6 +117,12 @@ def _load_rule(path: Path) -> DetectorRule:
         minimum_sample_size=int(data["minimum_sample_size"]) if data.get("minimum_sample_size") is not None else None,
         field_requirements=[str(item) for item in data.get("field_requirements", [])],
         known_false_positive_contexts=[str(item) for item in data.get("known_false_positive_contexts", [])],
+        title=_as_optional_locale_map(data.get("title")) or {"en": rule_id, "zh": rule_id},
+        description=_as_optional_locale_map(data.get("description")),
+        risk_signal_i18n=risk_signal_i18n,
+        manual_verification_i18n=manual_verification_i18n,
+        false_positive_risks_i18n=false_positive_risks_i18n,
+        safe_report_language_i18n=safe_language_i18n,
     )
 
 

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" data-default-locale="__DEFAULT_LOCALE__">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unified Research Integrity Review Dashboard</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #5e6a7d;
+      --line: #d9deea;
+      --blue: #2563eb;
+      --amber: #b45309;
+      --red: #b91c1c;
+      --green: #047857;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.45;
+    }
+    main { max-width: 1180px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 18px;
+    }
+    h1 { margin: 0 0 6px; font-size: clamp(1.6rem, 2.5vw, 2.4rem); letter-spacing: 0; }
+    .subtitle { color: var(--muted); margin: 0; max-width: 760px; }
+    .language-switch {
+      display: inline-flex;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--panel);
+      flex-shrink: 0;
+    }
+    .language-switch button {
+      border: 0;
+      padding: 8px 12px;
+      background: transparent;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .language-switch button.active { background: var(--blue); color: #fff; }
+    .notice {
+      border: 1px solid #f1c27d;
+      background: #fff7ed;
+      color: #7c2d12;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 18px 0;
+      font-weight: 700;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .stat-label { color: var(--muted); font-size: 0.85rem; margin-bottom: 6px; }
+    .stat-value { font-size: 2rem; font-weight: 800; }
+    .mrpi-bar { height: 12px; background: #e8edf6; border-radius: 99px; overflow: hidden; margin-top: 8px; }
+    .mrpi-fill { height: 100%; width: __MRPI_WIDTH__%; background: var(--blue); }
+    .findings { display: grid; gap: 12px; margin-top: 18px; }
+    article {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .finding-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    h2 { margin: 0; font-size: 1.1rem; }
+    .meta { color: var(--muted); font-size: 0.86rem; margin-top: 2px; }
+    .badge { border-radius: 999px; padding: 4px 9px; color: #fff; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+    .risk-high { background: var(--red); }
+    .risk-medium { background: var(--amber); }
+    .risk-low { background: var(--green); }
+    .summary { border-left: 4px solid var(--blue); background: #eff6ff; padding: 10px 12px; border-radius: 0 8px 8px 0; margin-bottom: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+    section.box { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: #fbfcff; }
+    h3 { margin: 0 0 8px; font-size: 0.9rem; color: var(--muted); }
+    ul { margin: 0; padding-left: 18px; }
+    li { margin: 3px 0; }
+    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; word-break: break-word; }
+    [data-lang] { display: none; }
+    body.locale-en [data-lang="en"], body.locale-zh [data-lang="zh"] { display: inline; }
+    @media (max-width: 700px) {
+      body { padding: 14px; }
+      header { display: block; }
+      .language-switch { margin-top: 12px; }
+      .finding-head { display: block; }
+      .badge { display: inline-block; margin-top: 8px; }
+    }
+  </style>
+</head>
+<body class="locale-__DEFAULT_LOCALE__">
+  <main>
+    <header>
+      <div>
+        <h1><span data-lang="en">Unified Research Integrity Review Dashboard</span><span data-lang="zh">研究诚信证据复核看板</span></h1>
+        <p class="subtitle"><span data-lang="en">Local evidence-ledger dashboard for candidate risk signals and manual verification requests.</span><span data-lang="zh">本地证据台账看板，用于汇总候选风险信号和人工复核请求。</span></p>
+      </div>
+      <div class="language-switch" aria-label="Language">
+        <button type="button" data-set-locale="en">EN</button>
+        <button type="button" data-set-locale="zh">中文</button>
+      </div>
+    </header>
+    <div class="notice"><span data-lang="en">This dashboard aggregates evidence signals only and does not determine research misconduct.</span><span data-lang="zh">此看板只汇总证据风险信号，不判定科研不端。</span></div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label"><span data-lang="en">Manual Review Priority Index</span><span data-lang="zh">人工复核优先指数</span></div>
+        <div class="stat-value">__MRPI__%</div>
+        <div class="mrpi-bar"><div class="mrpi-fill"></div></div>
+        <div style="font-size: 0.72rem; color: var(--muted); margin-top: 6px; line-height: 1.2;">
+          <span data-lang="en">* Estimated density of candidate signals for manual review, NOT misconduct probability.</span>
+          <span data-lang="zh">* 人工审核候选信号的估算密度，并非科研不端的概率。</span>
+        </div>
+      </div>
+      <div class="stat"><div class="stat-label"><span data-lang="en">Total Findings</span><span data-lang="zh">风险信号总数</span></div><div class="stat-value">__TOTAL_FINDINGS__</div></div>
+      <div class="stat"><div class="stat-label"><span data-lang="en">High / Medium / Low</span><span data-lang="zh">高 / 中 / 低</span></div><div class="stat-value">__RISK_COUNTS__</div></div>
+    </div>
+    <div class="findings">
+__FINDINGS_HTML__
+    </div>
+  </main>
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var body = document.body;
+      var locale = root.getAttribute("data-default-locale") || "en";
+      function setLocale(next) {
+        locale = next === "zh" ? "zh" : "en";
+        body.classList.remove("locale-en", "locale-zh");
+        body.classList.add("locale-" + locale);
+        Array.prototype.forEach.call(document.querySelectorAll("[data-set-locale]"), function (button) {
+          button.classList.toggle("active", button.getAttribute("data-set-locale") === locale);
+        });
+      }
+      Array.prototype.forEach.call(document.querySelectorAll("[data-set-locale]"), function (button) {
+        button.addEventListener("click", function () { setLocale(button.getAttribute("data-set-locale")); });
+      });
+      setLocale(locale);
+    })();
+  </script>
+</body>
+</html>

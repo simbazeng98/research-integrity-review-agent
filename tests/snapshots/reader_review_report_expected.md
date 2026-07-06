@@ -52,3 +52,4 @@
 
 ## Do-not-overclaim notice
 - This report surfaces candidate risk signals for human review. It does not determine misconduct, intent, or responsibility.
+- The Manual Review Priority Index (MRPI) is an estimated density index of candidate anomalies to help prioritize manual verification. It is NOT a misconduct probability. High priority signals must always be evaluated alongside alternative benign explanations and potential limitations of the detectors.

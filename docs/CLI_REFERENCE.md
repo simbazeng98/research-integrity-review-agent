@@ -27,11 +27,21 @@ Generated artifacts default to `outputs/...`. Writing curated artifacts into `kn
 | `report-raw-pv-html <raw_pv_findings.jsonl>` | Render raw PV dashboard | `outputs/raw_pv/raw_pv_dashboard.html` | Offline |
 | `review-package examples/toy_review_package` | Run unified evidence package runner | `outputs/review_package/` | Offline; `--allow-network` only for metadata checks |
 | `report-review-package-html <unified_evidence_index.jsonl>` | Render unified review dashboard | `outputs/review_package/review_package_dashboard.html` | Offline |
+| `wizard` | Guided bilingual onboarding wizard for reviewing a package | `outputs/review_package/` | Offline |
+| `view <output_dir>` | Local-only web server to serve and view HTML dashboards | Web browser auto-open | Offline |
 | `geng-video-index <seed_urls>` | Build safe Geng video index | `outputs/geng_video_distillation/geng_video_index.yml` | Offline fixture by default; private cache writes require explicit `--write-private-cache` and non-fixture metadata |
 | `geng-video-distill <index.yml>` | Distill indexed videos into public-safe case cards | `outputs/geng_video_distillation/cases/` | Offline; reads only configured local private root |
 | `geng-video-verify <case_dir>` | Alias for Geng case-card safety validation | stdout status | Offline |
 | `geng-video-safety-check <case_dir>` | Validate Geng case-card safety boundaries | stdout status | Offline |
 | `geng-video-rule-candidates <case_dir>` | Generate detector rule candidate drafts | `outputs/geng_video_distillation/rule_candidates/` | Offline |
+
+## Bilingual Localization and Local Dashboard Options
+
+Version 0.2.0 introduces bilingual localization (`en` and `zh`) and a portable local web viewer:
+
+- `--lang <en|zh>`: Set the locale for CLI wizard prompts, CLI outputs, and generated dashboards/reports.
+- `--view`: Optional flag for `review-package`, `report-review-package-html`, and `wizard` commands that automatically spins up a local zero-dependency Python HTTP server and launches the user's default browser to view the interactive dashboard.
+
 
 ## Bilibili / Geng Video Network Boundary
 

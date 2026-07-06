@@ -38,12 +38,12 @@ def test_review_package_schema_to_dict():
         package_id="toy_review_package",
         inputs=pkg_in,
         created_at=1700000000.0,
-        version="v0.12",
+        version="v0.2.0",
         metadata_info={"doi": "10.1002/adma.202000000"}
     )
     d_manifest = manifest.to_dict()
     assert d_manifest["package_id"] == "toy_review_package"
-    assert d_manifest["version"] == "v0.12"
+    assert d_manifest["version"] == "v0.2.0"
     assert d_manifest["metadata_info"]["doi"] == "10.1002/adma.202000000"
 
     summary = ReviewPackageRunSummary(
