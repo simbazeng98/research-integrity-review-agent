@@ -329,9 +329,9 @@ Serves and displays the generated reports of a previous run.
   * **Status**: PASS
   * **Evidence**: Verified by `test_v020_architecture.py` (`test_wizard_dry_run_supports_zh`) and manual dry-runs. Interactive outputs correctly load Chinese translations.
 - [~] Confirm Web Dashboard functions correctly offline (disconnect WiFi, open report).
-  * **Status**: PARTIAL (Static dependency check PASS; manual offline browser smoke NOT RUN)
-  * **Automated evidence**: Verified by static analysis that `dashboard.html` template and static renderers contain no external `http://` or `https://` CSS/JS/CDN references. It runs as a zero-dependency local static page.
-  * **Manual evidence not performed**: No disconnected-browser smoke test was run in this session.
+  * **Status**: PARTIAL (Browser visual smoke PASS; physical disconnected-network smoke NOT RUN)
+  * **Automated & Visual evidence**: Verified via static code analysis that `dashboard.html` contains no external HTTP/HTTPS CDN references (zero runtime network dependency). Verified by local file load that HTML structure, embedded CSS styles, MRPI widgets, finding cards, and the locale-toggling JavaScript initialize and toggle correctly in the browser.
+  * **Physical disconnected evidence not performed**: No hardware-level WiFi/network disconnection test was executed.
 - [x] Run benchmark validation: `pytest` must continue to pass all toy suites without regression.
   * **Status**: PASS
   * **Evidence**: Passed all 208 pytest test cases successfully without regression.
@@ -341,7 +341,7 @@ Serves and displays the generated reports of a previous run.
 
 ### Known Verification Gaps
 
-- **Offline Browser Visual Smoke Test**: The only pending verification check is the manual visual inspection of the web dashboard in an offline environment (browser opened on a disconnected machine). This is not a release blocker because:
-  1. Automated static checks confirm the dashboard template uses zero external network assets (no HTTP/HTTPS CDN references).
-  2. Pytest suites thoroughly cover dashboard generation and the local viewer CLI server startup logic.
-  3. To fully verify this in the future, a human reviewer should disconnect their WiFi, run `integrity-agent view outputs/review_package` (or open the generated `outputs/review_package/review_package_dashboard.html`), and visually verify that all tabs, styles, and interactions load correctly.
+- **Offline Browser Visual Smoke Test**: While local file checks and static dependency verification confirm that the web dashboard runs locally without any HTTP/HTTPS network calls, a true physical network disconnection (disabling physical network adapters) smoke test was not performed in this session. This is not a release blocker because:
+  1. Automated static dependency checks confirm zero remote CDN or CSS/JS calls.
+  2. Pytest suites thoroughly cover the HTML dashboard generation and local viewer CLI server startup logic.
+  3. Interactive elements (language switcher and tab states) run on standard local vanilla JavaScript.
