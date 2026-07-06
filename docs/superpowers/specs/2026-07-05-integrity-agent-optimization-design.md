@@ -322,8 +322,26 @@ Serves and displays the generated reports of a previous run.
 
 ## 9. Verification & Testing Checklist
 
-- [ ] Check if `scan_for_forbidden_phrases` passes successfully on new code.
-- [ ] Verify that `--lang zh` correctly translates the Wizard interactive prompts and runtime outputs.
-- [ ] Confirm Web Dashboard functions correctly offline (disconnect WiFi, open report).
-- [ ] Run benchmark validation: `pytest` must continue to pass all toy suites without regression.
-- [ ] Confirm no external dependencies (like node_modules) are created during installation.
+- [x] Check if `scan_for_forbidden_phrases` passes successfully on new code.
+  * **Status**: PASS
+  * **Evidence**: Verified by `test_p2_release_readiness.py` and run manually on the entire codebase. Zero hits detected.
+- [x] Verify that `--lang zh` correctly translates the Wizard interactive prompts and runtime outputs.
+  * **Status**: PASS
+  * **Evidence**: Verified by `test_v020_architecture.py` (`test_wizard_dry_run_supports_zh`) and manual dry-runs. Interactive outputs correctly load Chinese translations.
+- [~] Confirm Web Dashboard functions correctly offline (disconnect WiFi, open report).
+  * **Status**: PARTIAL (Static dependency check PASS; manual offline browser smoke NOT RUN)
+  * **Automated evidence**: Verified by static analysis that `dashboard.html` template and static renderers contain no external `http://` or `https://` CSS/JS/CDN references. It runs as a zero-dependency local static page.
+  * **Manual evidence not performed**: No disconnected-browser smoke test was run in this session.
+- [x] Run benchmark validation: `pytest` must continue to pass all toy suites without regression.
+  * **Status**: PASS
+  * **Evidence**: Passed all 208 pytest test cases successfully without regression.
+- [x] Confirm no external dependencies (like node_modules) are created during installation.
+  * **Status**: PASS
+  * **Evidence**: Checked that no `package.json` or `node_modules` exists. The project relies strictly on Python standard packaging.
+
+### Known Verification Gaps
+
+- **Offline Browser Visual Smoke Test**: The only pending verification check is the manual visual inspection of the web dashboard in an offline environment (browser opened on a disconnected machine). This is not a release blocker because:
+  1. Automated static checks confirm the dashboard template uses zero external network assets (no HTTP/HTTPS CDN references).
+  2. Pytest suites thoroughly cover dashboard generation and the local viewer CLI server startup logic.
+  3. To fully verify this in the future, a human reviewer should disconnect their WiFi, run `integrity-agent view outputs/review_package` (or open the generated `outputs/review_package/review_package_dashboard.html`), and visually verify that all tabs, styles, and interactions load correctly.
