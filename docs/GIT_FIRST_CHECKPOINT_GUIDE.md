@@ -48,11 +48,11 @@ If a private/generated file is staged, unstage it before continuing:
 git restore --staged <path>
 ```
 
-Commit only after review:
+Commit only after review (e.g., for v0.2.0, or historically v0.12-boundary-hardened):
 
 ```bash
-git commit -m "v0.12 unified evidence runner with boundary fixes"
-git tag v0.12-boundary-hardened
+git commit -m "v0.2.0 unified evidence runner with boundary fixes and bilingual wizard"
+git tag v0.2.0
 ```
 
 ## Manual Review Before `git commit`

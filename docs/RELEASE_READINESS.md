@@ -2,7 +2,7 @@
 
 ## Status
 
-- Version target: v0.12 Unified Evidence Package Runner.
+- Version target: v0.2.0 (incorporating v0.12 Unified Evidence Package Runner & v0.2.0 bilingual updates).
 - Boundary hardening: P0/P1 audit fix pass completed before this P2 cleanup.
 - P2 scope: dead-reference cleanup, CLI/docs consistency, privacy/path regressions, detector-rule registry checks, warning reduction, and release documentation.
 - Current release posture: local-first research-integrity evidence review toolkit, not an automatic misconduct adjudicator.

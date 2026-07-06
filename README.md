@@ -98,7 +98,7 @@ benchmarks, not claims about real-world misconduct detection accuracy.
 ## CLI and Release Docs
 
 - `docs/CLI_REFERENCE.md` lists supported CLI commands, default outputs, and network boundaries.
-- `docs/RELEASE_READINESS.md` gives the v0.12 + boundary-fix release checklist.
+- `docs/RELEASE_READINESS.md` gives the release readiness checklist (originally created for v0.12 boundary fixes, updated for v0.2.0).
 - `docs/GIT_FIRST_CHECKPOINT_GUIDE.md` explains the first git checkpoint procedure. This directory is intentionally not initialized as git by the toolchain.
 
 Default workflows are offline and local-first. `--allow-network` is available only for commands that need explicit metadata lookups. Generated artifacts default to `outputs/...`; writing curated artifacts into `knowledge_base/...` requires explicit paths or a curated script.

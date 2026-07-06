@@ -73,4 +73,4 @@ A raw measurements package folder containing:
 All findings use safe, non-verdict language like "Candidate raw/source-data reconciliation signal" or "formula audit signal".
 
 ## 15. Future Work
-- v0.12 candidate features include raw spectral curve loading for XRD/XPS/PL/Raman and peak position extraction.
+- Future candidate features (originally planned for the v0.12 baseline or subsequent releases) include raw spectral curve loading for XRD/XPS/PL/Raman and peak position extraction.

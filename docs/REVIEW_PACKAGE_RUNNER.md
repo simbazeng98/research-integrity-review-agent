@@ -1,4 +1,4 @@
-# Unified Evidence Review Package Runner (v0.12)
+# Unified Evidence Review Package Runner (introduced in v0.12, updated in v0.2.0)
 
 This domain-agnostic unified runner enables evidence review at a paper or package-level, grouping all standard sub-workflows into a single step-by-step pipeline.
 
