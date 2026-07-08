@@ -46,10 +46,15 @@ def test_review_package_safety_language():
                     f"Risk level ceiling exceeded in finding: {finding}"
                 
                 # Check safe report language
-                safe_lang = finding.get("safe_report_language", "").lower()
+                safe_lang = finding.get("safe_report_language", "")
+                if isinstance(safe_lang, dict):
+                    safe_lang_str = " ".join(str(v) for v in safe_lang.values())
+                else:
+                    safe_lang_str = str(safe_lang)
+                safe_lang_str = safe_lang_str.lower()
                 for phrase in FORBIDDEN_PHRASES:
-                    assert phrase not in safe_lang, \
-                        f"Forbidden overclaiming phrase '{phrase}' found in finding safe language: {safe_lang}"
+                    assert phrase not in safe_lang_str, \
+                        f"Forbidden overclaiming phrase '{phrase}' found in finding safe language: {safe_lang_str}"
 
     # 2. Check summary report
     summary_path = pkg_test_dir / "review_package_summary.md"

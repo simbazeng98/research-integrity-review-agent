@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from integrity_agent.workflows.run_rules import iter_rule_findings
 
@@ -30,6 +31,16 @@ def _bullet(items: list[str]) -> str:
     return "".join(f"- {item}\n" for item in items)
 
 
+def _resolve_str(val: Any) -> str:
+    if not val:
+        return ""
+    if isinstance(val, str):
+        return val
+    if isinstance(val, dict):
+        return val.get("en") or val.get("zh") or next(iter(val.values()), "")
+    return str(val)
+
+
 def write_reader_review_report(
     findings_path: Path, output_path: Path = DEFAULT_REPORT
 ) -> Path:
@@ -50,37 +61,64 @@ def write_reader_review_report(
         rule_id = finding.get("rule_id", "unknown_rule")
         src_file = finding.get("source_file") or finding.get("relative_path", "unknown_file")
         safe_lang = finding.get("safe_report_language", "")
-        composite = (rule_id, src_file, safe_lang)
-        
+        composite = (rule_id, src_file, str(safe_lang))
+
         # Check if already processed
         if (fid and fid in processed_finding_ids) or composite in processed_finding_ids:
             continue
-        
+
         if fid:
             processed_finding_ids.add(fid)
         processed_finding_ids.add(composite)
         deduped_findings.append(finding)
-    
+
     findings = deduped_findings
 
-    risk_lines = [
-        f"`{finding['rule_id']}` ({finding['risk_level']}): {finding['safe_report_language']}"
-        for finding in findings
-    ]
+    risk_lines = []
+    for finding in findings:
+        safe_lang = finding.get("safe_report_language", "")
+        if isinstance(safe_lang, dict):
+            safe_lang = safe_lang.get("en") or safe_lang.get("zh") or next(iter(safe_lang.values()), "")
+        risk_lines.append(f"`{finding['rule_id']}` ({finding['risk_level']}): {safe_lang}")
+
     evidence_lines = []
     alternatives: list[str] = []
     missing: list[str] = []
     questions: list[str] = []
     limitations: list[str] = []
     for finding in findings:
-        for item in finding.get("evidence_items", []):
+        ev_items = finding.get("evidence_items") or finding.get("evidence") or []
+        for item in ev_items:
             evidence_lines.append(
                 f"`{finding['rule_id']}`: {_display_path(item.get('source'))} at {item.get('location')}"
             )
-        alternatives.extend(finding.get("alternative_explanations", []))
-        missing.extend(finding.get("missing_verification_materials", []))
-        questions.extend(finding.get("suggested_verification_questions", []))
-        limitations.extend(finding.get("limitations", []))
+        alternatives.extend([_resolve_str(x) for x in finding.get("alternative_explanations", [])])
+
+        mv = finding.get("manual_verification")
+        if isinstance(mv, dict):
+            mv_reqs = mv.get("requests", [])
+        elif isinstance(mv, list):
+            mv_reqs = mv
+        else:
+            mv_reqs = []
+        for req in mv_reqs:
+            missing.append(_resolve_str(req))
+        missing.extend([_resolve_str(x) for x in finding.get("missing_verification_materials", [])])
+
+        q_list = finding.get("suggested_verification_questions") or finding.get("verification_questions") or []
+        for q in q_list:
+            if isinstance(q, dict):
+                text_val = q.get("text") or q.get("en") or q.get("zh")
+                if text_val:
+                    questions.append(_resolve_str(text_val))
+            else:
+                questions.append(_resolve_str(q))
+
+        lims = finding.get("limitations", [])
+        if isinstance(lims, list):
+            limitations.extend([_resolve_str(x) for x in lims])
+        else:
+            limitations.append(_resolve_str(lims))
 
     # Load exact duplicate image findings if present
     import json
@@ -101,7 +139,7 @@ def write_reader_review_report(
                         composite = (rule_id, src_file, safe_lang)
                         if (fid and fid in processed_finding_ids) or composite in processed_finding_ids:
                             continue
-                        
+
                         risk_level = img_f["risk_level"]
                         risk_lines.append(f"`{rule_id}` ({risk_level}): {safe_lang}")
 
@@ -135,9 +173,9 @@ def write_reader_review_report(
                         composite = (rule_id, src_file, safe_lang)
                         if (fid and fid in processed_finding_ids) or composite in processed_finding_ids:
                             continue
-                        
+
                         risk_level = cand["risk_level"]
-                        
+
                         risk_str = f"`{rule_id}` ({risk_level}): {safe_lang}"
                         if risk_str not in risk_lines:
                             risk_lines.append(risk_str)
@@ -175,9 +213,9 @@ def write_reader_review_report(
                         composite = (rule_id, src_file, safe_lang)
                         if (fid and fid in processed_finding_ids) or composite in processed_finding_ids:
                             continue
-                        
+
                         risk_level = tbl_f["risk_level"]
-                        
+
                         risk_str = f"`{rule_id}` ({risk_level}): {safe_lang}"
                         if risk_str not in risk_lines:
                             risk_lines.append(risk_str)
@@ -211,12 +249,12 @@ def write_reader_review_report(
             source_val = meta.get("source_strength", "unknown")
             title_val = meta.get("title", "Unknown Title")
             pub_val = meta.get("publisher", "Unknown Publisher")
-            
+
             if status_val == "no_known_update":
                 status_desc = "no known update found in available metadata"
             else:
                 status_desc = status_val
-                
+
             metadata_summary = [
                 f"- Target DOI: `{doi_val}` (status: `{status_desc}`, source: `{source_val}`)",
                 f"- Title: {title_val}",
@@ -283,9 +321,9 @@ def write_reader_review_report(
                 table_id = f["table_id"]
                 row_idx = f.get("row_index")
                 row_str = f" (Row {row_idx})" if row_idx else ""
-                
+
                 finding_str = f"`{f['finding_id']}` ({risk_level}): {safe_lang} [File: `{source_file}` / Table: `{table_id}`{row_str}]"
-                
+
                 if rule_id == "pv_pce_consistency":
                     pce_s.append(finding_str)
                 elif rule_id == "pv_eqe_jv_jsc_consistency":
@@ -372,9 +410,9 @@ def write_reader_review_report(
                 source_file = _display_path(f["source_file"])
                 dev_id = f.get("device_id")
                 dev_str = f" / Device: `{dev_id}`" if dev_id else ""
-                
+
                 finding_str = f"`{f['finding_id']}` ({risk_level}): {safe_lang} [File: `{source_file}`{dev_str}]"
-                
+
                 if rule_id == "pv_jv_metric_recalculation":
                     jv_recalc_s.append(finding_str)
                 elif rule_id == "pv_jv_hysteresis_candidate":
@@ -451,4 +489,3 @@ def write_reader_review_report(
     body = "\n".join(body_list)
     output_path.write_text(body, encoding="utf-8")
     return output_path.resolve()
-

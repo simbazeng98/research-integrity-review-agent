@@ -7,8 +7,11 @@ Generated artifacts default to `outputs/...`. Writing curated artifacts into `kn
 | Command | Purpose | Default output | Network default |
 |---|---|---|---|
 | `run-rules examples/toy_rule_package` | Run toy/stub detector rules | `outputs/rule_findings.jsonl` | Offline; `--allow-network` exists for metadata rules only |
+| `validate-ledger <findings.jsonl>` | Validate evidence-ledger JSONL schema, safe language, and private-path boundaries | stdout status; optional `--schema-output` writes JSON Schema | Offline |
 | `reader-intake --doi <doi>` | Normalize DOI and write paper metadata summary | `outputs/paper_case/` | Offline fixture/stub; `--allow-network` queries Crossref |
 | `batch-intake <input>` | Batch DOI/CSL/BibTeX/RIS intake | `outputs/batch_intake/` | Offline fixture/stub; `--allow-network` queries Crossref |
+| `status-enrich <input>` | Enrich DOI status with Crossref metadata | `outputs/status_enrich/` | Offline fixture/stub; `--allow-network` queries Crossref |
+| `reference-scan <input>` | Scan citations/references for anomalies | `outputs/reference_scan/` | Offline fixture/stub; `--allow-network` queries Crossref |
 | `report-batch-html <batch_items.jsonl>` | Render batch intake HTML table | beside/default batch outputs | Offline |
 | `image-intake <image_dir>` | Intake local toy image folder and exact duplicate signals | `outputs/image_intake/` | Offline |
 | `image-similarity <image_manifest.jsonl>` | Run perceptual image similarity candidates | `outputs/image_intake/` | Offline |
@@ -25,8 +28,14 @@ Generated artifacts default to `outputs/...`. Writing curated artifacts into `kn
 | `excel-formula-audit <excel_folder>` | Audit Excel formula/hardcoding signals | `outputs/raw_pv/` | Offline |
 | `raw-pv-reconcile <package_dir>` | Reconcile raw PV metrics | `outputs/raw_pv/` | Offline |
 | `report-raw-pv-html <raw_pv_findings.jsonl>` | Render raw PV dashboard | `outputs/raw_pv/raw_pv_dashboard.html` | Offline |
+| `pv-ruleset-export` | Export the PV Evidence Ruleset v1 taxonomy to JSON and MD | `outputs/pv_ruleset_v1/` | Offline |
+| `pv-ruleset-review <input>` | Run photovoltaics and materials evidence ruleset completeness review | `outputs/pv_ruleset_review/` | Offline |
 | `review-package examples/toy_review_package` | Run unified evidence package runner | `outputs/review_package/` | Offline; `--allow-network` only for metadata checks |
 | `report-review-package-html <unified_evidence_index.jsonl>` | Render unified review dashboard | `outputs/review_package/review_package_dashboard.html` | Offline |
+| `graph-export <unified_evidence_index.jsonl>` | Export a provenance graph of nodes and edges | `outputs/graph_export/` | Offline |
+| `init-package <package_dir>` | Initialize a local review package directory structure | None | Offline |
+| `run-audit <package_dir> [--allow-network]` | Run comprehensive integrity audit on a local package | `outputs/review_package/` | Offline; `--allow-network` only for metadata checks |
+| `validate-report <findings.jsonl>` | Validate a generated findings ledger file and check basic output presence | stdout status | Offline |
 | `wizard` | Guided bilingual onboarding wizard for reviewing a package | `outputs/review_package/` | Offline |
 | `view <output_dir>` | Local-only web server to serve and view HTML dashboards | Web browser auto-open | Offline |
 | `geng-video-index <seed_urls>` | Build safe Geng video index | `outputs/geng_video_distillation/geng_video_index.yml` | Offline fixture by default; private cache writes require explicit `--write-private-cache` and non-fixture metadata |

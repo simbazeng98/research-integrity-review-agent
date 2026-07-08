@@ -12,6 +12,7 @@ class ReviewPackageInput:
         tables_dir: str | None = None,
         pv_dir: str | None = None,
         raw_pv_dir: str | None = None,
+        references_dir: str | None = None,
     ):
         self.package_dir = package_dir
         self.metadata_dir = metadata_dir or f"{package_dir}/metadata"
@@ -19,6 +20,7 @@ class ReviewPackageInput:
         self.tables_dir = tables_dir or f"{package_dir}/tables"
         self.pv_dir = pv_dir or f"{package_dir}/pv"
         self.raw_pv_dir = raw_pv_dir or f"{package_dir}/raw_pv"
+        self.references_dir = references_dir or f"{package_dir}/references"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -28,6 +30,7 @@ class ReviewPackageInput:
             "tables_dir": self.tables_dir,
             "pv_dir": self.pv_dir,
             "raw_pv_dir": self.raw_pv_dir,
+            "references_dir": self.references_dir,
         }
 
 class EvidenceModuleStatus:

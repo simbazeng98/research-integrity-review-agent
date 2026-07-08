@@ -112,6 +112,54 @@ MOCK_FIXTURES: dict[str, dict[str, Any]] = {
             "publisher": "Mock Publisher Ltd",
             "updated-by": []
         }
+    },
+    "10.0000/toy-withdrawal": {
+        "status": "ok",
+        "message": {
+            "DOI": "10.0000/toy-withdrawal",
+            "title": ["Mock Withdrawn Article"],
+            "publisher": "Mock Publisher Ltd",
+            "updated-by": [
+                {
+                    "type": "withdrawal",
+                    "DOI": "10.0000/toy-withdrawal-notice",
+                    "label": "Withdrawal notice",
+                    "updated": {"date-parts": [[2025, 8, 15]]}
+                }
+            ]
+        }
+    },
+    "10.0000/toy-update-notice": {
+        "status": "ok",
+        "message": {
+            "DOI": "10.0000/toy-update-notice",
+            "title": ["Mock Update Notice Article"],
+            "publisher": "Mock Publisher Ltd",
+            "updated-by": [
+                {
+                    "type": "update",
+                    "DOI": "10.0000/toy-update-notice-notice",
+                    "label": "Update notice",
+                    "updated": {"date-parts": [[2024, 10, 10]]}
+                }
+            ]
+        }
+    },
+    "10.1002/adma.202000000": {
+        "status": "ok",
+        "message": {
+            "DOI": "10.1002/adma.202000000",
+            "title": ["Mock Adma 2020 Article"],
+            "publisher": "Wiley",
+            "updated-by": [
+                {
+                    "type": "correction",
+                    "DOI": "10.1002/adma.202000000-corr",
+                    "label": "Correction to Adma Article",
+                    "updated": {"date-parts": [[2024, 5, 1]]}
+                }
+            ]
+        }
     }
 }
 

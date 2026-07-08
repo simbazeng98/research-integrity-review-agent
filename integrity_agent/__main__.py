@@ -59,6 +59,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Reader review report output path.",
     )
 
+    validate_parser = subparsers.add_parser(
+        "validate-ledger",
+        help="Validate a JSONL evidence ledger contract, safety language, and path privacy.",
+    )
+    validate_parser.add_argument("input", type=Path, help="Evidence ledger JSONL path.")
+    validate_parser.add_argument(
+        "--schema-output",
+        type=Path,
+        help="Optional path to write the EvidenceRecord JSON Schema.",
+    )
+
     intake_parser = subparsers.add_parser(
         "reader-intake",
         help="Run DOI normalizer, metadata client and update parser for a specific paper.",
@@ -85,6 +96,52 @@ def build_parser() -> argparse.ArgumentParser:
         type=str,
         help="Email address for polite API usage.",
     )
+
+    status_enrich_parser = subparsers.add_parser(
+        "status-enrich",
+        help="Enrich DOI status by querying Crossref metadata (offline stub by default).",
+    )
+    status_enrich_parser.add_argument("input", type=Path, help="Input file path (txt, csv, json, jsonl).")
+    status_enrich_parser.add_argument(
+        "--allow-network",
+        action="store_true",
+        help="Allow network requests to query Crossref API.",
+    )
+    status_enrich_parser.add_argument(
+        "--mailto",
+        type=str,
+        help="Email address for polite API usage.",
+    )
+    status_enrich_parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("outputs") / "status_enrich",
+        help="Custom output directory path.",
+    )
+
+    reference_scan_parser = subparsers.add_parser(
+        "reference-scan",
+        help="Scan references and citations for metadata anomalies (offline stub by default).",
+    )
+    reference_scan_parser.add_argument("input", type=Path, help="Input file containing references/DOIs (JSONL or TXT).")
+    reference_scan_parser.add_argument(
+        "--allow-network",
+        action="store_true",
+        help="Allow network requests to query Crossref API.",
+    )
+    reference_scan_parser.add_argument(
+        "--mailto",
+        type=str,
+        help="Email address for polite API usage.",
+    )
+    reference_scan_parser.add_argument(
+        "-o",
+        "--output-dir",
+        type=Path,
+        default=Path("outputs") / "reference_scan",
+        help="Custom output directory path.",
+    )
+
 
     html_parser = subparsers.add_parser(
         "report-batch-html",
@@ -161,6 +218,50 @@ def build_parser() -> argparse.ArgumentParser:
     pv_parser.add_argument("--pce-tolerance-rel", type=float, default=0.03, help="Relative tolerance for PCE.")
     pv_parser.add_argument("--eqe-jsc-tolerance-rel", type=float, default=0.10, help="Relative tolerance for EQE vs JV Jsc.")
     pv_parser.add_argument("--eqe-jsc-tolerance-abs", type=float, default=1.0, help="Absolute tolerance for EQE vs JV Jsc.")
+
+    pv_ruleset_review_parser = subparsers.add_parser(
+        "pv-ruleset-review",
+        help="Run photovoltaics and materials evidence ruleset completeness review.",
+    )
+    pv_ruleset_review_parser.add_argument("input", type=Path, help="Path to table_manifest.jsonl or directory containing table files.")
+    pv_ruleset_review_parser.add_argument("--column-profiles", type=Path, help="Optional path to column_profiles.jsonl.")
+    pv_ruleset_review_parser.add_argument("-o", "--output-dir", type=Path, default=Path("outputs/pv_ruleset_review"), help="Optional custom output directory path.")
+
+    # graph-export
+    graph_export_parser = subparsers.add_parser(
+        "graph-export",
+        help="Export a provenance graph of nodes and edges from a unified evidence index.",
+    )
+    graph_export_parser.add_argument("input", type=Path, help="Path to unified_evidence_index.jsonl.")
+    graph_export_parser.add_argument("-o", "--output-dir", type=Path, default=Path("outputs/graph_export"), help="Optional custom output directory path.")
+
+    # init-package
+    init_parser = subparsers.add_parser(
+        "init-package",
+        help="Initialize a local review package directory structure.",
+    )
+    init_parser.add_argument("package_dir", type=Path, help="Directory to initialize.")
+
+    # run-audit
+    run_audit_parser = subparsers.add_parser(
+        "run-audit",
+        help="Run comprehensive integrity audit on a local package.",
+    )
+    run_audit_parser.add_argument("package_dir", type=Path, help="Path to package directory.")
+    run_audit_parser.add_argument("-o", "--output-dir", type=Path, default=Path("outputs/review_package"), help="Directory to write output files.")
+    run_audit_parser.add_argument("--skip-images", action="store_true", help="Skip image analysis.")
+    run_audit_parser.add_argument("--skip-tables", action="store_true", help="Skip table analysis.")
+    run_audit_parser.add_argument("--skip-pv", action="store_true", help="Skip PV metadata checks.")
+    run_audit_parser.add_argument("--skip-raw-pv", action="store_true", help="Skip raw PV reconciliation.")
+    run_audit_parser.add_argument("--allow-network", action="store_true", help="Allow network requests for status-enrich and metadata retrieval.")
+
+    # validate-report
+    validate_report_parser = subparsers.add_parser(
+        "validate-report",
+        help="Validate a generated findings ledger file and check basic output presence.",
+    )
+    validate_report_parser.add_argument("findings_file", type=Path, help="Path to findings jsonl file.")
+
 
     # raw-pv-intake
     raw_intake_parser = subparsers.add_parser("raw-pv-intake", help="Scan and intake raw measurements package.")
@@ -254,9 +355,20 @@ def build_parser() -> argparse.ArgumentParser:
     wizard_parser.add_argument("--package-dir", type=Path, help="Directory containing paper materials.")
     wizard_parser.add_argument("-o", "--output-dir", type=Path, default=Path("outputs/review_package"), help="Directory to write output files.")
     wizard_parser.add_argument("--dry-run", action="store_true", help="Preview the wizard plan without running detectors.")
-    wizard_parser.add_argument("--view", action="store_true", help="Open the generated local dashboard in a browser.")
+    # pv-ruleset-export
+    ruleset_export_parser = subparsers.add_parser(
+        "pv-ruleset-export",
+        help="Export the Photovoltaics (PV) Evidence Ruleset v1 taxonomy to JSON and Markdown.",
+    )
+    ruleset_export_parser.add_argument(
+        "-o",
+        "--output-dir",
+        type=Path,
+        help="Optional custom output directory path (defaults to outputs/pv_ruleset_v1).",
+    )
 
     return parser
+
 
 
 def _run_wizard(args: argparse.Namespace) -> int:
@@ -371,6 +483,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Wrote reader review report: {display_path(output_path)}")
         return 0
 
+    if args.command == "validate-ledger":
+        from integrity_agent.workflows.validate_ledger import (
+            validate_ledger_file,
+            write_ledger_json_schema,
+        )
+
+        if args.schema_output:
+            schema_path = write_ledger_json_schema(args.schema_output)
+            print(f"Wrote ledger JSON Schema: {display_path(schema_path)}")
+        result = validate_ledger_file(args.input)
+        if not result.ok:
+            for issue in result.issues:
+                print(f"ERROR: {issue.format()}", file=sys.stderr)
+            return 2
+        print(f"Ledger validation passed: records={result.records}")
+        return 0
+
     if args.command == "reader-intake":
         from integrity_agent.workflows.reader_intake import run_reader_intake
         meta_path, summary_path = run_reader_intake(args.doi, allow_network=args.allow_network)
@@ -389,6 +518,31 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Wrote batch CSV table: {display_path(csv_path)}")
         print(f"Wrote batch summary: {display_path(summary_path)}")
         return 0
+
+    if args.command == "status-enrich":
+        from integrity_agent.workflows.status_enrich import run_status_enrich
+        jsonl_path, summary_path = run_status_enrich(
+            args.input,
+            allow_network=args.allow_network,
+            mailto=args.mailto,
+            output_dir=args.output_dir,
+        )
+        print(f"Wrote status JSONL: {display_path(jsonl_path)}")
+        print(f"Wrote status summary: {display_path(summary_path)}")
+        return 0
+
+    if args.command == "reference-scan":
+        from integrity_agent.workflows.reference_scan import run_reference_scan
+        jsonl_path, summary_path = run_reference_scan(
+            args.input,
+            allow_network=args.allow_network,
+            mailto=args.mailto,
+            output_dir=args.output_dir,
+        )
+        print(f"Wrote reference anomalies JSONL: {display_path(jsonl_path)}")
+        print(f"Wrote reference anomalies summary: {display_path(summary_path)}")
+        return 0
+
 
     if args.command == "image-intake":
         from integrity_agent.workflows.image_intake import run_image_intake
@@ -483,6 +637,92 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Wrote PV findings: {display_path(findings)}")
         print(f"Wrote PV domain summary: {display_path(summary)}")
         return 0
+
+    if args.command == "pv-ruleset-review":
+        from integrity_agent.workflows.pv_ruleset_review import run_pv_ruleset_review
+        findings, summary, _ = run_pv_ruleset_review(
+            args.input,
+            column_profiles_path=args.column_profiles,
+            output_dir=args.output_dir,
+        )
+        return 0
+
+    if args.command == "graph-export":
+        from integrity_agent.workflows.graph_export import run_graph_export
+        run_graph_export(
+            args.input,
+            output_dir=args.output_dir,
+        )
+        return 0
+
+    if args.command == "init-package":
+        pkg_dir = Path(args.package_dir)
+        for sub in ["metadata", "images", "tables", "pv", "raw_pv", "references"]:
+            (pkg_dir / sub).mkdir(parents=True, exist_ok=True)
+        doi_file = pkg_dir / "metadata" / "doi.txt"
+        if not doi_file.exists():
+            doi_file.write_text("", encoding="utf-8")
+        example_doi_file = pkg_dir / "metadata" / "doi.example.txt"
+        if not example_doi_file.exists():
+            example_doi_file.write_text("10.1038/s41563-020-0000-0\n", encoding="utf-8")
+        print(f"Initialized local review package structure at: {display_path(pkg_dir)}")
+        print("Safety & Privacy Notice:")
+        print("- All analysis is local-first. Source data is not uploaded to external services.")
+        print("- Findings are risk signals only and do not prove research misconduct.")
+        return 0
+
+    if args.command == "run-audit":
+        from integrity_agent.workflows.review_package import run_review_package
+        summary = run_review_package(
+            package_dir=str(args.package_dir),
+            skip_images=args.skip_images,
+            skip_tables=args.skip_tables,
+            skip_pv=args.skip_pv,
+            skip_raw_pv=args.skip_raw_pv,
+            allow_network=args.allow_network,
+            output_dir=str(args.output_dir),
+        )
+        print("Audit run complete.")
+        print(f"Unified evidence index: {display_path(Path(args.output_dir) / 'unified_evidence_index.jsonl')}")
+        print("Notice: Signals are advisory risk markers for manual review, not misconduct proof.")
+        return 0
+
+    if args.command == "validate-report":
+        from integrity_agent.workflows.validate_ledger import validate_ledger_file
+        findings_path = Path(args.findings_file)
+        if not findings_path.exists():
+            print(f"Error: Findings file not found: {findings_path}")
+            return 1
+
+        validation_res = validate_ledger_file(findings_path)
+        print("Ledger Schema Validation Results:")
+        if validation_res.issues:
+            print(f"FAILED: Found {len(validation_res.issues)} issue(s):")
+            for issue in validation_res.issues:
+                print(f"- {issue}")
+        else:
+            print("PASSED: Schema validation matches all constraints.")
+
+        # Basic artifact presence check
+        parent = findings_path.parent
+        summary_md = parent / "pv_ruleset_review_summary.md"
+        pkg_summary_md = parent / "review_package_summary.md"
+        print("\nArtifact Presence Checks:")
+        checked_any = False
+        if summary_md.exists():
+            print(f"- Found PV ruleset summary: {display_path(summary_md)}")
+            checked_any = True
+        if pkg_summary_md.exists():
+            print(f"- Found package summary: {display_path(pkg_summary_md)}")
+            checked_any = True
+        if not checked_any:
+            print("- No optional summary Markdown found in the same folder.")
+
+        print("\nDisclaimer:")
+        print("- Validating a ledger does not confirm the truth or correctness of the findings.")
+        print("- Generated findings are advisory completeness/consistency signals requiring manual review.")
+        return 0 if not validation_res.issues else 1
+
 
     if args.command == "raw-pv-intake":
         from integrity_agent.workflows.raw_pv_intake import run_raw_pv_intake
@@ -628,6 +868,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command == "wizard":
         return _run_wizard(args)
+
+    if args.command == "pv-ruleset-export":
+        from integrity_agent.workflows.pv_ruleset_export import run_pv_ruleset_export
+        run_pv_ruleset_export(args.output_dir)
+        return 0
 
     parser.error(f"Unknown command: {args.command}")
     return 2

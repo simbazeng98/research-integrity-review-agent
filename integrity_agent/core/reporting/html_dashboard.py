@@ -103,20 +103,59 @@ def _evidence_html(items: list[Any]) -> str:
     return "<ul>" + "".join(lines) + "</ul>"
 
 
+STATUS_ZH_MAP = {
+    "correction": "修正/勘误 (Correction)",
+    "retraction": "撤稿 (Retraction)",
+    "expression_of_concern": "关注声明 (Expression of Concern)",
+    "withdrawal": "撤回 (Withdrawal)",
+    "update": "更新 (Update)",
+}
+
+
 def render_dashboard_html(
     findings: Iterable[Finding | dict[str, Any]],
     locale: str = "en",
 ) -> str:
-    normalized = [_normalise_record(finding) for finding in findings]
-    risk_counts = {
-        "high": sum(1 for finding in normalized if finding["risk_level"] == "high"),
-        "medium": sum(1 for finding in normalized if finding["risk_level"] == "medium"),
-        "low": sum(1 for finding in normalized if finding["risk_level"] == "low"),
-    }
-    mrpi = calculate_mrpi(normalized)
+    # Materialize findings to list to prevent generator exhaustion
+    findings = list(findings)
 
+    # Separate findings
+    status_findings = []
+    reference_findings = []
+    pv_completeness_findings = []
+    normal_findings = []
+
+    # We want to build normalisation/stats over all findings first,
+    # to keep total counts and MRPI accurate for all findings.
+    normalized_all = [_normalise_record(finding) for finding in findings]
+    risk_counts = {
+        "high": sum(1 for finding in normalized_all if finding["risk_level"] == "high"),
+        "medium": sum(1 for finding in normalized_all if finding["risk_level"] == "medium"),
+        "low": sum(1 for finding in normalized_all if finding["risk_level"] == "low"),
+    }
+    mrpi = calculate_mrpi(normalized_all)
+
+    # Now, physically separate the records for HTML display
+    for finding in findings:
+        category = ""
+        if hasattr(finding, "finding_category"):
+            category = finding.finding_category
+        elif isinstance(finding, dict):
+            category = finding.get("finding_category") or finding.get("type")
+
+        if category == "status_enrichment":
+            status_findings.append(finding)
+        elif category == "reference_anomaly":
+            reference_findings.append(finding)
+        elif category == "pv_evidence_completeness":
+            pv_completeness_findings.append(finding)
+        else:
+            normal_findings.append(finding)
+
+    # Render normal cards
+    normalized_normal = [_normalise_record(finding) for finding in normal_findings]
     cards = []
-    for finding in normalized:
+    for finding in normalized_normal:
         cards.append(
             f"""
       <article>
@@ -137,6 +176,375 @@ def render_dashboard_html(
       </article>"""
         )
 
+    # Render status enrichment cards
+    status_cards = []
+    for f in status_findings:
+        record = f.to_ledger_record() if hasattr(f, "to_ledger_record") else dict(f)
+        provenance = record.get("provenance") or {}
+        doi = html.escape(str(provenance.get("doi") or "Unknown DOI"))
+        raw_status = html.escape(str(provenance.get("raw_status") or "unknown"))
+        status_zh = STATUS_ZH_MAP.get(raw_status.lower(), raw_status)
+        risk_level = str(record.get("risk_level", record.get("risk", "low"))).lower()
+        if risk_level not in {"low", "medium", "high"}:
+            risk_level = "low"
+
+        # Relations: updates list
+        relations = provenance.get("status_relations") or []
+        updates_list_en = []
+        updates_list_zh = []
+        if not relations:
+            updates_html = (
+                '<ul data-lang="en"><li>No related updates recorded.</li></ul>'
+                '<ul data-lang="zh"><li>未记录关联更新。</li></ul>'
+            )
+        else:
+            for rel in relations:
+                rel_doi = html.escape(str(rel.get("doi") or ""))
+                rel_type = html.escape(str(rel.get("type") or ""))
+                rel_date = html.escape(str(rel.get("date") or ""))
+                rel_relation = html.escape(str(rel.get("relation") or ""))
+
+                updates_list_en.append(
+                    f'<div style="margin-bottom: 8px; border-bottom: 1px dashed var(--line); padding-bottom: 6px;">'
+                    f'<div><strong>Related Update DOI:</strong> <code>{rel_doi}</code></div>'
+                    f'<div><strong>Update Type:</strong> <code>{rel_type}</code></div>'
+                    f'<div><strong>Relation:</strong> <code>{rel_relation}</code></div>'
+                    f'<div><strong>Update Date:</strong> <code>{rel_date}</code></div>'
+                    f'</div>'
+                )
+                updates_list_zh.append(
+                    f'<div style="margin-bottom: 8px; border-bottom: 1px dashed var(--line); padding-bottom: 6px;">'
+                    f'<div><strong>关联更新 DOI:</strong> <code>{rel_doi}</code></div>'
+                    f'<div><strong>更新类型:</strong> <code>{rel_type}</code></div>'
+                    f'<div><strong>关联关系:</strong> <code>{rel_relation}</code></div>'
+                    f'<div><strong>更新日期:</strong> <code>{rel_date}</code></div>'
+                    f'</div>'
+                )
+            updates_html = (
+                f'<div data-lang="en">{"".join(updates_list_en)}</div>'
+                f'<div data-lang="zh">{"".join(updates_list_zh)}</div>'
+            )
+
+        # Safe report language
+        safe_lang = record.get("safe_report_language") or record.get("summary") or ""
+        if isinstance(safe_lang, dict):
+            safe_report_lang_en = html.escape(resolve_bilingual_string(safe_lang, "en"))
+            safe_report_lang_zh = html.escape(resolve_bilingual_string(safe_lang, "zh"))
+        else:
+            safe_report_lang_en = html.escape(str(safe_lang))
+            safe_report_lang_zh = html.escape(str(safe_lang))
+
+        # Manual verification requests
+        mv_val = record.get("manual_verification")
+        if isinstance(mv_val, dict):
+            mv_requests = mv_val.get("requests") or []
+        else:
+            mv_requests = mv_val or []
+
+        mv_pair = _list_pair(mv_requests)
+        if not mv_pair["en"]:
+            mv_pair["en"] = [f"Verify the status '{raw_status}' notice on the journal website. Note: status context is not proof of misconduct."]
+        if not mv_pair["zh"]:
+            mv_pair["zh"] = [f"在期刊网站核实状态 '{raw_status}' 的具体通知。注：状态上下文并非学术不端的证据。"]
+
+        mv_html = _list_html(mv_pair)
+
+        # Construct status enrichment card
+        status_cards.append(
+            f"""
+      <article class="status-enrichment-card" style="border: 2px solid var(--blue); background: var(--panel);">
+        <div class="finding-head">
+          <div>
+            <h2>
+              <span data-lang="en">Publication Status Context</span>
+              <span data-lang="zh">文献出版状态上下文</span>
+            </h2>
+            <div class="meta"><strong>DOI:</strong> <code>{doi}</code></div>
+          </div>
+          <span class="badge risk-{risk_level}">{risk_level}</span>
+        </div>
+
+        <div class="summary" style="border-left-color: var(--blue); background: #f0f5ff; margin-bottom: 12px; padding: 10px 12px; border-radius: 0 8px 8px 0;">
+          <span data-lang="en">Status: <strong>{raw_status}</strong></span>
+          <span data-lang="zh">文献状态: <strong>{status_zh}</strong></span>
+        </div>
+
+        <div style="background: #f0fdf4; border-left: 4px solid var(--green); padding: 10px 12px; border-radius: 0 8px 8px 0; margin-bottom: 12px;">
+          <div style="font-weight: bold; color: var(--green); margin-bottom: 4px; font-size: 0.9rem;">
+            <span data-lang="en">Safe Report Language (Candidate Context)</span>
+            <span data-lang="zh">安全报告文本 (候选上下文)</span>
+          </div>
+          <div style="font-size: 0.95rem;">
+            <span data-lang="en">{safe_report_lang_en}</span>
+            <span data-lang="zh">{safe_report_lang_zh}</span>
+          </div>
+        </div>
+
+        <div style="border: 1px solid #f1c27d; background: #fff7ed; color: #7c2d12; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 0.88rem; font-weight: bold;">
+          <span data-lang="en">⚠️ <strong>Notice:</strong> Publication status context is not proof of research misconduct. It is a candidate context that needs manual verification.</span>
+          <span data-lang="zh">⚠️ <strong>提示:</strong> 文献出版状态上下文并非学术不端的证据。这属于需要人工核实确认的候选上下文。</span>
+        </div>
+
+        <div class="grid">
+          <section class="box">
+            <h3>
+              <span data-lang="en">Related Update Notices</span>
+              <span data-lang="zh">关联更新通知</span>
+            </h3>
+            {updates_html}
+          </section>
+
+          <section class="box">
+            <h3>
+              <span data-lang="en">Manual Verification Requests</span>
+              <span data-lang="zh">人工复核请求</span>
+            </h3>
+            {mv_html}
+          </section>
+        </div>
+      </article>"""
+        )
+
+    if status_cards:
+        status_enrichment_html = f"""
+    <section style="margin-top: 18px; margin-bottom: 24px;">
+      <h2 style="font-size: 1.3rem; margin-bottom: 12px; border-bottom: 2px solid var(--line); padding-bottom: 6px;">
+        <span data-lang="en">Publication Status / Status Enrichment</span>
+        <span data-lang="zh">文献出版状态 / 状态富集</span>
+      </h2>
+      <div style="display: grid; gap: 12px;">
+        {"".join(status_cards)}
+      </div>
+    </section>"""
+    else:
+        status_enrichment_html = ""
+
+    # Render reference anomalies
+    reference_cards = []
+    for f in reference_findings:
+        record = f.to_ledger_record() if hasattr(f, "to_ledger_record") else dict(f)
+        provenance = record.get("provenance") or {}
+
+        rule_id = html.escape(str(record.get("rule_id") or record.get("type") or "unknown_rule"))
+        risk_level = str(record.get("risk_level", record.get("risk", "low"))).lower()
+        if risk_level not in {"low", "medium", "high"}:
+            risk_level = "low"
+
+        finding_id = html.escape(str(record.get("finding_id") or "FINDING"))
+
+        evidence = record.get("evidence") or record.get("evidence_items") or []
+        evidence_loc_str = ""
+        if evidence:
+            ev = evidence[0]
+            if isinstance(ev, dict):
+                loc = ev.get("location") or ""
+                src = ev.get("source") or ""
+                evidence_loc_str = f"{src} | {loc}" if src else loc
+            else:
+                evidence_loc_str = str(ev)
+        evidence_loc_str = html.escape(evidence_loc_str)
+
+        target_id = html.escape(str(
+            provenance.get("doi")
+            or provenance.get("raw_doi")
+            or provenance.get("duplicate_item")
+            or "N/A"
+        ))
+
+        # Title and Summary
+        title_pair = _pair(record.get("title") or "Reference Anomaly")
+        summary_pair = _pair(record.get("summary") or "")
+
+        # Safe report language
+        safe_lang = record.get("safe_report_language") or record.get("summary") or ""
+        if isinstance(safe_lang, dict):
+            safe_report_lang_en = html.escape(resolve_bilingual_string(safe_lang, "en"))
+            safe_report_lang_zh = html.escape(resolve_bilingual_string(safe_lang, "zh"))
+        else:
+            safe_report_lang_en = html.escape(str(safe_lang))
+            safe_report_lang_zh = html.escape(str(safe_lang))
+
+        # Manual verification requests
+        mv_val = record.get("manual_verification")
+        if isinstance(mv_val, dict):
+            mv_requests = mv_val.get("requests") or []
+        else:
+            mv_requests = mv_val or []
+        mv_pair = _list_pair(mv_requests)
+        mv_html = _list_html(mv_pair)
+
+        reference_cards.append(
+            f"""
+      <article class="reference-anomaly-card" style="border: 2px solid var(--amber); background: var(--panel); margin-bottom: 12px;">
+        <div class="finding-head">
+          <div>
+            <h2>
+              <span data-lang="en">Bibliographic / Reference Anomaly</span>
+              <span data-lang="zh">文献引用异常</span>
+            </h2>
+            <div class="meta">
+              <code>{finding_id}</code> | <strong>Rule:</strong> <code>{rule_id}</code> | <strong>Location:</strong> <code>{evidence_loc_str}</code>
+            </div>
+          </div>
+          <span class="badge risk-{risk_level}">{risk_level}</span>
+        </div>
+
+        <div class="summary" style="border-left-color: var(--amber); background: #fffbeb; margin-bottom: 12px; padding: 10px 12px; border-radius: 0 8px 8px 0;">
+          <span data-lang="en"><strong>Target Identifier:</strong> <code>{target_id}</code></span>
+          <span data-lang="zh"><strong>目标标识符:</strong> <code>{target_id}</code></span>
+        </div>
+
+        <div style="background: #f0fdf4; border-left: 4px solid var(--green); padding: 10px 12px; border-radius: 0 8px 8px 0; margin-bottom: 12px;">
+          <div style="font-weight: bold; color: var(--green); margin-bottom: 4px; font-size: 0.9rem;">
+            <span data-lang="en">Safe Report Language (Candidate Bibliographic Signal)</span>
+            <span data-lang="zh">安全报告文本 (候选文献计量信号)</span>
+          </div>
+          <div style="font-size: 0.95rem;">
+            <span data-lang="en">{safe_report_lang_en}</span>
+            <span data-lang="zh">{safe_report_lang_zh}</span>
+          </div>
+        </div>
+
+        <div style="border: 1px solid #f1c27d; background: #fff7ed; color: #7c2d12; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 0.88rem; font-weight: bold;">
+          <span data-lang="en">⚠️ <strong>Notice:</strong> Bibliographic reference anomalies are bibliographic integrity fingerprints and are not proof of research misconduct. They represent candidate signals requiring manual verification.</span>
+          <span data-lang="zh">⚠️ <strong>提示:</strong> 文献引用异常属于文献计量学完整性指纹，并非学术不端的证据。这属于需要人工核实确认的候选信号。</span>
+        </div>
+
+        <div class="grid">
+          <section class="box" style="grid-column: 1 / -1;">
+            <h3>
+              <span data-lang="en">Manual Verification Requests</span>
+              <span data-lang="zh">人工复核请求</span>
+            </h3>
+            {mv_html}
+          </section>
+        </div>
+      </article>"""
+        )
+
+    # Render PV Evidence Completeness Section
+    pv_cards = []
+    for f in pv_completeness_findings:
+        record = f.to_ledger_record() if hasattr(f, "to_ledger_record") else dict(f)
+        provenance = record.get("provenance") or {}
+
+        rule_id = html.escape(str(record.get("rule_id") or record.get("type") or "unknown_rule"))
+        risk_level = str(record.get("risk_level", record.get("risk", "low"))).lower()
+        if risk_level not in {"low", "medium", "high"}:
+            risk_level = "low"
+
+        finding_id = html.escape(str(record.get("finding_id") or "FINDING"))
+
+        evidence = record.get("evidence") or record.get("evidence_items") or []
+        evidence_loc_str = ""
+        if evidence:
+            ev = evidence[0]
+            if isinstance(ev, dict):
+                loc = ev.get("location") or ""
+                src = ev.get("source") or ""
+                evidence_loc_str = f"{src} | {loc}" if src else loc
+            else:
+                evidence_loc_str = str(ev)
+        evidence_loc_str = html.escape(evidence_loc_str)
+
+        missing_fields = ", ".join(provenance.get("missing_fields") or [])
+        missing_fields = html.escape(missing_fields) if missing_fields else "N/A"
+
+        # Title and Summary
+        safe_lang = record.get("safe_report_language") or record.get("summary") or ""
+        if isinstance(safe_lang, dict):
+            safe_report_lang_en = html.escape(resolve_bilingual_string(safe_lang, "en"))
+            safe_report_lang_zh = html.escape(resolve_bilingual_string(safe_lang, "zh"))
+        else:
+            safe_report_lang_en = html.escape(str(safe_lang))
+            safe_report_lang_zh = html.escape(str(safe_lang))
+
+        # Manual verification requests
+        mv_val = record.get("manual_verification")
+        if isinstance(mv_val, dict):
+            mv_requests = mv_val.get("requests") or []
+        else:
+            mv_requests = mv_val or []
+        mv_pair = _list_pair(mv_requests)
+        mv_html = _list_html(mv_pair)
+
+        pv_cards.append(
+            f"""
+      <article class="pv-completeness-card" style="border: 2px solid var(--emerald, #10b981); background: var(--panel); margin-bottom: 12px;">
+        <div class="finding-head">
+          <div>
+            <h2>
+              <span data-lang="en">PV Evidence Completeness Gap</span>
+              <span data-lang="zh">PV 证据完整性缺失</span>
+            </h2>
+            <div class="meta">
+              <code>{finding_id}</code> | <strong>Rule:</strong> <code>{rule_id}</code> | <strong>Location:</strong> <code>{evidence_loc_str}</code>
+            </div>
+          </div>
+          <span class="badge risk-{risk_level}">{risk_level}</span>
+        </div>
+
+        <div class="summary" style="border-left-color: var(--emerald, #10b981); background: #ecfdf5; margin-bottom: 12px; padding: 10px 12px; border-radius: 0 8px 8px 0;">
+          <span data-lang="en"><strong>Missing Fields:</strong> <code>{missing_fields}</code></span>
+          <span data-lang="zh"><strong>缺失字段:</strong> <code>{missing_fields}</code></span>
+        </div>
+
+        <div style="background: #f0fdf4; border-left: 4px solid var(--green); padding: 10px 12px; border-radius: 0 8px 8px 0; margin-bottom: 12px;">
+          <div style="font-weight: bold; color: var(--green); margin-bottom: 4px; font-size: 0.9rem;">
+            <span data-lang="en">Safe Report Language (Candidate Completeness Signal)</span>
+            <span data-lang="zh">安全报告文本 (候选完整性信号)</span>
+          </div>
+          <div style="font-size: 0.95rem;">
+            <span data-lang="en">{safe_report_lang_en}</span>
+            <span data-lang="zh">{safe_report_lang_zh}</span>
+          </div>
+        </div>
+
+        <div style="border: 1px solid #f1c27d; background: #fff7ed; color: #7c2d12; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; font-size: 0.88rem; font-weight: bold;">
+          <span data-lang="en">⚠️ <strong>Notice:</strong> This is a taxonomy/advisory completeness signal, not an automatic misconduct detector. It requires source/raw data review to determine validity.</span>
+          <span data-lang="zh">⚠️ <strong>提示:</strong> 本项属于分类/建议性完整性信号，并非自动学术不端检测工具。这需要结合原始/源数据审查进行人工核实。</span>
+        </div>
+
+        <div class="grid">
+          <section class="box" style="grid-column: 1 / -1;">
+            <h3>
+              <span data-lang="en">Manual Verification Requests</span>
+              <span data-lang="zh">人工复核请求</span>
+            </h3>
+            {mv_html}
+          </section>
+        </div>
+      </article>"""
+        )
+
+    if pv_cards:
+        pv_completeness_html = f"""
+    <section style="margin-top: 18px; margin-bottom: 24px;">
+      <h2 style="font-size: 1.3rem; margin-bottom: 12px; border-bottom: 2px solid var(--emerald, #10b981); padding-bottom: 6px;">
+        <span data-lang="en">PV Evidence Completeness Reviews</span>
+        <span data-lang="zh">光伏组件及材料报告完整性评估</span>
+      </h2>
+      <div style="display: grid; gap: 12px;">
+        {"".join(pv_cards)}
+      </div>
+    </section>"""
+    else:
+        pv_completeness_html = ""
+
+    if reference_cards:
+        reference_anomalies_html = f"""
+    <section style="margin-top: 18px; margin-bottom: 24px;">
+      <h2 style="font-size: 1.3rem; margin-bottom: 12px; border-bottom: 2px solid var(--line); padding-bottom: 6px;">
+        <span data-lang="en">Reference / Bibliography Anomalies</span>
+        <span data-lang="zh">文献引用异常检测</span>
+      </h2>
+      <div style="display: grid; gap: 12px;">
+        {"".join(reference_cards)}
+      </div>
+    </section>"""
+    else:
+        reference_anomalies_html = ""
+
     safe_locale = "zh" if locale == "zh" else "en"
     mrpi_text = f"{mrpi:.2f}".rstrip("0").rstrip(".")
     return (
@@ -144,8 +552,11 @@ def render_dashboard_html(
         .replace("__DEFAULT_LOCALE__", safe_locale)
         .replace("__MRPI__", mrpi_text)
         .replace("__MRPI_WIDTH__", str(min(100.0, max(0.0, mrpi))))
-        .replace("__TOTAL_FINDINGS__", str(len(normalized)))
+        .replace("__TOTAL_FINDINGS__", str(len(normalized_all)))
         .replace("__RISK_COUNTS__", f"{risk_counts['high']} / {risk_counts['medium']} / {risk_counts['low']}")
+        .replace("__STATUS_ENRICHMENT_HTML__", status_enrichment_html)
+        .replace("__REFERENCE_ANOMALIES_HTML__", reference_anomalies_html)
+        .replace("__PV_COMPLETENESS_HTML__", pv_completeness_html)
         .replace("__FINDINGS_HTML__", "\n".join(cards) if cards else "<article>No findings recorded.</article>")
     )
 

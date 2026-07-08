@@ -17,8 +17,11 @@ from integrity_agent.core.safety import scan_for_forbidden_phrases
 
 REQUIRED_RELEASE_COMMANDS = [
     "run-rules",
+    "validate-ledger",
     "reader-intake",
     "batch-intake",
+    "status-enrich",
+    "reference-scan",
     "report-batch-html",
     "image-intake",
     "image-similarity",
@@ -35,6 +38,8 @@ REQUIRED_RELEASE_COMMANDS = [
     "excel-formula-audit",
     "raw-pv-reconcile",
     "report-raw-pv-html",
+    "pv-ruleset-export",
+    "pv-ruleset-review",
     "review-package",
     "report-review-package-html",
     "geng-video-index",
@@ -42,8 +47,12 @@ REQUIRED_RELEASE_COMMANDS = [
     "geng-video-verify",
     "geng-video-safety-check",
     "geng-video-rule-candidates",
+    "graph-export",
+    "init-package",
+    "run-audit",
+    "validate-report",
 ]
-ALLOW_NETWORK_COMMANDS = {"run-rules", "reader-intake", "batch-intake", "review-package", "geng-video-index"}
+ALLOW_NETWORK_COMMANDS = {"run-rules", "reader-intake", "batch-intake", "status-enrich", "review-package", "geng-video-index", "reference-scan", "run-audit"}
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -277,3 +286,35 @@ def test_perceptual_hash_does_not_emit_pillow_getdata_deprecation_warning():
         compute_phash_fallback(img_a)
     messages = [str(w.message) for w in caught]
     assert not any("getdata is deprecated" in message for message in messages)
+
+
+def test_review_package_runner_documentation_readiness():
+    runner_md_path = REPO_ROOT / "docs" / "REVIEW_PACKAGE_RUNNER.md"
+    assert runner_md_path.exists()
+    content = runner_md_path.read_text(encoding="utf-8")
+
+    assert "references/references.txt" in content
+    assert "reference_anomalies.jsonl" in content
+    assert "not proof of misconduct" in content
+
+
+def test_pv_evidence_ruleset_v1_documentation_readiness():
+    files_to_check = [
+        REPO_ROOT / "docs" / "PV_EVIDENCE_RULESET_V1.md",
+        REPO_ROOT / "docs" / "pv_ruleset_implementation_summary.md",
+    ]
+    for path in files_to_check:
+        assert path.exists()
+        content = path.read_text(encoding="utf-8")
+        content_lower = content.lower()
+
+        # Check safety disclaimer keywords for the main doc
+        if path.name == "PV_EVIDENCE_RULESET_V1.md":
+            assert "not an automatic misconduct detector" in content_lower
+            assert "manual verification" in content_lower
+            assert "source/raw data" in content_lower or "raw/source-data" in content_lower
+
+        # Ensure no absolute paths are present in either file
+        forbidden_patterns = ["file:///", "d:/", "c:/", "d:\\", "c:\\"]
+        for pattern in forbidden_patterns:
+            assert pattern not in content_lower, f"Forbidden absolute path pattern '{pattern}' found in {path.name}"
