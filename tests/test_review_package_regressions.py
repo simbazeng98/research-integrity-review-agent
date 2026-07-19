@@ -187,6 +187,10 @@ def test_absolute_run_paths_and_tracebacks_are_not_persisted(
     inputs = manifest["manifest"]["inputs"]
     assert "documents_dir" in inputs
     assert all(not Path(value).is_absolute() for value in inputs.values())
+    returned_inputs = summary.manifest.inputs.to_dict()
+    assert returned_inputs == inputs
+    assert summary.manifest.inputs.package_dir == "."
+    assert all(not Path(value).is_absolute() for value in returned_inputs.values())
 
     reader_status = next(
         row for row in _read_statuses(output_dir) if row["module_name"] == "reader-intake"

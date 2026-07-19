@@ -525,7 +525,7 @@ def run_review_package(
     final_out_path.parent.mkdir(parents=True, exist_ok=True)
 
     package_id = pack_path.name
-    pkg_input = ReviewPackageInput(
+    runtime_input = ReviewPackageInput(
         package_dir=str(pack_path),
         metadata_dir=str(pack_path / "metadata"),
         images_dir=str(pack_path / "images"),
@@ -535,10 +535,20 @@ def run_review_package(
         references_dir=str(pack_path / "references"),
         documents_dir=str(pack_path / "documents"),
     )
+    public_input = ReviewPackageInput(
+        package_dir=".",
+        metadata_dir="metadata",
+        images_dir="images",
+        tables_dir="tables",
+        pv_dir="pv",
+        raw_pv_dir="raw_pv",
+        references_dir="references",
+        documents_dir="documents",
+    )
 
     manifest = ReviewPackageManifest(
         package_id=package_id,
-        inputs=pkg_input,
+        inputs=public_input,
         created_at=start_time
     )
 
@@ -568,7 +578,7 @@ def run_review_package(
 
     try:
         # 1. Metadata Intake
-        doi_file = Path(pkg_input.metadata_dir) / "doi.txt"
+        doi_file = Path(runtime_input.metadata_dir) / "doi.txt"
         if doi_file.exists():
             # Reader Intake
             m_start = time.time()
@@ -659,7 +669,7 @@ def run_review_package(
 
         # 1c. References / Bibliography Scan
         ref_start = time.time()
-        ref_dir = Path(pkg_input.references_dir)
+        ref_dir = Path(runtime_input.references_dir)
         ref_txt = ref_dir / "references.txt"
         ref_jsonl = ref_dir / "references.jsonl"
 
@@ -709,7 +719,7 @@ def run_review_package(
 
         # 1d. Human-confirmed document claims and publication versions
         claims_start = time.time()
-        documents_dir = Path(pkg_input.documents_dir)
+        documents_dir = Path(runtime_input.documents_dir)
         claims_path = documents_dir / "claims.jsonl"
         version_manifest_path = documents_dir / "version_manifest.yml"
         if not claims_path.exists():
@@ -1223,7 +1233,7 @@ def run_review_package(
             ))
 
         # 2. Image Intake & Similarity
-        if skip_images or not Path(pkg_input.images_dir).exists():
+        if skip_images or not Path(runtime_input.images_dir).exists():
             module_statuses.append(EvidenceModuleStatus(
                 module_name="image-intake",
                 status="skipped",
@@ -1239,7 +1249,7 @@ def run_review_package(
             m_start = time.time()
             try:
                 manifest_jsonl, manifest_csv, findings_jsonl, summary_md = run_image_intake(
-                    folder_path=pkg_input.images_dir,
+                    folder_path=runtime_input.images_dir,
                     output_dir=temp_dir / "image_intake"
                 )
 
@@ -1251,7 +1261,7 @@ def run_review_package(
                 module_statuses.append(EvidenceModuleStatus(
                     module_name="image-intake",
                     status="success",
-                    input_path=pkg_input.images_dir,
+                    input_path=runtime_input.images_dir,
                     output_paths=[
                         str(out_path / "image_intake/image_manifest.jsonl"),
                         str(out_path / "image_intake/image_findings.jsonl")
@@ -1296,7 +1306,7 @@ def run_review_package(
                 module_statuses.append(EvidenceModuleStatus(
                     module_name="image-intake",
                     status="failed",
-                    input_path=pkg_input.images_dir,
+                    input_path=runtime_input.images_dir,
                     error_message=str(e),
                     runtime_seconds=time.time() - m_start
                 ))
@@ -1308,8 +1318,8 @@ def run_review_package(
                 ))
 
         # 3. Table Intake & Numeric Review
-        table_artifact_count = _count_table_input_artifacts(pkg_input.tables_dir)
-        if skip_tables or not Path(pkg_input.tables_dir).exists():
+        table_artifact_count = _count_table_input_artifacts(runtime_input.tables_dir)
+        if skip_tables or not Path(runtime_input.tables_dir).exists():
             table_skip_reason = "skipped_by_configuration" if skip_tables else "missing_input_directory"
             module_statuses.append(EvidenceModuleStatus(
                 module_name="table-intake",
@@ -1331,7 +1341,7 @@ def run_review_package(
             m_start = time.time()
             try:
                 t_manifest_jsonl, t_manifest_csv, t_profiles_jsonl, t_summary_md = run_table_intake(
-                    input_dir=pkg_input.tables_dir,
+                    input_dir=runtime_input.tables_dir,
                     output_dir=temp_dir / "table_intake"
                 )
 
@@ -1347,7 +1357,7 @@ def run_review_package(
                 module_statuses.append(EvidenceModuleStatus(
                     module_name="table-intake",
                     status="success",
-                    input_path=pkg_input.tables_dir,
+                    input_path=runtime_input.tables_dir,
                     output_paths=[
                         str(out_path / "table_intake/table_manifest.jsonl"),
                         str(out_path / "table_intake/column_profiles.jsonl")
@@ -1423,7 +1433,7 @@ def run_review_package(
                 module_statuses.append(EvidenceModuleStatus(
                     module_name="table-intake",
                     status="failed",
-                    input_path=pkg_input.tables_dir,
+                    input_path=runtime_input.tables_dir,
                     error_message=str(e),
                     runtime_seconds=time.time() - m_start,
                     input_artifact_count=table_artifact_count,
@@ -1445,8 +1455,8 @@ def run_review_package(
                 ))
 
         # 4. PV Domain Review
-        pv_artifact_count = _count_table_input_artifacts(pkg_input.pv_dir)
-        if skip_pv or not Path(pkg_input.pv_dir).exists():
+        pv_artifact_count = _count_table_input_artifacts(runtime_input.pv_dir)
+        if skip_pv or not Path(runtime_input.pv_dir).exists():
             pv_skip_reason = "skipped_by_configuration" if skip_pv else "missing_input_directory"
             module_statuses.append(EvidenceModuleStatus(
                 module_name="pv-domain-review",
@@ -1459,7 +1469,7 @@ def run_review_package(
             try:
                 # Intake the PV directory first
                 pv_t_manifest_jsonl, pv_t_manifest_csv, pv_t_profiles_jsonl, pv_t_summary_md = run_table_intake(
-                    input_dir=pkg_input.pv_dir,
+                    input_dir=runtime_input.pv_dir,
                     output_dir=temp_dir / "pv_domain_intake"
                 )
 
@@ -1471,7 +1481,7 @@ def run_review_package(
                     module_statuses.append(EvidenceModuleStatus(
                         module_name="pv-domain-review",
                         status="skipped",
-                        input_path=pkg_input.pv_dir,
+                        input_path=runtime_input.pv_dir,
                         input_artifact_count=0,
                         parsed_row_count=0,
                         finding_count=0,
@@ -1482,7 +1492,7 @@ def run_review_package(
                     module_statuses.append(EvidenceModuleStatus(
                         module_name="pv-domain-review",
                         status="warning",
-                        input_path=pkg_input.pv_dir,
+                        input_path=runtime_input.pv_dir,
                         warnings=["Input artifacts were found, but no PV rows were parsed."],
                         input_artifact_count=pv_artifact_count,
                         parsed_row_count=0,
@@ -1509,7 +1519,7 @@ def run_review_package(
                     module_statuses.append(EvidenceModuleStatus(
                         module_name="pv-domain-review",
                         status=pv_status,
-                        input_path=pkg_input.pv_dir,
+                        input_path=runtime_input.pv_dir,
                         output_paths=[
                             str(out_path / "pv_domain/pv_findings.jsonl")
                         ],
@@ -1524,7 +1534,7 @@ def run_review_package(
                 module_statuses.append(EvidenceModuleStatus(
                     module_name="pv-domain-review",
                     status="failed",
-                    input_path=pkg_input.pv_dir,
+                    input_path=runtime_input.pv_dir,
                     error_message=str(e),
                     runtime_seconds=time.time() - m_start,
                     input_artifact_count=pv_artifact_count,
@@ -1561,7 +1571,7 @@ def run_review_package(
                     input_path=combined_manifest,
                     column_profiles_path=combined_profiles,
                     output_dir=temp_dir / "pv_ruleset_review",
-                    table_base_dir=pkg_input.package_dir
+                    table_base_dir=runtime_input.package_dir
                 )
 
                 if rs_pv_count > 0:
@@ -1571,7 +1581,7 @@ def run_review_package(
                     module_statuses.append(EvidenceModuleStatus(
                         module_name="pv-ruleset-review",
                         status="success",
-                        input_path=str(pkg_input.package_dir),
+                        input_path=str(runtime_input.package_dir),
                         output_paths=[
                             str(out_path / "pv_ruleset_review/pv_ruleset_findings.jsonl"),
                             str(out_path / "pv_ruleset_review/pv_ruleset_review_summary.md")
@@ -1589,7 +1599,7 @@ def run_review_package(
                 module_statuses.append(EvidenceModuleStatus(
                     module_name="pv-ruleset-review",
                     status="failed",
-                    input_path=str(pkg_input.package_dir),
+                    input_path=str(runtime_input.package_dir),
                     error_message=_format_error(rs_err, privacy_roots),
                     runtime_seconds=time.time() - rs_start
                 ))
@@ -1602,7 +1612,7 @@ def run_review_package(
             ))
 
         # 5. Raw PV Reconciliation
-        if skip_raw_pv or not Path(pkg_input.raw_pv_dir).exists():
+        if skip_raw_pv or not Path(runtime_input.raw_pv_dir).exists():
             module_statuses.append(EvidenceModuleStatus(
                 module_name="raw-pv-reconcile",
                 status="skipped"
@@ -1611,7 +1621,7 @@ def run_review_package(
             m_start = time.time()
             try:
                 run_raw_pv_reconciliation(
-                    package_dir=pkg_input.raw_pv_dir,
+                    package_dir=runtime_input.raw_pv_dir,
                     output_dir=temp_dir / "raw_pv"
                 )
 
@@ -1625,7 +1635,7 @@ def run_review_package(
                 module_statuses.append(EvidenceModuleStatus(
                     module_name="raw-pv-reconcile",
                     status="success",
-                    input_path=pkg_input.raw_pv_dir,
+                    input_path=runtime_input.raw_pv_dir,
                     output_paths=[
                         str(out_path / "raw_pv/raw_pv_findings.jsonl")
                     ],
@@ -1635,7 +1645,7 @@ def run_review_package(
                 module_statuses.append(EvidenceModuleStatus(
                     module_name="raw-pv-reconcile",
                     status="failed",
-                    input_path=pkg_input.raw_pv_dir,
+                    input_path=runtime_input.raw_pv_dir,
                     error_message=str(e),
                     runtime_seconds=time.time() - m_start
                 ))
