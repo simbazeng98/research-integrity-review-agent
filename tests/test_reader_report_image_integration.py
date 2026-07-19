@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
 from integrity_agent.workflows.report_reader_review import write_reader_review_report
 
 
 def test_reader_report_image_integration(tmp_path):
-    project_root = Path(__file__).resolve().parents[1]
-    
     findings_jsonl = tmp_path / "rule_findings.jsonl"
     report_file = tmp_path / "reader_review_report.md"
     

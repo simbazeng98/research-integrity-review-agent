@@ -408,3 +408,30 @@ def test_sanitizer_fails_closed_for_malformed_owned_json(tmp_path: Path) -> None
             staged_output,
             (staged_output,),
         )
+
+
+@pytest.mark.parametrize(
+    ("suffix", "content", "message"),
+    [
+        (".json", '{"value":', "generated JSON artifact contains invalid JSON"),
+        (
+            ".jsonl",
+            '{"valid": true}\n{not-json}\n',
+            "generated JSONL artifact contains invalid JSON on line 2",
+        ),
+    ],
+)
+def test_safe_copy_rejects_malformed_structured_output_before_staging(
+    tmp_path: Path,
+    suffix: str,
+    content: str,
+    message: str,
+) -> None:
+    source = tmp_path / f"generated{suffix}"
+    destination = tmp_path / "staged" / f"generated{suffix}"
+    source.write_text(content, encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        review_package.safe_copy_file(source, destination)
+
+    assert not destination.exists()

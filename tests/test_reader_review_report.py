@@ -141,8 +141,6 @@ def test_reader_review_report_with_metadata_json(tmp_path):
     from integrity_agent.workflows.report_reader_review import write_reader_review_report
     import json
     
-    project_root = Path(__file__).resolve().parents[1]
-    
     # 1. Create a dummy metadata.json
     meta_dir = Path("outputs") / "paper_case"
     meta_dir.mkdir(parents=True, exist_ok=True)

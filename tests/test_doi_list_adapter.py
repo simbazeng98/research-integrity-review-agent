@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import csv
-import pytest
-from pathlib import Path
 
 from integrity_agent.core.intake.adapters.doi_list import parse_doi_list
 

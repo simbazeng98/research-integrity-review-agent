@@ -129,7 +129,7 @@ def test_similarity_pairs_does_not_embed_project_external_paths(tmp_path, monkey
         "image_id_a": "img-a",
         "image_id_b": "img-b",
         "relative_path_a": r"D:\Private Folder\secret-a.png",
-        "relative_path_b": r"D:\Private Folder\secret-b.png",
+        "relative_path_b": r"\\private-server\private-share\secret-b.png",
         "hash_method": "dhash",
         "hamming_distance": 2,
         "threshold": 6,
@@ -139,7 +139,11 @@ def test_similarity_pairs_does_not_embed_project_external_paths(tmp_path, monkey
     generate_similarity_pairs_html(candidates_jsonl, output_path=html_file)
     content = html_file.read_text(encoding="utf-8")
 
-    assert "Preview unavailable" in content
+    assert content.count("Preview unavailable") == 2
     assert "Private Folder" not in content
+    assert "private-server" not in content
+    assert "private-share" not in content
+    assert "secret-a.png" not in content
+    assert "secret-b.png" not in content
     assert "D:%5C" not in content
     assert "D:\\Private" not in content

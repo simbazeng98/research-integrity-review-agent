@@ -119,9 +119,10 @@ def test_malformed_child_ledger_cannot_be_silently_dropped(
         write_malformed_child,
     )
 
+    output_dir = tmp_path / "output"
     summary = run_review_package(
         package_dir=str(package_dir),
-        output_dir=str(tmp_path / "output"),
+        output_dir=str(output_dir),
         skip_images=True,
         skip_tables=True,
         skip_pv=True,
@@ -136,6 +137,16 @@ def test_malformed_child_ledger_cannot_be_silently_dropped(
     )
     assert aggregation.status == "failed"
     assert "invalid JSON" in (aggregation.error_message or "")
+    decay_status = next(
+        status
+        for status in summary.module_statuses
+        if status.module_name == "pv-decay-fit-review"
+    )
+    assert decay_status.status == "failed"
+    assert "validation failed" in (decay_status.error_message or "")
+    assert not (
+        output_dir / "pv_decay_fit_review" / "pv_decay_fit_findings.jsonl"
+    ).exists()
 
 
 def test_reporters_reject_posix_private_paths_defense_in_depth(

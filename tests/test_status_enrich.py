@@ -1,10 +1,7 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-import pytest
 
-from integrity_agent.core.metadata.crossref_client import CrossrefClientError
 from integrity_agent.workflows.status_enrich import run_status_enrich
 from integrity_agent.workflows.validate_ledger import validate_ledger_file
 

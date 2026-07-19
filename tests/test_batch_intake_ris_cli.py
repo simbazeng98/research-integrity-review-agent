@@ -4,7 +4,6 @@ import csv
 import subprocess
 import sys
 from pathlib import Path
-import pytest
 
 
 def test_batch_intake_cli_ris():

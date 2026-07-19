@@ -205,8 +205,6 @@ def generate_similarity_pairs_html(
         # Lookup details or load images to get dimensions
         dim_a = "unknown"
         dim_b = "unknown"
-        name_a = html.escape(Path(path_a).name, quote=True)
-        name_b = html.escape(Path(path_b).name, quote=True)
 
         if id_a_raw in manifest_lookup:
             dim_a = f"{manifest_lookup[id_a_raw]['width']} x {manifest_lookup[id_a_raw]['height']}"
@@ -217,6 +215,8 @@ def generate_similarity_pairs_html(
         # and never embed paths that escape the local project root.
         abs_a = resolve_local_asset(path_a, project_root=project_root)
         abs_b = resolve_local_asset(path_b, project_root=project_root)
+        name_a = html.escape(abs_a.name, quote=True) if abs_a is not None else "unavailable"
+        name_b = html.escape(abs_b.name, quote=True) if abs_b is not None else "unavailable"
 
         # Read dimensions if we couldn't get them from manifest lookup
         if dim_a == "unknown" and abs_a is not None and abs_a.exists():

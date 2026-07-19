@@ -3,8 +3,6 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from pathlib import Path
-import pytest
 
 def test_init_package_cli(tmp_path):
     pkg_dir = tmp_path / "test_pkg"

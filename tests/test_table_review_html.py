@@ -3,7 +3,6 @@ from __future__ import annotations
 import subprocess
 import sys
 from pathlib import Path
-import pytest
 
 from integrity_agent.workflows.report_table_review_html import generate_table_review_html
 

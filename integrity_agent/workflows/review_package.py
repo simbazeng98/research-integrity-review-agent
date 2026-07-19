@@ -372,22 +372,41 @@ def parse_args(args=None):
     parser.add_argument("-o", "--output-dir", default="outputs/review_package", help="Directory to write output files.")
     return parser.parse_args(args)
 
+def _validate_structured_copy_source(src: Path) -> None:
+    """Reject malformed generated JSON before it enters the staged output tree."""
+    suffix = src.suffix.lower()
+    if suffix not in {".json", ".jsonl"}:
+        return
+    try:
+        text = src.read_text(encoding="utf-8")
+        if suffix == ".json":
+            json.loads(text)
+            return
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            if not line.strip():
+                continue
+            try:
+                json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise ValueError(
+                    "generated JSONL artifact contains invalid JSON "
+                    f"on line {line_number}"
+                ) from exc
+    except UnicodeError as exc:
+        raise ValueError(
+            "generated structured artifact is not valid UTF-8"
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError("generated JSON artifact contains invalid JSON") from exc
+
+
 def safe_copy_file(src: Path | str, dest: Path | str) -> None:
     src_p = Path(src)
     dest_p = Path(dest)
     if src_p.exists():
+        _validate_structured_copy_source(src_p)
         dest_p.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src_p, dest_p)
-
-def safe_copy_dir(src: Path | str, dest: Path | str) -> None:
-    src_p = Path(src)
-    dest_p = Path(dest)
-    if src_p.exists():
-        dest_p.parent.mkdir(parents=True, exist_ok=True)
-        if dest_p.exists():
-            shutil.rmtree(dest_p)
-        shutil.copytree(src_p, dest_p)
-
 
 _TABLE_INPUT_SUFFIXES = {".csv", ".tsv", ".xlsx", ".md"}
 
@@ -892,14 +911,32 @@ def run_review_package(
                     decay_input,
                     output_dir=temp_dir / "pv_decay_fit_review",
                 )
+                # Keep the child ledger in the aggregation set even when it is
+                # malformed so the unified gate records the failure.  Validate
+                # before copying it into the staged publication tree: a failed
+                # run may publish diagnostics, but it must never publish an
+                # invalid child artifact.
+                decay_findings = Path(decay_findings)
+                structured_finding_files.append(decay_findings)
+                from integrity_agent.workflows.validate_ledger import (
+                    validate_ledger_file,
+                )
+
+                decay_validation = validate_ledger_file(decay_findings)
+                if not decay_validation.ok:
+                    details = "; ".join(
+                        issue.format() for issue in decay_validation.issues
+                    )
+                    raise ValueError(
+                        f"generated decay ledger validation failed: {details}"
+                    )
                 decay_output = out_path / "pv_decay_fit_review/pv_decay_fit_findings.jsonl"
                 safe_copy_file(decay_findings, decay_output)
                 safe_copy_file(
                     decay_summary,
                     out_path / "pv_decay_fit_review/pv_decay_fit_summary.md",
                 )
-                decay_finding_count = _jsonl_record_count(decay_findings)
-                structured_finding_files.append(Path(decay_findings))
+                decay_finding_count = decay_validation.records
                 module_statuses.append(EvidenceModuleStatus(
                     module_name="pv-decay-fit-review",
                     status="success" if parsed_decay_records else "warning",

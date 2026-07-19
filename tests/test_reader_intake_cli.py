@@ -4,7 +4,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-import pytest
 
 from integrity_agent.workflows.reader_intake import run_reader_intake
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import urllib.error
 import pytest
-from unittest.mock import MagicMock
 
 from integrity_agent.core.metadata.crossref_updates import parse_crossref_updates
 from integrity_agent.core.metadata.crossref_client import fetch_crossref_work, CrossrefRateLimitError

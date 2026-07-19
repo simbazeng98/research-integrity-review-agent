@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import pytest
-from pathlib import Path
 
 from integrity_agent.core.intake.adapters.bibtex_basic import parse_bibtex
 

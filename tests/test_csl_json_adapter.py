@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import json
-import pytest
-from pathlib import Path
 
 from integrity_agent.core.intake.adapters.csl_json import parse_csl_json
 

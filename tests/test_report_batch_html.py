@@ -4,7 +4,6 @@ import subprocess
 import sys
 import json
 from pathlib import Path
-import pytest
 
 from integrity_agent.workflows.report_batch_html import generate_batch_html
 

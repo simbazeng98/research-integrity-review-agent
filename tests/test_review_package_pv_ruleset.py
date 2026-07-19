@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 import json
-import shutil
-from pathlib import Path
-import pytest
 
 from integrity_agent.workflows.review_package import run_review_package
 from integrity_agent.workflows.validate_ledger import validate_ledger_file
@@ -24,7 +21,7 @@ def test_review_package_pv_ruleset_integration(tmp_path):
     out_dir = tmp_path / "outputs"
 
     # 2. Run review-package
-    summary = run_review_package(
+    run_review_package(
         package_dir=str(pkg_dir),
         output_dir=str(out_dir)
     )

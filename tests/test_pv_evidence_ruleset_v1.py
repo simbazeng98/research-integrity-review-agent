@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
-import pytest
 
-from integrity_agent.domains.photovoltaics.evidence_ruleset_v1 import TAXONOMY_RULESET, TaxonomyItem
+from integrity_agent.domains.photovoltaics.evidence_ruleset_v1 import TAXONOMY_RULESET
 from integrity_agent.workflows.pv_ruleset_export import run_pv_ruleset_export
 from integrity_agent.core.safety import FORBIDDEN_VERDICT_PHRASES
 

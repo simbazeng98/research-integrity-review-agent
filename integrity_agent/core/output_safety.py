@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 from urllib.parse import quote
 
@@ -23,8 +23,17 @@ def resolve_local_asset(
 ) -> Path | None:
     """Resolve an asset only when it remains inside the declared project root."""
     root = Path(project_root).resolve()
-    candidate = Path(path_value)
-    if not candidate.is_absolute():
+    value = os.fspath(path_value)
+    candidate = Path(value)
+    windows_candidate = PureWindowsPath(value)
+    if windows_candidate.anchor and not windows_candidate.is_absolute():
+        return None
+    absolute_on_any_platform = (
+        windows_candidate.is_absolute() or PurePosixPath(value).is_absolute()
+    )
+    if absolute_on_any_platform and not candidate.is_absolute():
+        return None
+    if not absolute_on_any_platform:
         candidate = root / candidate
     candidate = candidate.resolve()
     try:

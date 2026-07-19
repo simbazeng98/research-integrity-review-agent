@@ -3,10 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from pathlib import Path
-import pytest
 
-from integrity_agent.domains.photovoltaics.schema import PVMetricRow
 from integrity_agent.workflows.pv_ruleset_review import run_pv_ruleset_review
 from integrity_agent.workflows.validate_ledger import validate_ledger_file
 from integrity_agent.core.safety import FORBIDDEN_VERDICT_PHRASES
