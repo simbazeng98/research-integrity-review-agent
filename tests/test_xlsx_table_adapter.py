@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 import pytest
 from integrity_agent.core.tables.adapters.xlsx_table import parse_xlsx_sheet, get_xlsx_sheets
 

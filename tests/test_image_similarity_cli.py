@@ -4,7 +4,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-import pytest
 
 
 def test_image_similarity_cli():
@@ -75,6 +74,6 @@ def test_image_similarity_cli():
     assert candidates[0]["hamming_distance"] <= 6
     
     # Check summary contains safe notice
-    summary_text = summary_path = summary_md.read_text(encoding="utf-8")
+    summary_text = summary_md.read_text(encoding="utf-8")
     assert "visually similar candidate pairs for human review" in summary_text
     assert "does not determine image manipulation" in summary_text

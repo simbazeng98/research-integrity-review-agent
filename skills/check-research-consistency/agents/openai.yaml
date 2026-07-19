@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Consistency Check"
+  short_description: "Cross-check confirmed claims and source data"
+  default_prompt: "Use $check-research-consistency to compare my confirmed claims and source tables."

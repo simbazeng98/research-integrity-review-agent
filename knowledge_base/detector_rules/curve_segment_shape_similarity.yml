@@ -1,0 +1,72 @@
+rule_id: curve_segment_shape_similarity
+status: active
+linked_cases: []
+input_required:
+  - supplied_numeric_curve_tables
+  - explicit_column_mapping
+  - human_confirmation_that_curves_are_independently_labelled
+fields_required:
+  - source_x
+  - source_y
+  - plot_x
+  - plot_y
+  - source_hash
+  - source_version
+  - minimum_window_points
+risk_signal: >
+  Two nontrivial, non-overlapping segments from explicitly mapped supplied
+  numeric curves remain highly similar after an auditable affine offset-scale fit.
+detection_idea:
+  - Compare only human-confirmed mappings of supplied CSV/XLSX numeric columns.
+  - Search a declared, bounded candidate budget for one best contiguous affine shape match at or above the declared minimum length.
+  - Use the actual x axis for linearity and sampling-cadence checks; require a positive signal scale.
+  - Ignore constant, near-linear, low-dynamic-range, axis-inverted, overlapping, blank-row-bridged, and short windows.
+  - Retain row/x spans, window length, affine transform, correlation, normalized RMSE, and source hashes.
+  - Emit a candidate requiring manual review; never infer cause or intent.
+manual_verification:
+  - Confirm that the mapped columns represent independently labelled curves and verify both source hashes.
+  - Inspect original exports and plotting code for smoothing, interpolation, resampling, normalization, offsets, and scale conversions.
+  - Check sampling cadence, repeated or periodic acquisition cycles, and instrument/export precision.
+  - Verify both reported row and x-axis spans in the supplied source tables.
+false_positive_risks:
+  - Smoothing, interpolation, or resampling can align otherwise independent segments.
+  - Periodic measurements or repeated acquisition cycles can produce similar local shapes.
+  - Shared references, baseline subtraction, or normalization can preserve shape.
+  - Documented offset or scale conversions can create an affine relationship.
+  - Instrument quantization or limited export precision can increase apparent similarity.
+  - The curves may intentionally derive from the same disclosed upstream data.
+safe_report_language: >
+  Candidate segment-shape similarity between two explicitly mapped numeric curve
+  segments; manual review of source, processing, sampling, and instrument context is required.
+runtime_status: active
+execution_mode: offline
+toy_fixture: null
+detector_module: integrity_agent.workflows.curve_reconciliation
+detector_function: run_curve_segment_similarity
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+traceability:
+  - source_label
+  - source_hash
+  - source_version
+  - column_mapping
+  - row_and_x_spans
+  - window_length
+  - affine_transform
+  - correlation
+  - normalized_rmse
+  - sampling_metrics
+  - search_budget
+accepted_input_types:
+  - csv
+  - xlsx
+known_false_positive_contexts:
+  - smoothing
+  - periodic_signal
+  - resampling
+  - offset_scale_conversion
+  - instrument_quantization
+  - shared_upstream_data
+  - axis_inversion
+  - large_unreviewed_search_space

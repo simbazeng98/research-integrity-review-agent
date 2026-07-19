@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
-import pytest
 
 from integrity_agent.core.reporting.html_dashboard import render_dashboard_html
 

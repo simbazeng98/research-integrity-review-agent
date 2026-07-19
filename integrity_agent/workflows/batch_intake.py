@@ -16,6 +16,7 @@ from integrity_agent.core.metadata.crossref_client import (
     CrossrefRateLimitError,
 )
 from integrity_agent.core.metadata.crossref_updates import parse_crossref_updates
+from integrity_agent.core.output_safety import sanitize_csv_cell
 
 DEFAULT_OUTPUT_DIR = Path("outputs") / "batch_intake"
 
@@ -36,17 +37,22 @@ def _write_csv_table(path: Path, items: list[LiteratureItem]) -> None:
         writer = csv.writer(f)
         writer.writerow(headers)
         for item in items:
-            writer.writerow([
-                item.item_id,
-                item.doi or "",
-                item.normalized_doi or "",
-                item.title or "",
-                item.year or "",
-                item.journal or "",
-                item.metadata_status,
-                item.crossref_update_status,
-                "; ".join(item.warnings),
-            ])
+            writer.writerow(
+                [
+                    sanitize_csv_cell(value)
+                    for value in [
+                        item.item_id,
+                        item.doi or "",
+                        item.normalized_doi or "",
+                        item.title or "",
+                        item.year or "",
+                        item.journal or "",
+                        item.metadata_status,
+                        item.crossref_update_status,
+                        "; ".join(item.warnings),
+                    ]
+                ]
+            )
 
 
 def _write_jsonl(path: Path, items: list[LiteratureItem]) -> None:

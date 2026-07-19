@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 from integrity_agent.domains.photovoltaics.raw_measurements.schema import JVCurve
@@ -136,27 +135,6 @@ def read_jv_curve_file(path: str, metadata: dict | None = None) -> JVCurve:
         headers = ["voltage", "current_density"]
         data_start_idx = 0
 
-    # Parse rows
-    voltages = []
-    currents = []
-    
-    for line_idx in range(data_start_idx, len(lines)):
-        line = lines[line_idx]
-        if line.startswith("#") or line.startswith("//"):
-            continue # comment line
-        parts = [p.strip() for p in line.split(best_delim) if p.strip()] if best_delim else [p.strip() for p in line.split() if p.strip()]
-        if len(parts) < 2:
-            continue
-        try:
-            v_val = float(parts[0] if len(parts) >= 1 else 0)
-            c_val = float(parts[1] if len(parts) >= 2 else 0)
-            # Store raw values for now, mapping will happen later
-            voltages.append(v_val)
-            currents.append(c_val)
-        except ValueError:
-            # skip row with non-numeric data
-            continue
-
     # Let's map headers to columns
     v_idx = -1
     j_idx = -1
@@ -187,11 +165,7 @@ def read_jv_curve_file(path: str, metadata: dict | None = None) -> JVCurve:
         else:
             warnings.append("Could not find current or density column.")
 
-    # Now extract the lists
-    volt_list = []
-    curr_list = []
-
-    # re-parse according to correct indices
+    # Parse rows according to the mapped column indices.
     voltages = []
     current_density_or_current = []
     

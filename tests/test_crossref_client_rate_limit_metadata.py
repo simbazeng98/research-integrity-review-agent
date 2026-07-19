@@ -4,7 +4,6 @@ import json
 import urllib.error
 import urllib.request
 import pytest
-from pathlib import Path
 
 from integrity_agent.core.metadata.crossref_client import fetch_crossref_work, CrossrefRateLimitError
 

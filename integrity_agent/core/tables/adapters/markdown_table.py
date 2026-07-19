@@ -23,7 +23,7 @@ def parse_markdown_table(
     lines = [line.strip() for line in content.splitlines() if line.strip()]
 
     # Extract lines starting and ending with '|'
-    table_lines = [l for l in lines if l.startswith("|") and l.endswith("|")]
+    table_lines = [line for line in lines if line.startswith("|") and line.endswith("|")]
     if len(table_lines) < 3:
         warnings.append("No valid markdown pipe table found (minimum 3 lines required).")
         return [], [], warnings

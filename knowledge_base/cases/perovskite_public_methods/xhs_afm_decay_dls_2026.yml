@@ -1,0 +1,54 @@
+case_id: perovskite_public_method_afm_decay_dls_2026
+priority: P1
+field: pv_decay_and_process_lineage
+scope: research_integrity
+source_type: public_method
+source_url: https://www.xiaohongshu.com/explore/6a4a1d3b0000000015027bc0
+feed_id: 6a4a1d3b0000000015027bc0
+source_accessed_at: '2026-07-11'
+target_doi: 10.1002/adfm.76562
+public_status: public_method_example
+summary: >
+  Distilled review method: recalculate declared decay-fit averages with the
+  stated weighting formula and units, and trace DLS or filtration descriptions
+  to the measured sample stage. Treat the public response as counter-evidence
+  that still requires publisher-version and source-data checks.
+evidence_tier: E1
+evidence_patterns:
+  - decay_fit_formula_unit_or_weighting_consistency
+  - dls_and_filtration_sample_stage_lineage
+  - public_response_requires_version_reconciliation
+detector_candidates:
+  - pv_decay_fit_consistency
+  - materials_process_lineage
+  - publication_version_drift
+manual_verification_needed:
+  - Check the declared fit equation, component amplitudes, lifetimes, units, and source decay curve.
+  - Identify the exact material stage used for DLS and filtration measurements.
+  - Compare the response with the current publisher article and supplementary files.
+false_positive_risks:
+  - Amplitude-weighted and intensity-weighted lifetime formulas produce different valid averages.
+  - DLS values can differ across precursor, filtered dispersion, and processed sample stages.
+  - A revised supplementary version may resolve an earlier visible discrepancy.
+alternative_explanations:
+  - The reported lifetime may use a weighting convention not stated near the table.
+  - The response may identify a different sample stage or later document version.
+safe_report_language: >
+  Candidate decay-fit or process-lineage signal remains partially explained and requires formula, sample-stage, source-data, and publisher-version review.
+limitations:
+  - Social claims and commenter identities are not independently verified.
+  - The linked response is counter-evidence, not a formal publisher correction.
+counter_sources:
+  - url: https://www.xiaohongshu.com/explore/6a4b90570000000011011c56
+    source_type: author_response
+    observed_at: '2026-07-11'
+resolution_status: partially_explained
+version_timeline:
+  - source_url: https://www.xiaohongshu.com/explore/6a4a1d3b0000000015027bc0
+    source_type: public_method
+    observed_at: '2026-07-11'
+    status: review_method_observed
+  - source_url: https://www.xiaohongshu.com/explore/6a4b90570000000011011c56
+    source_type: author_response
+    observed_at: '2026-07-11'
+    status: response_observed

@@ -1,0 +1,44 @@
+case_id: perovskite_public_method_afm_response_version_drift_2026
+priority: P1
+field: publication_version_reconciliation
+scope: research_integrity
+source_type: public_method
+source_url: https://www.xiaohongshu.com/explore/6a4b90570000000011011c56
+feed_id: 6a4b90570000000011011c56
+source_accessed_at: '2026-07-11'
+target_doi: 10.1002/adfm.76562
+public_status: unresolved
+summary: >
+  Distilled reconciliation method: record an author response as public
+  counter-evidence, preserve the original observation, and compare both with the
+  current publisher article and supplementary version. A response alone can
+  partially explain a signal but cannot establish a formal correction.
+evidence_tier: E1
+evidence_patterns:
+  - author_response_as_counter_evidence
+  - source_version_timeline_requires_publisher_check
+  - response_does_not_replace_formal_correction_status
+detector_candidates:
+  - publication_version_drift
+  - cross_document_claim_consistency
+manual_verification_needed:
+  - Compare the response with the current publisher article, supplementary files, and update notices.
+  - Verify whether the response addresses the same sample, measurement context, formula, and document version.
+false_positive_risks:
+  - The response and original observation may refer to different source versions or sample stages.
+  - A publisher-hosted update may exist even when the public discussion does not link it.
+alternative_explanations:
+  - A clarified formula or sample-stage label may partially explain the visible difference.
+  - A current supplementary version may differ from the originally observed file.
+safe_report_language: >
+  Public response recorded as counter-evidence; the candidate signal is partially explained pending current publisher-version and source-data review.
+limitations:
+  - Social claims and commenter identities are not independently verified.
+  - Response authorship and scope are not treated as independently verified formal status.
+counter_sources: []
+resolution_status: partially_explained
+version_timeline:
+  - source_url: https://www.xiaohongshu.com/explore/6a4b90570000000011011c56
+    source_type: author_response
+    observed_at: '2026-07-11'
+    status: response_observed

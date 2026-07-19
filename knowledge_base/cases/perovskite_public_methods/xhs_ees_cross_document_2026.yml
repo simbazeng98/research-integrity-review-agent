@@ -1,0 +1,39 @@
+case_id: perovskite_public_method_ees_cross_document_2026
+priority: P1
+field: cross_document_consistency
+scope: research_integrity
+source_type: public_method
+source_url: https://www.xiaohongshu.com/explore/6a4f42f3000000001702c2e9
+feed_id: 6a4f42f3000000001702c2e9
+source_accessed_at: '2026-07-11'
+target_doi: 10.1039/d6ee00301j
+public_status: public_method_example
+summary: >
+  Distilled review method: compare human-confirmed atomic claims across main
+  text, supplementary information, figures, and tables only after matching the
+  device variant, sample, measurement context, units, and source version.
+evidence_tier: E1
+evidence_patterns:
+  - main_text_si_figure_or_table_claim_difference
+  - device_variant_and_sample_context_must_match
+  - stale_document_version_requires_reconciliation
+detector_candidates:
+  - cross_document_claim_consistency
+  - publication_version_drift
+manual_verification_needed:
+  - Verify both claim locations in the current publisher article and supplementary version.
+  - Confirm device variant, sample identity, measurement context, and compatible units before comparison.
+false_positive_risks:
+  - Different device branches or samples may legitimately use different conditions.
+  - Unit conversion, typographical correction, or stale supplementary files can create an apparent mismatch.
+alternative_explanations:
+  - The compared statements may describe different variants or measurement contexts.
+  - A newer publisher-hosted version may already align the documents.
+safe_report_language: >
+  Candidate cross-document consistency signal requiring context-matched comparison of current source versions.
+limitations:
+  - Social claims and commenter identities are not independently verified.
+  - This card retains only distilled method metadata and no raw post or comment content.
+counter_sources: []
+resolution_status: unresolved
+version_timeline: []

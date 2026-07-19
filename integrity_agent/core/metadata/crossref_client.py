@@ -205,7 +205,7 @@ def fetch_crossref_work(
             data = json.loads(safe_file.read_text(encoding="utf-8"))
             data["_cache_hit"] = True
             return data
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             # If cache file is corrupt, we'll continue to network/mock
             pass
 

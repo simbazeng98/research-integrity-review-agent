@@ -14,6 +14,62 @@ required_fields:
   - manual_verification_needed
   - false_positive_risks
   - safe_report_language
+validation_mode_default: production
+validation_mode_enum:
+  - production
+  - toy
+  - draft
+validation_mode_rules:
+  production: All required_fields must be present and non-empty.
+  toy: Missing production fields are allowed only when validation_mode is explicitly toy.
+  draft: Missing production fields are allowed only when validation_mode is explicitly draft.
+optional_provenance_fields:
+  scope: research_integrity | engineering_plausibility; unsupported_motive cannot become a finding.
+  target_doi: DOI string for a paper-specific method card.
+  source_accessed_at: ISO-8601 date or timestamp.
+  source_snapshot_hash: Optional non-secret content hash; never a local path.
+  evidence_tier: E0 | E1 | E2 | E3 | E4
+  counter_sources: Structured public counter-evidence sources.
+  resolution_status: open | partially_explained | resolved_by_version | formally_corrected | unresolved
+  version_timeline: Structured, ISO-8601-dated public source events.
+evidence_tier_enum:
+  - E0
+  - E1
+  - E2
+  - E3
+  - E4
+evidence_tier_meanings:
+  E0: Unverified lead without a source artifact checked by this workflow.
+  E1: Source-anchored public observation not independently reproduced.
+  E2: Deterministic check reproduced against a provided or public source artifact.
+  E3: Counter-evidence or current-version evidence has been compared, without treating an author response as a formal correction.
+  E4: Formal publisher or institutional status evidence.
+counter_source_type_enum:
+  - author_response
+  - publisher_update
+  - correction
+  - raw_data_offer
+  - other
+resolution_status_enum:
+  - open
+  - partially_explained
+  - resolved_by_version
+  - formally_corrected
+  - unresolved
+public_method_rules:
+  required_fields:
+    - scope
+    - target_doi
+    - source_accessed_at
+    - evidence_tier
+    - resolution_status
+  public_status_enum:
+    - public_method_example
+    - unresolved
+  resolution_contract:
+    - resolved_by_version and formally_corrected require a public counter source.
+    - An author response can support partially_explained but cannot establish publisher resolution.
+    - resolved_by_version and formally_corrected require publisher_update or correction evidence.
 public_status_enum:
   - confirmed_misconduct
   - allegation
@@ -53,6 +109,8 @@ policy_anchors:
     url: https://www.bilibili.com/
 prohibited_public_content:
   - bilibili_video_transcripts
+  - social_media_raw_post_or_comment_dumps
+  - authentication_cookies_tokens_or_qr_material
   - full copyrighted article text
   - unverified personal accusations stated as fact
   - private source data or reviewer files

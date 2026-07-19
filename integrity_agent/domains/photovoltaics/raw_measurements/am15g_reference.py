@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 # Built-in toy AM1.5G spectrum for testing/fallback
@@ -35,7 +34,6 @@ def load_reference_spectrum(path_or_name: str | None = None) -> tuple[list[tuple
             return TOY_AM15G_SPECTRUM, warnings
             
         # Parse headers/rows
-        header_mapped = False
         w_idx = 0
         irr_idx = 1
         

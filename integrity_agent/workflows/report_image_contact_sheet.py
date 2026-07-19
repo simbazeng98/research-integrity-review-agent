@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import html
 import json
-import os
 from collections import defaultdict
 from pathlib import Path
+
+from integrity_agent.core.output_safety import safe_local_asset_url
 
 DEFAULT_OUTPUT_HTML = Path("outputs") / "image_intake" / "image_contact_sheet.html"
 
@@ -192,32 +193,31 @@ def generate_image_contact_sheet(
     ]
 
     for item in items:
-        image_id = html.escape(str(item.get("image_id", "")))
-        file_name = html.escape(str(item.get("file_name", "")))
-        file_ext = html.escape(str(item.get("file_ext", "")))
+        image_id = html.escape(str(item.get("image_id", "")), quote=True)
+        file_name = html.escape(str(item.get("file_name", "")), quote=True)
+        file_ext = html.escape(str(item.get("file_ext", "")), quote=True)
         relative_path = str(item.get("relative_path", ""))
         width = int(item.get("width", 0))
         height = int(item.get("height", 0))
-        fmt = html.escape(str(item.get("format", "unknown")))
-        sha256 = html.escape(str(item.get("sha256", "")))
+        fmt = html.escape(str(item.get("format", "unknown")), quote=True)
+        sha256_raw = str(item.get("sha256", ""))
         warnings = item.get("warnings", [])
 
         # Compute relative image file path from the output HTML location
         # Project relative: e.g. outputs/image_intake/image_manifest.jsonl
         # Image is: e.g. examples/toy_image_package/images/img_a.png
         # We find absolute project root and build relative path
-        project_root = Path(__file__).resolve().parents[3]
-        absolute_img_path = project_root / relative_path
-
-        # Generate relative URL from output html to image file
-        try:
-            rel_img_url = os.path.relpath(absolute_img_path, start=resolved_out.parent)
-            rel_img_url = rel_img_url.replace("\\", "/")
-        except Exception:
-            rel_img_url = relative_path
+        project_root = Path(__file__).resolve().parents[2]
+        rel_img_url = safe_local_asset_url(
+            relative_path,
+            project_root=project_root,
+            output_parent=resolved_out.parent,
+        )
+        if rel_img_url is not None:
+            rel_img_url = html.escape(rel_img_url, quote=True)
 
         # Check duplicate badge
-        is_dup = hash_counts[sha256] > 1 if sha256 else False
+        is_dup = hash_counts[sha256_raw] > 1 if sha256_raw else False
         badge_html = ""
         if is_dup:
             badge_html = '<span class="badge badge-danger">Exact Duplicate</span>'
@@ -225,12 +225,12 @@ def generate_image_contact_sheet(
             badge_html = '<span class="badge badge-warning">Corrupted / Failed</span>'
 
         # Render preview tag
-        if warnings:
+        if warnings or rel_img_url is None:
             preview_html = '<div class="placeholder">Failed to render preview<br><small style="color: var(--danger-color);">Metadata read failed</small></div>'
         else:
             preview_html = f'<img src="{rel_img_url}" alt="{file_name}" loading="lazy">'
 
-        sha_short = sha256[:12] if sha256 else "unknown"
+        sha_short = html.escape(sha256_raw[:12], quote=True) if sha256_raw else "unknown"
 
         html_lines.extend([
             '            <div class="card">',

@@ -81,6 +81,18 @@ def normalize_area(value, unit_hint) -> tuple[float | None, list[str]]:
         return val * 0.01, warnings
     return val, warnings
 
+def normalize_light_intensity(value, unit_hint) -> tuple[float | None, list[str]]:
+    val = to_float(value)
+    if val is None:
+        return None, ["Could not parse light intensity value as numeric"]
+    warnings = []
+    if unit_hint == "w/m2":
+        warnings.append(f"Converting light intensity {val} from W/m2 to mW/cm2 (factor of 0.1)")
+        val *= 0.1
+    if val <= 0:
+        return None, [*warnings, "Light intensity must be a positive numeric value"]
+    return val, warnings
+
 def normalize_bandgap(value, unit_hint) -> tuple[float | None, list[str]]:
     val = to_float(value)
     if val is None:

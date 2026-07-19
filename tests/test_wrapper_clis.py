@@ -3,8 +3,6 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from pathlib import Path
-import pytest
 
 def test_init_package_cli(tmp_path):
     pkg_dir = tmp_path / "test_pkg"
@@ -24,6 +22,7 @@ def test_init_package_cli(tmp_path):
     assert (pkg_dir / "pv").exists()
     assert (pkg_dir / "raw_pv").exists()
     assert (pkg_dir / "references").exists()
+    assert (pkg_dir / "documents").exists()
     assert (pkg_dir / "metadata" / "doi.txt").exists()
 
 

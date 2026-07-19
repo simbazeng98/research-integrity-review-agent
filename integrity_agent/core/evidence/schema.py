@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, TypeAlias
 
+from integrity_agent.core.evidence.scope import FindingScope, scope_of
+
 
 BilingualText: TypeAlias = str | dict[str, str]
 
@@ -103,11 +105,13 @@ class Finding:
     summary: BilingualText
     evidence: list[EvidenceItem]
     manual_verification: ManualVerification
+    safe_report_language: BilingualText | None = None
     finding_category: str = "general"
     false_positive_risks: list[BilingualText] = field(default_factory=list)
     alternative_explanations: list[BilingualText] = field(default_factory=list)
     limitations: list[BilingualText] | dict[str, str] = field(default_factory=list)
     provenance: dict[str, Any] = field(default_factory=dict)
+    scope: FindingScope = FindingScope.RESEARCH_INTEGRITY
 
     def title_for(self, locale: str = "en") -> str:
         return resolve_bilingual_string(self.title, locale)
@@ -126,6 +130,7 @@ class Finding:
 
         record = {
             "finding_id": self.finding_id,
+            "scope": scope_of(self).value,
             "finding_category": self.finding_category,
             "type": self.type,
             "title": self.title_for(locale) if locale else self.title,
@@ -148,6 +153,12 @@ class Finding:
             "limitations": limitations,
             "provenance": dict(self.provenance),
         }
+        if self.safe_report_language is not None:
+            record["safe_report_language"] = (
+                resolve_bilingual_string(self.safe_report_language, locale)
+                if locale
+                else self.safe_report_language
+            )
         rule_id = self.provenance.get("rule_id")
         if rule_id:
             record["rule_id"] = rule_id

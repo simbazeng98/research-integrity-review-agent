@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pytest
 from integrity_agent.core.images.image_schema import ImageManifestItem, ImagePackageManifest, ImageEvidenceFinding
 
 

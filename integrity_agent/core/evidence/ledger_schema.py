@@ -4,6 +4,8 @@ from typing import Any, Literal, TypeAlias
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from integrity_agent.core.evidence.scope import FindingScope, scope_of
+
 
 BilingualText: TypeAlias = str | dict[str, str]
 RiskLevelValue: TypeAlias = Literal["low", "medium", "high"]
@@ -70,6 +72,7 @@ class EvidenceRecord(BaseModel):
     model_config = ConfigDict(extra="allow", strict=True)
 
     finding_id: str = Field(min_length=1)
+    scope: FindingScope = FindingScope.RESEARCH_INTEGRITY
     finding_category: str = "general"
     type: str | None = None
     title: BilingualText | None = None
@@ -96,6 +99,8 @@ class EvidenceRecord(BaseModel):
         if not isinstance(data, dict):
             return data
         normalized = dict(data)
+        if "scope" in normalized:
+            normalized["scope"] = scope_of(normalized)
         if "finding_id" not in normalized and "candidate_id" in normalized:
             normalized["finding_id"] = normalized["candidate_id"]
         if "risk" not in normalized and "risk_level" in normalized:
@@ -134,6 +139,10 @@ class EvidenceRecord(BaseModel):
 
     @model_validator(mode="after")
     def require_traceable_review_fields(self) -> EvidenceRecord:
+        if self.scope is FindingScope.UNSUPPORTED_MOTIVE:
+            raise ValueError(
+                "unsupported_motive is not a finding scope and cannot enter the evidence ledger"
+            )
         if not self.evidence:
             raise ValueError("evidence ledger record must include at least one evidence location")
         if self.needs_manual_review is not None and self.needs_manual_review != self.manual_verification.needed:

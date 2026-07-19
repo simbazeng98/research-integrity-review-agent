@@ -1,7 +1,20 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from typing import Any
+
+from integrity_agent.core.safety import redact_public_text
+
+
+def _public_path(value: str | None) -> str | None:
+    if value is None:
+        return None
+    candidate = Path(value)
+    if candidate.is_absolute():
+        suffix = candidate.name
+        return f"<local-path>/{suffix}" if suffix else "<local-path>"
+    return redact_public_text(candidate.as_posix())
 
 class ReviewPackageInput:
     def __init__(
@@ -13,6 +26,7 @@ class ReviewPackageInput:
         pv_dir: str | None = None,
         raw_pv_dir: str | None = None,
         references_dir: str | None = None,
+        documents_dir: str | None = None,
     ):
         self.package_dir = package_dir
         self.metadata_dir = metadata_dir or f"{package_dir}/metadata"
@@ -21,16 +35,38 @@ class ReviewPackageInput:
         self.pv_dir = pv_dir or f"{package_dir}/pv"
         self.raw_pv_dir = raw_pv_dir or f"{package_dir}/raw_pv"
         self.references_dir = references_dir or f"{package_dir}/references"
+        self.documents_dir = documents_dir or f"{package_dir}/documents"
 
     def to_dict(self) -> dict[str, Any]:
+        package_root = Path(self.package_dir)
+
+        if package_root.is_absolute():
+            try:
+                public_root = package_root.resolve().relative_to(Path.cwd().resolve()).as_posix()
+            except (OSError, ValueError):
+                public_root = package_root.name or "package"
+        else:
+            public_root = package_root.as_posix()
+
+        def package_relative(value: str) -> str | None:
+            candidate = Path(value)
+            try:
+                relative = candidate.resolve().relative_to(package_root.resolve())
+            except (OSError, ValueError):
+                return _public_path(value)
+            if not relative.parts:
+                return public_root
+            return (Path(public_root) / relative).as_posix()
+
         return {
-            "package_dir": self.package_dir,
-            "metadata_dir": self.metadata_dir,
-            "images_dir": self.images_dir,
-            "tables_dir": self.tables_dir,
-            "pv_dir": self.pv_dir,
-            "raw_pv_dir": self.raw_pv_dir,
-            "references_dir": self.references_dir,
+            "package_dir": public_root,
+            "metadata_dir": package_relative(self.metadata_dir),
+            "images_dir": package_relative(self.images_dir),
+            "tables_dir": package_relative(self.tables_dir),
+            "pv_dir": package_relative(self.pv_dir),
+            "raw_pv_dir": package_relative(self.raw_pv_dir),
+            "references_dir": package_relative(self.references_dir),
+            "documents_dir": package_relative(self.documents_dir),
         }
 
 class EvidenceModuleStatus:
@@ -43,6 +79,10 @@ class EvidenceModuleStatus:
         warnings: list[str] | None = None,
         error_message: str | None = None,
         runtime_seconds: float = 0.0,
+        input_artifact_count: int = 0,
+        parsed_row_count: int = 0,
+        finding_count: int = 0,
+        skip_reason: str | None = None,
     ):
         self.module_name = module_name
         self.status = status
@@ -51,16 +91,28 @@ class EvidenceModuleStatus:
         self.warnings = warnings or []
         self.error_message = error_message
         self.runtime_seconds = runtime_seconds
+        self.input_artifact_count = input_artifact_count
+        self.parsed_row_count = parsed_row_count
+        self.finding_count = finding_count
+        self.skip_reason = skip_reason
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "module_name": self.module_name,
             "status": self.status,
-            "input_path": self.input_path,
-            "output_paths": self.output_paths,
-            "warnings": self.warnings,
-            "error_message": self.error_message,
+            "input_path": _public_path(self.input_path),
+            "output_paths": [_public_path(path) for path in self.output_paths],
+            "warnings": [redact_public_text(item) for item in self.warnings],
+            "error_message": (
+                redact_public_text(self.error_message)
+                if self.error_message is not None
+                else None
+            ),
             "runtime_seconds": self.runtime_seconds,
+            "input_artifact_count": self.input_artifact_count,
+            "parsed_row_count": self.parsed_row_count,
+            "finding_count": self.finding_count,
+            "skip_reason": self.skip_reason,
         }
 
 class ReviewPackageManifest:

@@ -9,6 +9,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_ci_installs_the_packaging_frontend_used_by_the_suite():
+    workflow = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert 'python -m pip install -e . pytest build "setuptools>=77"' in workflow
+
+
 def test_packaging_smoke(tmp_path):
     """Build the package offline and verify sdist and wheel contain critical resources."""
     cmd = [

@@ -5,7 +5,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
 
 from integrity_agent.workflows.reference_scan import run_reference_scan
 from integrity_agent.workflows.validate_ledger import validate_ledger_file

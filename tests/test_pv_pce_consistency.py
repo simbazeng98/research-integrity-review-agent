@@ -56,3 +56,19 @@ def test_pce_consistency_detector():
     findings = run_pce_consistency_check([row_non_sun_err])
     assert len(findings) == 1
     assert "under the specified 80.0 mW/cm² illumination basis" in findings[0].safe_report_language
+
+
+def test_pce_consistency_does_not_assume_one_sun_when_reported_illumination_is_unparsable():
+    row_unparsable_illumination = PVMetricRow(
+        row_id="7", source_file="test.csv", table_id="tbl-1", row_index=7,
+        voc_v=1.10, jsc_ma_cm2=22.0, ff=0.75, pce_percent=22.6875,
+        raw_values={"Light intensity (mW/cm2)": "not reported"},
+        warnings=["Could not parse light intensity value as numeric"],
+    )
+
+    findings = run_pce_consistency_check([row_unparsable_illumination])
+
+    assert len(findings) == 1
+    assert findings[0].rule_id == "pv_pce_missing_illumination_context"
+    assert findings[0].risk_level == "low"
+    assert "could not be parsed" in findings[0].safe_report_language.lower()

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
-import json
-from integrity_agent.domains.photovoltaics.schema import PVMetricRow, PVFieldMapping, PVConsistencyFinding, build_pv_metric_rows
+from integrity_agent.domains.photovoltaics.schema import PVMetricRow, PVFieldMapping, PVConsistencyFinding
 
 def test_pv_schema_dataclasses():
     row = PVMetricRow(

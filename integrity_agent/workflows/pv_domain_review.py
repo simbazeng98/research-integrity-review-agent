@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-import sys
 from typing import Any
 
+from pydantic import ValidationError
+
 from integrity_agent.core.tables.table_schema import TableManifestItem
-from integrity_agent.domains.photovoltaics.schema import build_pv_metric_rows, PVMetricRow, PVConsistencyFinding
+from integrity_agent.domains.photovoltaics.schema import (
+    PVConsistencyFinding,
+    build_pv_metric_rows,
+)
 from integrity_agent.domains.photovoltaics.field_mapping import infer_pv_field_mapping
 from integrity_agent.domains.photovoltaics.pce_consistency import run_pce_consistency_check
 from integrity_agent.domains.photovoltaics.eqe_jv_consistency import run_eqe_jv_jsc_consistency_check
@@ -15,18 +19,217 @@ from integrity_agent.domains.photovoltaics.reporting_completeness import run_pv_
 from integrity_agent.domains.photovoltaics.stability_reporting import run_pv_stability_reporting_check
 from integrity_agent.domains.photovoltaics.tandem_consistency import run_tandem_consistency_check
 from integrity_agent.domains.photovoltaics.materials_characterization import run_materials_characterization_check
+from integrity_agent.domains.photovoltaics.decay_fit_consistency import (
+    DecayFitRecord,
+    run_decay_fit_consistency_check,
+)
+from integrity_agent.workflows.validate_ledger import validate_ledger_file
 
 DEFAULT_OUTPUT_DIR = Path("outputs") / "pv_domain"
+DECAY_FINDINGS_NAME = "pv_decay_fit_findings.jsonl"
+DECAY_SUMMARY_NAME = "pv_decay_fit_summary.md"
+
+
+class PVDecayFitReviewError(ValueError):
+    def __init__(self, issues: list[str] | str):
+        self.issues = [issues] if isinstance(issues, str) else list(issues)
+        super().__init__("; ".join(self.issues))
 
 def _write_jsonl(path: Path, records: list[dict]) -> None:
     with path.open("w", encoding="utf-8") as f:
         for r in records:
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
+
+def _safe_decay_input_label(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
+    except (OSError, ValueError):
+        return path.name
+
+
+def _decay_output_paths(output_dir: Path) -> tuple[Path, Path]:
+    return output_dir / DECAY_FINDINGS_NAME, output_dir / DECAY_SUMMARY_NAME
+
+
+def _clear_decay_outputs(output_dir: Path) -> None:
+    findings_path, summary_path = _decay_output_paths(output_dir)
+    for path in (
+        findings_path,
+        summary_path,
+        findings_path.with_suffix(findings_path.suffix + ".tmp"),
+        summary_path.with_suffix(summary_path.suffix + ".tmp"),
+    ):
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def _load_decay_fit_records(
+    records_path: Path,
+) -> tuple[list[DecayFitRecord], list[str]]:
+    records: list[DecayFitRecord] = []
+    warnings: list[str] = []
+    issues: list[str] = []
+    seen_ids: set[str] = set()
+
+    with records_path.open(encoding="utf-8") as handle:
+        for line_number, raw_line in enumerate(handle, start=1):
+            if not raw_line.strip():
+                warnings.append(f"line {line_number}: blank line ignored")
+                continue
+            try:
+                payload = json.loads(raw_line)
+            except json.JSONDecodeError as exc:
+                issues.append(f"line {line_number}: invalid JSON ({exc.msg})")
+                continue
+            if not isinstance(payload, dict):
+                issues.append(f"line {line_number}: decay-fit record must be a JSON object")
+                continue
+            try:
+                record = DecayFitRecord.model_validate(payload)
+            except ValidationError as exc:
+                details = "; ".join(
+                    f"{'.'.join(str(part) for part in error['loc'])}: {error['msg']}"
+                    for error in exc.errors()
+                )
+                issues.append(f"line {line_number}: {details}")
+                continue
+            if record.record_id in seen_ids:
+                issues.append(
+                    f"line {line_number}: duplicate record_id {record.record_id!r}"
+                )
+                continue
+            seen_ids.add(record.record_id)
+            records.append(record)
+
+    if issues:
+        raise PVDecayFitReviewError(issues)
+    if not records:
+        warnings.append("No structured decay-fit records were supplied")
+    return records, warnings
+
+
+def _write_decay_summary(
+    path: Path,
+    *,
+    input_label: str,
+    records: list[DecayFitRecord],
+    finding_records: list[dict[str, Any]],
+    warnings: list[str],
+) -> None:
+    confirmed_count = sum(1 for record in records if record.human_confirmed)
+    draft_count = len(records) - confirmed_count
+    status = "warning" if warnings else "success"
+    risk_counts = {
+        risk: sum(1 for record in finding_records if record.get("risk_level") == risk)
+        for risk in ("low", "medium", "high")
+    }
+    lines = [
+        "# PV Decay-Fit Structured Review Summary",
+        "",
+        f"- Status: {status}",
+        f"- Input: `{input_label}`",
+        f"- Input records: {len(records)}",
+        f"- Human-confirmed records: {confirmed_count}",
+        f"- Draft records excluded from findings: {draft_count}",
+        f"- Findings: {len(finding_records)}",
+        f"- Risk counts: low={risk_counts['low']}, medium={risk_counts['medium']}, high={risk_counts['high']}",
+        "",
+        "## Warnings",
+    ]
+    if warnings:
+        lines.extend(f"- {warning}" for warning in warnings)
+    else:
+        lines.append("- None.")
+    lines.extend(
+        [
+            "",
+            "## Safety and interpretation",
+            "- This wrapper reads structured JSONL records only and performs no PDF, image, OCR, or language-model extraction.",
+            "- A mismatch is a candidate consistency signal requiring formula, unit, sample, source-version, and fit-parameter verification.",
+            "- Missing or unsupported formula context remains low risk and is excluded from open scoring.",
+            "",
+        ]
+    )
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def run_pv_decay_fit_review(
+    records_path: Path | str,
+    output_dir: Path | str | None = None,
+) -> tuple[Path, Path]:
+    """Review explicit structured TRPL/TPV JSONL records, entirely offline.
+
+    This wrapper is intentionally separate from the legacy table-derived PV
+    dataclasses. It never attempts PDF/OCR extraction.
+    """
+    input_path = Path(records_path)
+    resolved_out = (
+        DEFAULT_OUTPUT_DIR / "decay_fit"
+        if output_dir is None
+        else Path(output_dir)
+    )
+    target_findings, target_summary = _decay_output_paths(resolved_out)
+    input_resolved = input_path.resolve()
+    if input_resolved in {
+        target_findings.resolve(),
+        target_summary.resolve(),
+    }:
+        raise PVDecayFitReviewError(
+            "structured input and generated output paths must differ"
+        )
+    _clear_decay_outputs(resolved_out)
+    if input_path.suffix.lower() != ".jsonl":
+        raise PVDecayFitReviewError(
+            "PV decay-fit review accepts structured JSONL only; PDF/OCR extraction is not performed"
+        )
+    if not input_path.is_file():
+        raise PVDecayFitReviewError(f"structured JSONL file not found: {input_path.name}")
+
+    try:
+        records, warnings = _load_decay_fit_records(input_path)
+    except (OSError, PVDecayFitReviewError) as exc:
+        _clear_decay_outputs(resolved_out)
+        if isinstance(exc, PVDecayFitReviewError):
+            raise
+        raise PVDecayFitReviewError(f"could not read structured JSONL: {exc}") from exc
+
+    findings = run_decay_fit_consistency_check(records)
+    finding_records = [finding.to_ledger_record() for finding in findings]
+
+    resolved_out.mkdir(parents=True, exist_ok=True)
+    findings_path, summary_path = _decay_output_paths(resolved_out)
+    findings_tmp = findings_path.with_suffix(findings_path.suffix + ".tmp")
+    summary_tmp = summary_path.with_suffix(summary_path.suffix + ".tmp")
+    try:
+        _write_jsonl(findings_tmp, finding_records)
+        validation = validate_ledger_file(findings_tmp)
+        if not validation.ok:
+            details = "; ".join(issue.format() for issue in validation.issues)
+            raise PVDecayFitReviewError(
+                "generated PV decay-fit ledger failed validation: " + details
+            )
+        _write_decay_summary(
+            summary_tmp,
+            input_label=_safe_decay_input_label(input_path),
+            records=records,
+            finding_records=finding_records,
+            warnings=warnings,
+        )
+        findings_tmp.replace(findings_path)
+        summary_tmp.replace(summary_path)
+    except Exception:
+        _clear_decay_outputs(resolved_out)
+        raise
+    return findings_path.resolve(), summary_path.resolve()
+
 def run_pv_domain_review(
     manifest_path: Path | str,
     column_profiles_path: Path | str | None = None,
     output_dir: Path | str | None = None,
+    table_base_dir: Path | str | None = None,
     pce_tolerance_abs: float = 0.3,
     pce_tolerance_rel: float = 0.03,
     eqe_jsc_tolerance_rel: float = 0.10,
@@ -40,7 +243,11 @@ def run_pv_domain_review(
     resolved_out.mkdir(parents=True, exist_ok=True)
 
     # 1. Build PV Metric Rows
-    pv_rows = build_pv_metric_rows(manifest_path, column_profiles_path)
+    pv_rows = build_pv_metric_rows(
+        manifest_path,
+        column_profiles_path,
+        table_base_dir=table_base_dir,
+    )
 
     # Load manifest items for column mappings output
     items: list[TableManifestItem] = []

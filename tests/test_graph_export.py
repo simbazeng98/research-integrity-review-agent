@@ -3,8 +3,6 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from pathlib import Path
-import pytest
 
 from integrity_agent.workflows.graph_export import run_graph_export
 

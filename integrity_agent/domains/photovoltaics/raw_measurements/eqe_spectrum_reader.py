@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 from integrity_agent.domains.photovoltaics.raw_measurements.schema import EQESpectrum

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import json
 import csv
 import subprocess
 import sys
 from pathlib import Path
-import pytest
+
+from integrity_agent.core.intake.batch_schema import LiteratureItem
+from integrity_agent.workflows.batch_intake import _write_csv_table
 
 
 def test_batch_intake_cli_txt():
@@ -111,3 +112,25 @@ def test_batch_intake_cli_bib():
         assert rows[1]["doi"] == "10.0000/toy-retracted"
         assert rows[1]["crossref_update_status"] == "retraction"
         assert rows[1]["journal"] == "Nature Materials"
+
+
+def test_batch_intake_csv_neutralizes_all_formula_prefixes_and_keeps_numbers(tmp_path):
+    csv_table = tmp_path / "batch_intake_table.csv"
+    prefixes = ["=FORMULA", "+FORMULA", "-FORMULA", "@FORMULA"]
+    items = [
+        LiteratureItem(
+            item_id=f"item-{index}",
+            source_file="input.json",
+            source_format="csl_json",
+            title=value,
+            year=2024,
+        )
+        for index, value in enumerate(prefixes)
+    ]
+
+    _write_csv_table(csv_table, items)
+    with csv_table.open(encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+
+    assert [row["title"] for row in rows] == [f"'{value}" for value in prefixes]
+    assert [row["year"] for row in rows] == ["2024"] * 4

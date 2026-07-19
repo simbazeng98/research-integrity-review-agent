@@ -30,6 +30,7 @@ source_type_map:
   science_news_investigation: news_report
   bilibili_video: video_public_claim
   video_public_claim: video_public_claim
+  public_method: video_public_claim
   peer_review_platform: peer_review_platform
   tool_and_text_signal: peer_review_platform
   dataset: peer_review_platform

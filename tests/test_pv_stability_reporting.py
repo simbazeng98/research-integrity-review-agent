@@ -36,3 +36,29 @@ def test_stability_reporting_detector():
     )
     findings = run_pv_stability_reporting_check([row_complete])
     assert not findings
+
+
+def test_empty_temperature_and_humidity_cells_do_not_count_as_reported_conditions():
+    row_empty_environment = PVMetricRow(
+        row_id="4", source_file="test.csv", table_id="tbl-4", row_index=1,
+        stability_duration_h=500.0,
+        stabilized_power_output_percent=21.0,
+        mpp_tracking="on",
+        encapsulation="glass",
+        raw_values={
+            "Stability duration (h)": "500",
+            "Stabilized power output (%)": "21",
+            "Light intensity (mW/cm2)": "80",
+            "Temperature (C)": "",
+            "Humidity (%)": "",
+            "MPP tracking": "on",
+            "Encapsulation": "glass",
+        },
+    )
+
+    findings = run_pv_stability_reporting_check([row_empty_environment])
+
+    assert len(findings) == 1
+    missing_conditions = findings[0].observed_values["missing_conditions"]
+    assert "temperature conditions" in missing_conditions
+    assert "humidity or atmospheric environment" in missing_conditions

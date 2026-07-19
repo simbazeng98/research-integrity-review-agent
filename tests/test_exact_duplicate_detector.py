@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pytest
 from integrity_agent.core.images.image_schema import ImageManifestItem
 from integrity_agent.detectors.image.exact_duplicate import detect_exact_duplicates
 

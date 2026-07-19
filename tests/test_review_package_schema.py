@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 from integrity_agent.core.packages.package_schema import (
     ReviewPackageInput,
     EvidenceModuleStatus,

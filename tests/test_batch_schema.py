@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from integrity_agent.core.intake.batch_schema import LiteratureItem, BatchIntakeResult, BatchItemStatus
+from integrity_agent.core.intake.batch_schema import LiteratureItem, BatchIntakeResult
 
 
 def test_literature_item_defaults():

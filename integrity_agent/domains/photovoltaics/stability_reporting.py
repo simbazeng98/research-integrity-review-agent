@@ -2,6 +2,22 @@ from __future__ import annotations
 
 from integrity_agent.domains.photovoltaics.schema import PVMetricRow, PVConsistencyFinding
 
+
+def _has_nonempty_raw_condition(
+    rows: list[PVMetricRow],
+    keywords: tuple[str, ...],
+) -> bool:
+    for row in rows:
+        for column_name, value in row.raw_values.items():
+            column_lower = str(column_name).lower()
+            if not any(keyword in column_lower for keyword in keywords):
+                continue
+            if value is not None and str(value).strip().lower() not in {
+                "", "n/a", "na", "nan", "none", "null"
+            }:
+                return True
+    return False
+
 def run_pv_stability_reporting_check(rows: list[PVMetricRow]) -> list[PVConsistencyFinding]:
     findings: list[PVConsistencyFinding] = []
     
@@ -51,13 +67,16 @@ def run_pv_stability_reporting_check(rows: list[PVMetricRow]) -> list[PVConsiste
 
         # Check for temperature
         has_temp = any(getattr(r, "temperature_c", None) is not None for r in t_rows) or \
-                   any(any(k in col for k in ("temp", "temperature")) for col in raw_cols_lower)
+                   _has_nonempty_raw_condition(t_rows, ("temp", "temperature"))
         if not has_temp:
             missing_conditions.append("temperature conditions")
 
         # Check for humidity/atmosphere
         has_humidity = any(getattr(r, "humidity_percent", None) is not None for r in t_rows) or \
-                       any(any(k in col for k in ("humidity", "rh", "atmosphere", "nitrogen", "n2", "air", "ambient")) for col in raw_cols_lower)
+                       _has_nonempty_raw_condition(
+                           t_rows,
+                           ("humidity", "rh", "atmosphere", "nitrogen", "n2", "air", "ambient"),
+                       )
         if not has_humidity:
             missing_conditions.append("humidity or atmospheric environment")
 

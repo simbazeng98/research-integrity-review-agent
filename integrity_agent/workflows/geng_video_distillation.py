@@ -11,7 +11,7 @@ from typing import Any, Callable
 
 import yaml
 
-from integrity_agent.core.safety import FORBIDDEN_VERDICT_PHRASES as FORBIDDEN_PHRASES
+from integrity_agent.core.safety import find_runtime_safety_issues, walk_text_values
 
 DEFAULT_SEED_URLS = [
     "https://www.bilibili.com/video/BV13E7q6qEZq/",  # specific paper/case discussion
@@ -67,17 +67,6 @@ FORBIDDEN_PUBLIC_KEYS = {
     "screenshot_set",
     "user_id",
     "username",
-}
-
-FORBIDDEN_PUBLIC_PATH_FRAGMENTS = {
-    "private_video_corpora/",
-    "private_transcripts/",
-    "private_chunk_notes/",
-    "private_screenshots/",
-    "raw_metadata/",
-    "private_audio/",
-    "D:/",
-    "C:/Users/",
 }
 
 FORBIDDEN_PUBLIC_TITLE_TERMS = {
@@ -573,7 +562,6 @@ def _signals_for_video(title: str, case_kind: str) -> tuple[str, list[str], list
             ["methodology_triage_workflow_from_geng_videos"],
             ["method scope", "benign-control examples", "independent expert review"],
         )
-    title_l = title.lower()
     if any(token in title for token in ["图", "显微", "WB", "Western", "图像"]):
         return (
             "image_integrity",
@@ -698,6 +686,7 @@ def distill_geng_video_cases(
             risk_signals = risk_signals + ["video metadata/description lists DOI-level examples; formal public status remains unverified in this dry-run"]
         card = {
             "case_id": f"geng_video_{bv_id.lower()}",
+            "priority": "P1",
             "source_type": "bilibili_video",
             "source_url": video.get("url") or normalize_bilibili_url(bv_id),
             "bv_id": bv_id,
@@ -750,23 +739,6 @@ class GengVideoSafetyError(ValueError):
     pass
 
 
-def _walk_strings(obj: Any) -> list[str]:
-    if isinstance(obj, dict):
-        values: list[str] = []
-        for key, value in obj.items():
-            values.append(str(key))
-            values.extend(_walk_strings(value))
-        return values
-    if isinstance(obj, list):
-        values = []
-        for item in obj:
-            values.extend(_walk_strings(item))
-        return values
-    if isinstance(obj, str):
-        return [obj]
-    return []
-
-
 def validate_geng_video_case_card(card: dict[str, Any]) -> None:
     errors: list[str] = []
     missing = PUBLIC_CASE_REQUIRED_FIELDS - set(card)
@@ -796,17 +768,8 @@ def validate_geng_video_case_card(card: dict[str, Any]) -> None:
     forbidden_keys = keys & FORBIDDEN_PUBLIC_KEYS
     if forbidden_keys:
         errors.append(f"public case card contains forbidden transcript/comment/media keys: {sorted(forbidden_keys)}")
-    text_values = _walk_strings(card)
-    text_blob = "\n".join(text_values).lower()
-    for phrase in FORBIDDEN_PHRASES:
-        if phrase.lower() in text_blob:
-            errors.append(f"forbidden phrase found: {phrase}")
-    for value in text_values:
-        normalized = value.replace("\\", "/")
-        lowered = normalized.lower()
-        for fragment in FORBIDDEN_PUBLIC_PATH_FRAGMENTS:
-            if fragment.lower() in lowered:
-                errors.append(f"public case card contains private/local path fragment: {fragment}")
+    errors.extend(find_runtime_safety_issues(card))
+    text_values = walk_text_values(card)
     for value in text_values:
         if len(value) > 1200:
             errors.append("possible long quote/transcript segment found in public case card")

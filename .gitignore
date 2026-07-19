@@ -32,13 +32,12 @@ zotero_exports_private/
 real_figures/
 real_source_data/
 
-# Allow toy examples and test fixtures
-!examples/**/*.csv
-!examples/**/*.tsv
-!examples/**/*.xlsx
-!examples/**/*.md
-!examples/**/*.txt
-!tests/**/*.csv
+# Generic local-only source roots. Put machine-specific corpus names in
+# .git/info/exclude so private labels never enter public repository history.
+private_sources/
+private_research_data/
+private_account_exports/
+
 # Private/real data paths
 real_pv_data/
 real_jv_data/
@@ -54,20 +53,26 @@ real_excel_audit/
 *.iv
 *.eqe
 
-# Explicitly allow toy raw PV package files
-!examples/
-!examples/**
-!tests/
-!tests/**
+# Allow ignored data formats only in known synthetic fixture roots.
+!examples/toy_batch_intake/*.csv
+!examples/toy_batch_intake/*.txt
+!examples/toy_pv_package/*.csv
+!examples/toy_pv_package/*.tsv
+!examples/toy_pv_package/*.xlsx
 !examples/toy_raw_pv_package/**/*.csv
-!examples/toy_raw_pv_package/**/*.tsv
-!examples/toy_raw_pv_package/**/*.txt
 !examples/toy_raw_pv_package/**/*.xlsx
 !examples/toy_raw_pv_package/**/*.xlsm
-!examples/toy_raw_pv_package/**/*.md
-!examples/toy_raw_pv_package/README.md
+!examples/toy_review_package/**/*.csv
+!examples/toy_review_package/**/*.tsv
+!examples/toy_review_package/**/*.txt
+!examples/toy_review_package/**/*.xlsx
+!examples/toy_review_package/**/*.xlsm
+!examples/toy_rule_package/*.csv
+!examples/toy_table_package/*.csv
+!examples/toy_table_package/*.tsv
+!examples/toy_table_package/*.xlsx
 
-# Python/test runtime artifacts stay local even after fixture allow rules.
+# Python/test runtime artifacts stay local.
 __pycache__/
 **/__pycache__/
 *.py[cod]

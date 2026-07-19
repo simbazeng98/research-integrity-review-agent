@@ -1,0 +1,39 @@
+case_id: perovskite_public_method_ne_quantization_grid_2026
+priority: P1
+field: numeric_table_integrity
+scope: research_integrity
+source_type: public_method
+source_url: https://www.xiaohongshu.com/explore/6a51e989000000001603ea0b
+feed_id: 6a51e989000000001603ea0b
+source_accessed_at: '2026-07-11'
+target_doi: 10.1038/s41560-026-02067-w
+public_status: public_method_example
+summary: >
+  Distilled review method: profile repeated time-series values, candidate lattice
+  steps, run lengths, and grid overlap, then compare them with declared
+  instrument or export resolution before requesting source data.
+evidence_tier: E1
+evidence_patterns:
+  - repeated_or_quantized_time_series_values
+  - candidate_lattice_step_requires_resolution_context
+  - related_curve_grid_overlap_requires_source_data_review
+detector_candidates:
+  - measurement_precision_anomaly
+  - quantization_grid
+manual_verification_needed:
+  - Compare the reported series with the publisher source-data file and original export precision.
+  - Confirm instrument resolution, rounding, normalization, and preprocessing settings.
+false_positive_risks:
+  - Instrument or software export resolution can create a legitimate value grid.
+  - Rounding, normalization, smoothing, or small sample counts can increase repetition.
+alternative_explanations:
+  - A declared acquisition or export step may explain the observed lattice.
+  - Shared preprocessing can align related curves without implying an integrity issue.
+safe_report_language: >
+  Candidate quantization-grid risk signal requiring source-data and instrument-resolution review.
+limitations:
+  - Social claims and commenter identities are not independently verified.
+  - This card retains only distilled method metadata and no raw post or comment content.
+counter_sources: []
+resolution_status: unresolved
+version_timeline: []

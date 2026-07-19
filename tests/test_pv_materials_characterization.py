@@ -39,3 +39,41 @@ def test_materials_characterization_detector():
     findings = run_materials_characterization_check([row_pl])
     assert len(findings) == 1
     assert any("excitation wavelength" in item for item in findings[0].observed_values["missing_metadata"])
+
+
+def test_materials_characterization_requires_explicit_tokens_not_bare_substrings():
+    # "sample" contains "pl" and "temperature" contains "tem", but neither
+    # is an explicit materials-characterization token.
+    row_false_positive = PVMetricRow(
+        row_id="5", source_file="sample_metrics.csv", table_id="tbl-5", row_index=1,
+        raw_values={"Temperature (C)": "25"},
+    )
+    assert run_materials_characterization_check([row_false_positive]) == []
+
+    # A filename can provide candidate context but cannot create a finding alone.
+    row_filename_only = PVMetricRow(
+        row_id="6", source_file="xrd_results.csv", table_id="tbl-6", row_index=1,
+        raw_values={"Value": "1"},
+    )
+    assert run_materials_characterization_check([row_filename_only]) == []
+
+
+def test_materials_characterization_routes_explicit_aliases():
+    cases = [
+        ("XRD", "XRD"),
+        ("XPS", "XPS"),
+        ("TRPL", "PL/TRPL"),
+        ("SEM image", "SEM/TEM"),
+        ("TEM micrograph", "SEM/TEM"),
+    ]
+    for index, (header, expected_kind) in enumerate(cases, start=1):
+        row = PVMetricRow(
+            row_id=f"alias-{index}",
+            source_file="metrics.csv",
+            table_id=f"tbl-alias-{index}",
+            row_index=1,
+            raw_values={header: "present"},
+        )
+        findings = run_materials_characterization_check([row])
+        assert len(findings) == 1, header
+        assert findings[0].observed_values["characterization_type"] == expected_kind

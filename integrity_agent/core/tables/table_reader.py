@@ -22,6 +22,6 @@ def read_any_table(
     elif ext == ".md":
         return parse_markdown_table(file_path)
     elif ext in [".xlsx", ".xlsm"]:
-        return parse_xlsx_sheet(file_path, sheet_name or "Sheet1")
+        return parse_xlsx_sheet(file_path, sheet_name)
 
     return [], [], [f"Unsupported format: {ext}"]

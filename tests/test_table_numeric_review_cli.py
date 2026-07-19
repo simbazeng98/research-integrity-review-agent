@@ -4,7 +4,6 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-import pytest
 
 
 def test_table_numeric_review_cli():

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from integrity_agent.core.tables.adapters.tsv_table import parse_tsv_table
 
 

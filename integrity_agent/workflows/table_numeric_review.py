@@ -6,6 +6,7 @@ from pathlib import Path
 from integrity_agent.core.rules.registry import load_rule_registry
 from integrity_agent.core.tables.table_schema import TableManifestItem, TableEvidenceFinding
 from integrity_agent.detectors.numeric.fixed_delta import detect_fixed_delta
+from integrity_agent.detectors.numeric.quantization_grid import detect_quantization_grid
 from integrity_agent.detectors.numeric.terminal_digit import detect_terminal_digits
 
 DEFAULT_OUTPUT_DIR = Path("outputs") / "table_intake"
@@ -120,6 +121,8 @@ def _generate_numeric_review_summary_md(
 def run_table_numeric_review(
     manifest_jsonl_path: Path | str,
     output_dir: Path | str | None = None,
+    table_base_dir: Path | str | None = None,
+    column_profiles_path: Path | str | None = None,
 ) -> tuple[Path, Path]:
     """Execute v0.9 Table Numeric Review routing over a table manifest."""
     manifest_jsonl_path = Path(manifest_jsonl_path)
@@ -136,12 +139,33 @@ def run_table_numeric_review(
             if line.strip():
                 items.append(TableManifestItem(**json.loads(line)))
 
+    profiles_by_table: dict[str, dict[str, dict]] = {}
+    if column_profiles_path is not None:
+        profiles_path = Path(column_profiles_path)
+        if profiles_path.exists():
+            with profiles_path.open(encoding="utf-8") as handle:
+                for line in handle:
+                    if not line.strip():
+                        continue
+                    record = json.loads(line)
+                    table_id = record.get("table_id")
+                    profile = record.get("profile")
+                    if not table_id or not isinstance(profile, dict):
+                        continue
+                    column_name = profile.get("column_name")
+                    if column_name:
+                        profiles_by_table.setdefault(str(table_id), {})[
+                            str(column_name)
+                        ] = profile
+
     # 2. Load registry rules
     project_root = Path.cwd()
+    base_dir = Path(table_base_dir) if table_base_dir is not None else project_root
     registry = load_rule_registry(project_root / "knowledge_base" / "detector_rules")
 
     rule_fd = registry.get("numeric_fixed_delta_between_columns")
     rule_td = registry.get("numeric_terminal_digit_anomaly")
+    rule_qg = registry.get("measurement_precision_anomaly")
 
     findings: list[TableEvidenceFinding] = []
     finding_idx = 1
@@ -151,7 +175,7 @@ def run_table_numeric_review(
         # Resolve target table file path
         file_path = Path(item.relative_path)
         if not file_path.is_absolute():
-            file_path = (project_root / item.relative_path).resolve()
+            file_path = (base_dir / item.relative_path).resolve()
 
         if not file_path.exists():
             # Try prepending examples/toy_table_package
@@ -159,9 +183,18 @@ def run_table_numeric_review(
             if fallback.exists():
                 file_path = fallback
             else:
-                continue
+                raise FileNotFoundError(
+                    f"Table manifest path could not be resolved: {item.relative_path}"
+                )
 
-        options = {"manifest_item": item, "table_id": item.table_id}
+        # Keep the public manifest relative, but pass the already-resolved path
+        # to detector runtime so it does not resolve against Path.cwd().
+        options = {
+            "file_path": file_path,
+            "sheet_name": item.sheet_name,
+            "table_id": item.table_id,
+            "profiles": profiles_by_table.get(item.table_id, {}),
+        }
 
         # Run Domain Routing
         from integrity_agent.domains import route_table_columns
@@ -218,6 +251,30 @@ def run_table_numeric_review(
             td_results = detect_terminal_digits(file_path, rule_td, options)
             for res in td_results:
                 cols, row_range = _parse_columns_and_rows_from_loc(res.evidence_items[0].get("location", ""))
+                finding = TableEvidenceFinding(
+                    finding_id=f"TBL-FIND-{finding_idx:03d}",
+                    rule_id=res.rule_id,
+                    risk_level=res.risk_level,
+                    table_id=item.table_id,
+                    source_file=item.source_file,
+                    column_names=cols,
+                    row_range=row_range,
+                    safe_report_language=res.safe_report_language,
+                    alternative_explanations=res.alternative_explanations,
+                    false_positive_risks=res.false_positive_risks,
+                    manual_verification=res.missing_verification_materials,
+                    metadata=res.metadata,
+                )
+                findings.append(finding)
+                finding_idx += 1
+
+        # Run quantization-grid detector using table-intake ColumnProfile data.
+        if rule_qg:
+            qg_results = detect_quantization_grid(file_path, rule_qg, options)
+            for res in qg_results:
+                cols, row_range = _parse_columns_and_rows_from_loc(
+                    res.evidence_items[0].get("location", "")
+                )
                 finding = TableEvidenceFinding(
                     finding_id=f"TBL-FIND-{finding_idx:03d}",
                     rule_id=res.rule_id,

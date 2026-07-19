@@ -28,3 +28,22 @@
 
 These anchors support cautious reporting language: "candidate risk signal" and
 "needs manual verification" are preferred over accusations.
+
+## Scope Firewall
+
+Every new review item must declare one of these explicit scopes. The runtime
+does not infer scope from words in a title, summary, file name, or comment.
+
+- `research_integrity`: arithmetic, source-data, image, provenance, reporting,
+  or cross-document consistency. These candidate signals may contribute to the
+  Manual Review Priority Index (MRPI).
+- `engineering_plausibility`: cost, scalability, deposition feasibility,
+  supply chain, or industrial value. These are shown as separate engineering
+  questions and contribute zero to integrity MRPI.
+- `unsupported_motive`: an unsupported assertion about intent, concealment, or
+  deception. This scope is not a valid evidence-ledger finding and is omitted
+  from public reports.
+
+Records created before the scope field was introduced remain readable and
+default to `research_integrity`. Producers of new records are responsible for
+setting the scope explicitly.

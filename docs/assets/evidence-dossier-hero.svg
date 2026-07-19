@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="520" viewBox="0 0 1440 520" role="img" aria-labelledby="hero-title hero-desc">
+  <title id="hero-title">Research Integrity Evidence Review Agent</title>
+  <desc id="hero-desc">An evidence dossier connecting sources, candidate signals, counter-evidence, and human verification without issuing a verdict.</desc>
+
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101419"/>
+      <stop offset="1" stop-color="#182029"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4F0E6"/>
+      <stop offset="1" stop-color="#E8E1D2"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#C99A3D" stroke-width="1" opacity="0.09"/>
+    </pattern>
+  </defs>
+
+  <rect width="1440" height="520" rx="28" fill="url(#background)"/>
+  <rect width="1440" height="520" rx="28" fill="url(#grid)"/>
+  <rect x="0" y="0" width="14" height="520" rx="7" fill="#A84A3A"/>
+  <rect x="14" y="0" width="5" height="520" fill="#C99A3D"/>
+
+  <g font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif">
+    <text x="88" y="92" fill="#C99A3D" font-size="20" font-weight="700" letter-spacing="5">RESEARCH INTEGRITY REVIEW</text>
+    <text x="88" y="178" fill="#F4F0E6" font-size="64" font-weight="750" letter-spacing="-1">EVIDENCE</text>
+    <text x="88" y="244" fill="#F4F0E6" font-size="64" font-weight="750" letter-spacing="-1">DOSSIER</text>
+    <rect x="88" y="278" width="108" height="5" rx="2.5" fill="#C99A3D"/>
+    <text x="88" y="331" fill="#F4F0E6" font-size="25" font-weight="620">证据先行 / 可追溯 / 可反证 / 人工复核</text>
+    <text x="88" y="376" fill="#BFC6C9" font-size="17" font-weight="520" letter-spacing="1.2">TRACEABLE · COUNTERCHECKED · HUMAN REVIEWED</text>
+
+    <g transform="translate(88 420)">
+      <rect width="142" height="42" rx="21" fill="#275C4A"/>
+      <text x="71" y="27" fill="#F4F0E6" font-size="14" text-anchor="middle" font-weight="720" letter-spacing="1">LOCAL FIRST</text>
+      <rect x="158" width="188" height="42" rx="21" fill="none" stroke="#C99A3D" stroke-width="1.5"/>
+      <text x="252" y="27" fill="#C99A3D" font-size="14" text-anchor="middle" font-weight="720" letter-spacing="1">CANDIDATE SIGNALS</text>
+      <rect x="362" width="166" height="42" rx="21" fill="none" stroke="#F4F0E6" stroke-width="1.5" opacity="0.9"/>
+      <text x="445" y="27" fill="#F4F0E6" font-size="14" text-anchor="middle" font-weight="720" letter-spacing="1">NO AUTO VERDICT</text>
+    </g>
+
+    <g transform="translate(760 58)">
+      <rect width="590" height="404" rx="18" fill="#080B0E" opacity="0.42"/>
+      <rect x="-10" y="-10" width="590" height="404" rx="18" fill="url(#paper)" stroke="#C99A3D" stroke-width="2"/>
+      <rect x="20" y="20" width="550" height="52" rx="8" fill="#101419"/>
+      <text x="44" y="52" fill="#F4F0E6" font-size="19" font-weight="750" letter-spacing="2">REVIEW CHAIN</text>
+      <text x="538" y="52" fill="#C99A3D" font-size="14" font-weight="720" text-anchor="end">HUMAN GATE</text>
+
+      <line x1="72" y1="123" x2="488" y2="123" stroke="#101419" stroke-width="3" opacity="0.25"/>
+      <circle cx="72" cy="123" r="17" fill="#101419"/>
+      <circle cx="210" cy="123" r="17" fill="#C99A3D"/>
+      <circle cx="350" cy="123" r="17" fill="#A84A3A"/>
+      <circle cx="488" cy="123" r="17" fill="#275C4A"/>
+      <text x="72" y="129" fill="#F4F0E6" font-size="15" font-weight="800" text-anchor="middle">1</text>
+      <text x="210" y="129" fill="#101419" font-size="15" font-weight="800" text-anchor="middle">2</text>
+      <text x="350" y="129" fill="#F4F0E6" font-size="15" font-weight="800" text-anchor="middle">3</text>
+      <text x="488" y="129" fill="#F4F0E6" font-size="15" font-weight="800" text-anchor="middle">4</text>
+
+      <text x="72" y="158" fill="#101419" font-size="12" font-weight="750" text-anchor="middle" letter-spacing="0.8">SOURCE</text>
+      <text x="210" y="158" fill="#101419" font-size="12" font-weight="750" text-anchor="middle" letter-spacing="0.8">SIGNAL</text>
+      <text x="350" y="158" fill="#101419" font-size="12" font-weight="750" text-anchor="middle" letter-spacing="0.8">COUNTERCHECK</text>
+      <text x="488" y="158" fill="#101419" font-size="12" font-weight="750" text-anchor="middle" letter-spacing="0.8">VERIFY</text>
+
+      <g transform="translate(28 194)">
+        <rect width="252" height="78" rx="10" fill="#FFFFFF" opacity="0.68" stroke="#101419" stroke-width="1"/>
+        <rect width="7" height="78" rx="3.5" fill="#C99A3D"/>
+        <text x="25" y="29" fill="#101419" font-size="13" font-weight="800" letter-spacing="1">PROVENANCE</text>
+        <text x="25" y="54" fill="#4C535A" font-size="13">DOI · file · table · row · version</text>
+      </g>
+      <g transform="translate(300 194)">
+        <rect width="252" height="78" rx="10" fill="#FFFFFF" opacity="0.68" stroke="#101419" stroke-width="1"/>
+        <rect width="7" height="78" rx="3.5" fill="#A84A3A"/>
+        <text x="25" y="29" fill="#101419" font-size="13" font-weight="800" letter-spacing="1">RISK CONTROL</text>
+        <text x="25" y="54" fill="#4C535A" font-size="13">limits · benign explanations</text>
+      </g>
+      <g transform="translate(28 290)">
+        <rect width="524" height="70" rx="10" fill="#275C4A"/>
+        <text x="24" y="27" fill="#F4F0E6" font-size="13" font-weight="800" letter-spacing="1">OUTPUT</text>
+        <text x="24" y="51" fill="#F4F0E6" font-size="14">Evidence ledger + verification requests + safe report language</text>
+      </g>
+    </g>
+  </g>
+</svg>

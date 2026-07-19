@@ -1,32 +1,15 @@
 from __future__ import annotations
 
 import json
-import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
-
 from pydantic import ValidationError
 
 from integrity_agent.core.evidence.ledger_schema import (
     EvidenceRecord,
     evidence_record_json_schema,
 )
-from integrity_agent.core.safety import FORBIDDEN_VERDICT_PHRASES
-
-
-WINDOWS_ABSOLUTE_PATH_RE = re.compile(
-    r"(?:\\\\\?\\)?[A-Za-z]:[\\/](?![\\/])[^\s\"'<>|]+",
-)
-UNC_PATH_RE = re.compile(r"\\\\(?!\?\\)[^\\/\s\"'<>|]+[\\/][^\\/\s\"'<>|]+")
-PRIVATE_PATH_FRAGMENTS = (
-    "private_video_corpora",
-    "private_transcripts",
-    "private_chunk_notes",
-    "raw_metadata",
-    "danmaku",
-    "bullet_comments",
-)
+from integrity_agent.core.safety import find_runtime_safety_issues
 
 
 @dataclass(frozen=True)
@@ -47,49 +30,6 @@ class LedgerValidationResult:
     @property
     def ok(self) -> bool:
         return not self.issues
-
-
-def _walk_strings(value: Any) -> list[str]:
-    if isinstance(value, str):
-        return [value]
-    if isinstance(value, dict):
-        strings: list[str] = []
-        for key, item in value.items():
-            strings.extend(_walk_strings(key))
-            strings.extend(_walk_strings(item))
-        return strings
-    if isinstance(value, list):
-        strings: list[str] = []
-        for item in value:
-            strings.extend(_walk_strings(item))
-        return strings
-    return []
-
-
-def _find_forbidden_phrase(value: Any) -> str | None:
-    strings = _walk_strings(value)
-    for text in strings:
-        lowered = text.lower()
-        for phrase in FORBIDDEN_VERDICT_PHRASES:
-            if phrase.lower() in lowered:
-                return phrase
-    return None
-
-
-def _find_private_path(value: Any) -> str | None:
-    strings = _walk_strings(value)
-    for text in strings:
-        normalized = text.replace("\\", "/")
-        for fragment in PRIVATE_PATH_FRAGMENTS:
-            if fragment in normalized:
-                return fragment
-        windows_match = WINDOWS_ABSOLUTE_PATH_RE.search(text)
-        if windows_match:
-            return windows_match.group(0)
-        unc_match = UNC_PATH_RE.search(text)
-        if unc_match:
-            return unc_match.group(0)
-    return None
 
 
 def validate_ledger_file(path: Path | str) -> LedgerValidationResult:
@@ -123,23 +63,20 @@ def validate_ledger_file(path: Path | str) -> LedgerValidationResult:
             continue
 
         record_data = record.model_dump(mode="json")
-        forbidden_phrase = _find_forbidden_phrase(record_data)
-        if forbidden_phrase:
+        for safety_issue in find_runtime_safety_issues(record_data):
+            if safety_issue.startswith("forbidden phrase"):
+                kind = "forbidden phrase"
+            elif safety_issue.startswith("private/local path"):
+                kind = "private path leak"
+            elif safety_issue.startswith("sensitive authentication"):
+                kind = "sensitive authentication material"
+            else:
+                kind = "runtime safety error"
             issues.append(
                 LedgerValidationIssue(
                     line=line_no,
-                    kind="forbidden phrase",
-                    message=f"blocked verdict-like phrase: {forbidden_phrase}",
-                )
-            )
-
-        private_path = _find_private_path(record_data)
-        if private_path:
-            issues.append(
-                LedgerValidationIssue(
-                    line=line_no,
-                    kind="private path leak",
-                    message=f"local/private path fragment found: {private_path}",
+                    kind=kind,
+                    message=safety_issue,
                 )
             )
 

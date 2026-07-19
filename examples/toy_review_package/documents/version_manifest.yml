@@ -1,0 +1,33 @@
+manifest_version: '1'
+target_doi: 10.1000/toy-version
+events:
+  - event_id: observed-v1
+    source_version: publisher-v1
+    source_type: original_public_version
+    source_url: https://publisher.example/toy-article/si-v1
+    observed_at: '2026-01-10'
+    status: mismatch_observed
+    related_finding_ids:
+      - crossdoc-1
+    related_claim_ids:
+      - toy-concentration-main
+      - toy-concentration-si
+  - event_id: response-1
+    source_version: author-response-v1
+    source_type: author_response
+    source_url: https://author.example/toy-response
+    observed_at: '2026-02-01'
+    status: response_received
+    resolves_event_ids:
+      - observed-v1
+  - event_id: current-si-v2
+    source_version: publisher-v2
+    source_type: current_publisher_si
+    source_url: https://publisher.example/toy-article/si-current
+    observed_at: '2026-03-01'
+    status: current_version_matches
+    resolution_status: resolved_by_version
+    resolves_event_ids:
+      - observed-v1
+    supersedes_versions:
+      - publisher-v1

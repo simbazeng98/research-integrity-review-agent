@@ -4,8 +4,9 @@ import csv
 import json
 from pathlib import Path
 
-from integrity_agent.core.images.image_schema import ImagePackageManifest, ImageEvidenceFinding, ImageManifestItem
+from integrity_agent.core.images.image_schema import ImageEvidenceFinding, ImageManifestItem
 from integrity_agent.core.images.folder_intake import intake_image_folder
+from integrity_agent.core.output_safety import sanitize_csv_cell
 from integrity_agent.detectors.image.exact_duplicate import detect_exact_duplicates
 
 DEFAULT_OUTPUT_DIR = Path("outputs") / "image_intake"
@@ -30,20 +31,25 @@ def _write_manifest_csv(path: Path, items: list[ImageManifestItem]) -> None:
         writer = csv.writer(f)
         writer.writerow(headers)
         for item in items:
-            writer.writerow([
-                item.image_id,
-                item.source_file,
-                item.relative_path,
-                item.file_name,
-                item.file_ext,
-                item.file_size_bytes,
-                item.sha256,
-                item.width,
-                item.height,
-                item.mode,
-                item.format,
-                "; ".join(item.warnings),
-            ])
+            writer.writerow(
+                [
+                    sanitize_csv_cell(value)
+                    for value in [
+                        item.image_id,
+                        item.source_file,
+                        item.relative_path,
+                        item.file_name,
+                        item.file_ext,
+                        item.file_size_bytes,
+                        item.sha256,
+                        item.width,
+                        item.height,
+                        item.mode,
+                        item.format,
+                        "; ".join(item.warnings),
+                    ]
+                ]
+            )
 
 
 def _write_jsonl(path: Path, records: list[dict]) -> None:

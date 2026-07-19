@@ -1,5 +1,5 @@
 rule_id: numeric_fixed_delta_between_columns
-status: draft_spec_only
+status: active
 linked_cases:
 - geng_tongji_numeric_anomaly_2026
 - ranga_dias_superconductivity_data_reliability
@@ -7,12 +7,13 @@ input_required:
 - source_table
 fields_required:
 - numeric_matrix
-risk_signal: repeated algebraic relation across columns that are reported as independent
-  measurements
+risk_signal: repeated constant difference across columns explicitly documented as
+  nominally independent measurements
 detection_idea:
-- compute pairwise column differences/ratios
-- look for repeated constant offsets after rounding
-- separate derived columns from independent measurements
+- compute pairwise constant differences only
+- require explicit nominally independent measurement semantics before integrity scoring
+- otherwise emit a low, non-scoring context question
+- suppress identifiers, row indices, formulas, derived values, normalizations and disclosed unit conversions
 manual_verification:
 - raw data
 - analysis script
@@ -28,8 +29,9 @@ traceability:
 - sheet
 - row
 - column
-safe_report_language: Candidate fixed-delta risk signal; verify whether columns are
-  derived, rounded, normalized, or unit-converted.
+safe_report_language: Candidate fixed-delta consistency signal between explicitly
+  independent measurement columns; verify formulas, units, normalization, rounding,
+  and raw data before interpretation.
 runtime_status: active
 execution_mode: offline
 toy_fixture: toy_numeric_fixed_delta.csv
@@ -46,3 +48,6 @@ known_false_positive_contexts:
   - "normalized measurements"
   - "unit conversions"
   - "disclosed formula columns"
+  - "identifier or row-index columns"
+  - "small samples"
+  - "columns without documented independence semantics"

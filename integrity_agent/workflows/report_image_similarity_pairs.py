@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import html
 import json
-import os
 from pathlib import Path
 from PIL import Image
+
+from integrity_agent.core.output_safety import resolve_local_asset, safe_local_asset_url
 
 DEFAULT_OUTPUT_HTML = Path("outputs") / "image_intake" / "image_similarity_pairs.html"
 
@@ -190,68 +191,63 @@ def generate_similarity_pairs_html(
     ]
 
     for cand in candidates:
-        cand_id = html.escape(str(cand.get("candidate_id", "")))
-        id_a = html.escape(str(cand.get("image_id_a", "")))
-        id_b = html.escape(str(cand.get("image_id_b", "")))
+        cand_id = html.escape(str(cand.get("candidate_id", "")), quote=True)
+        id_a_raw = str(cand.get("image_id_a", ""))
+        id_b_raw = str(cand.get("image_id_b", ""))
+        id_a = html.escape(id_a_raw, quote=True)
+        id_b = html.escape(id_b_raw, quote=True)
         path_a = str(cand.get("relative_path_a", ""))
         path_b = str(cand.get("relative_path_b", ""))
-        method = html.escape(str(cand.get("hash_method", "")))
+        method = html.escape(str(cand.get("hash_method", "")), quote=True)
         distance = int(cand.get("hamming_distance", 0))
         threshold = int(cand.get("threshold", 0))
 
         # Lookup details or load images to get dimensions
         dim_a = "unknown"
         dim_b = "unknown"
-        name_a = Path(path_a).name
-        name_b = Path(path_b).name
 
-        if id_a in manifest_lookup:
-            dim_a = f"{manifest_lookup[id_a]['width']} x {manifest_lookup[id_a]['height']}"
-        if id_b in manifest_lookup:
-            dim_b = f"{manifest_lookup[id_b]['width']} x {manifest_lookup[id_b]['height']}"
+        if id_a_raw in manifest_lookup:
+            dim_a = f"{manifest_lookup[id_a_raw]['width']} x {manifest_lookup[id_a_raw]['height']}"
+        if id_b_raw in manifest_lookup:
+            dim_b = f"{manifest_lookup[id_b_raw]['width']} x {manifest_lookup[id_b_raw]['height']}"
 
-        # Build relative paths to image files from output HTML
-        abs_a = project_root / path_a
-        abs_b = project_root / path_b
-
-        # If they don't exist, try fallback search under examples/
-        if not abs_a.exists():
-            abs_a = (project_root / "examples" / "toy_image_package" / path_a).resolve()
-        if not abs_b.exists():
-            abs_b = (project_root / "examples" / "toy_image_package" / path_b).resolve()
-
-        # If we still can't find them, rglob
-        if not abs_a.exists():
-            m = list(project_root.rglob(f"**/{Path(path_a).name}"))
-            if m:
-                abs_a = m[0]
-        if not abs_b.exists():
-            m = list(project_root.rglob(f"**/{Path(path_b).name}"))
-            if m:
-                abs_b = m[0]
+        # Resolve only project-contained assets. Avoid broad recursive searches
+        # and never embed paths that escape the local project root.
+        abs_a = resolve_local_asset(path_a, project_root=project_root)
+        abs_b = resolve_local_asset(path_b, project_root=project_root)
+        name_a = html.escape(abs_a.name, quote=True) if abs_a is not None else "unavailable"
+        name_b = html.escape(abs_b.name, quote=True) if abs_b is not None else "unavailable"
 
         # Read dimensions if we couldn't get them from manifest lookup
-        if dim_a == "unknown" and abs_a.exists():
+        if dim_a == "unknown" and abs_a is not None and abs_a.exists():
             try:
                 with Image.open(abs_a) as im:
                     dim_a = f"{im.width} x {im.height}"
             except Exception:
                 pass
-        if dim_b == "unknown" and abs_b.exists():
+        if dim_b == "unknown" and abs_b is not None and abs_b.exists():
             try:
                 with Image.open(abs_b) as im:
                     dim_b = f"{im.width} x {im.height}"
             except Exception:
                 pass
 
-        try:
-            url_a = os.path.relpath(abs_a, start=resolved_out.parent).replace("\\", "/")
-        except Exception:
-            url_a = path_a
-        try:
-            url_b = os.path.relpath(abs_b, start=resolved_out.parent).replace("\\", "/")
-        except Exception:
-            url_b = path_b
+        url_a = safe_local_asset_url(
+            path_a,
+            project_root=project_root,
+            output_parent=resolved_out.parent,
+        )
+        url_b = safe_local_asset_url(
+            path_b,
+            project_root=project_root,
+            output_parent=resolved_out.parent,
+        )
+        if url_a is not None:
+            url_a = html.escape(url_a, quote=True)
+        if url_b is not None:
+            url_b = html.escape(url_b, quote=True)
+        dim_a = html.escape(str(dim_a), quote=True)
+        dim_b = html.escape(str(dim_b), quote=True)
 
         html_lines.extend([
             '        <div class="pair-container">',
@@ -262,14 +258,22 @@ def generate_similarity_pairs_html(
             '            <div class="pair-grid">',
             '                <div class="image-column">',
             '                    <div class="image-box">',
-            f'                        <img src="{url_a}" alt="{name_a}">',
+            (
+                f'                        <img src="{url_a}" alt="{name_a}">'
+                if url_a is not None
+                else '                        <div class="image-unavailable">Preview unavailable</div>'
+            ),
             "                    </div>",
             f'                    <div class="image-label"><code>{id_a}</code> - {name_a}</div>',
             f'                    <div class="image-dim">Dimensions: {dim_a}</div>',
             "                </div>",
             '                <div class="image-column">',
             '                    <div class="image-box">',
-            f'                        <img src="{url_b}" alt="{name_b}">',
+            (
+                f'                        <img src="{url_b}" alt="{name_b}">'
+                if url_b is not None
+                else '                        <div class="image-unavailable">Preview unavailable</div>'
+            ),
             "                    </div>",
             f'                    <div class="image-label"><code>{id_b}</code> - {name_b}</div>',
             f'                    <div class="image-dim">Dimensions: {dim_b}</div>',

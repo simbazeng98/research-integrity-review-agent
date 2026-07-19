@@ -1,0 +1,4 @@
+interface:
+  display_name: "Safe Integrity Report"
+  short_description: "Turn reviewed evidence into a safe report"
+  default_prompt: "Use $write-safe-integrity-report to produce a publication-safe evidence review."
