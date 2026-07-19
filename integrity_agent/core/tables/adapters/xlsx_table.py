@@ -13,14 +13,17 @@ def get_xlsx_sheets(file_path: Path | str) -> list[str]:
         import openpyxl
         # Read only sheetnames quickly
         wb = openpyxl.load_workbook(filename=str(file_path), read_only=True, keep_links=False)
-        return wb.sheetnames
+        try:
+            return list(wb.sheetnames)
+        finally:
+            wb.close()
     except Exception:
         return []
 
 
 def parse_xlsx_sheet(
     file_path: Path | str,
-    sheet_name: str,
+    sheet_name: str | None,
 ) -> tuple[list[list[str]], list[str], list[str]]:
     """Parse a single Excel sheet and return (rows_data, column_headers, warnings)."""
     file_path = Path(file_path)
@@ -36,13 +39,18 @@ def parse_xlsx_sheet(
         warnings.append("openpyxl_not_installed")
         return [], [], warnings
 
+    wb = None
     try:
         wb = openpyxl.load_workbook(filename=str(file_path), data_only=True, read_only=True, keep_links=False)
-        if sheet_name not in wb.sheetnames:
-            warnings.append(f"Sheet '{sheet_name}' not found.")
+        selected_sheet = sheet_name or (wb.sheetnames[0] if wb.sheetnames else None)
+        if selected_sheet is None:
+            warnings.append("Workbook has no worksheets.")
+            return [], [], warnings
+        if selected_sheet not in wb.sheetnames:
+            warnings.append(f"Sheet '{selected_sheet}' not found.")
             return [], [], warnings
 
-        ws = wb[sheet_name]
+        ws = wb[selected_sheet]
         all_rows = []
         for r in ws.iter_rows(values_only=True):
             # Check if entire row is empty. If so, skip it.
@@ -70,3 +78,6 @@ def parse_xlsx_sheet(
     except Exception as e:
         warnings.append(f"Failed to read sheet: {e}")
         return [], [], warnings
+    finally:
+        if wb is not None:
+            wb.close()

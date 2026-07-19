@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
 
 from integrity_agent.domains.photovoltaics.schema import build_pv_metric_rows, PVMetricRow
-from integrity_agent.domains.photovoltaics.evidence_ruleset_v1 import TAXONOMY_RULESET, TaxonomyItem
+from integrity_agent.domains.photovoltaics.evidence_ruleset_v1 import TAXONOMY_RULESET
 from integrity_agent.core.path_display import display_path
 from integrity_agent.core.evidence.ledger_schema import EvidenceRecord
 

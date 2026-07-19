@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import shutil
+import pytest
 from integrity_agent.workflows.report_reader_review import write_reader_review_report
 
 def test_reader_report_pv_integration(tmp_path):
@@ -41,3 +42,42 @@ def test_reader_report_pv_integration(tmp_path):
     # 2. Verify forbidden phrases are NOT present
     for phrase in ["造假成立", "学术不端成立", "作者造假", "fraud confirmed", "misconduct confirmed"]:
         assert phrase not in content, f"Forbidden phrase found: '{phrase}'"
+
+
+def test_reader_report_accepts_generic_pv_ledger_without_legacy_table_id(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.chdir(tmp_path)
+    record = {
+        "finding_id": "PV-GENERIC-001",
+        "finding_category": "pv_consistency",
+        "type": "pv_tandem_current_matching",
+        "rule_id": "pv_tandem_current_matching",
+        "title": "Candidate tandem context",
+        "summary": "A tandem current-matching context needs verification.",
+        "safe_report_language": "A tandem current-matching context needs verification.",
+        "risk": "low",
+        "risk_level": "low",
+        "evidence": [
+            {
+                "source": "tables/tandem_context.csv",
+                "location": "rows 2-3",
+                "metadata": {"table_id": "table-from-evidence"},
+            }
+        ],
+        "manual_verification": {
+            "needed": True,
+            "requests": ["Confirm the supplied tandem context."],
+        },
+        "alternative_explanations": ["The record may be a completeness question."],
+        "limitations": ["Generic ledger fixture."],
+    }
+    findings = tmp_path / "findings.jsonl"
+    findings.write_text(json.dumps(record) + "\n", encoding="utf-8")
+
+    report = write_reader_review_report(findings, tmp_path / "report.md")
+    content = report.read_text(encoding="utf-8")
+
+    assert "table-from-evidence" in content
+    assert "Confirm the supplied tandem context." in content

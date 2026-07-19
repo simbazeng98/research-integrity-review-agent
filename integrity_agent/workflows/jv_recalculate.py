@@ -9,7 +9,7 @@ from pathlib import Path
 from integrity_agent.core.path_display import display_path
 import sys
 
-from integrity_agent.domains.photovoltaics.raw_measurements.schema import JVCurve, JVMetrics, RawPVConsistencyFinding
+from integrity_agent.domains.photovoltaics.raw_measurements.schema import RawPVConsistencyFinding
 from integrity_agent.domains.photovoltaics.raw_measurements.jv_curve_reader import read_jv_curve_file
 from integrity_agent.domains.photovoltaics.raw_measurements.jv_metrics import extract_jv_metrics
 from integrity_agent.domains.photovoltaics.raw_measurements.jv_hysteresis import pair_forward_reverse_curves, run_jv_hysteresis_check

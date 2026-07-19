@@ -11,6 +11,20 @@ from integrity_agent.workflows.report_reader_review import write_reader_review_r
 from integrity_agent.workflows.run_rules import run_rules
 
 
+def _print_failed_review_modules(summary: object) -> None:
+    from integrity_agent.core.safety import find_runtime_safety_issues
+
+    for status in getattr(summary, "module_statuses", []) or []:
+        if getattr(status, "status", None) != "failed":
+            continue
+        module_name = str(getattr(status, "module_name", "unknown-module"))
+        skip_reason = str(getattr(status, "skip_reason", "") or "")
+        detail = str(getattr(status, "error_message", "") or skip_reason or "failed")
+        if find_runtime_safety_issues(detail):
+            detail = skip_reason or "details withheld by runtime safety guard"
+        print(f"ERROR: {module_name}: {detail}", file=sys.stderr)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="integrity-agent",
@@ -142,6 +156,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="Custom output directory path.",
     )
 
+    claim_intake_parser = subparsers.add_parser(
+        "document-claim-intake",
+        help="Validate and normalize human-located atomic claims from claims.jsonl.",
+    )
+    claim_intake_parser.add_argument(
+        "input",
+        type=Path,
+        help="Structured claims.jsonl path or its containing documents directory.",
+    )
+    claim_intake_parser.add_argument(
+        "-o",
+        "--output-dir",
+        type=Path,
+        default=Path("outputs") / "document_claim_intake",
+        help="Directory for normalized claims and the intake manifest.",
+    )
+
 
     html_parser = subparsers.add_parser(
         "report-batch-html",
@@ -199,6 +230,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     t_review_parser.add_argument("input", type=Path, help="Path to table_manifest.jsonl.")
     t_review_parser.add_argument("-o", "--output", type=Path, help="Optional custom output directory path.")
+    t_review_parser.add_argument(
+        "--column-profiles",
+        type=Path,
+        help="Optional path to table-intake column_profiles.jsonl.",
+    )
 
     t_html_parser = subparsers.add_parser(
         "report-table-review-html",
@@ -355,6 +391,7 @@ def build_parser() -> argparse.ArgumentParser:
     wizard_parser.add_argument("--package-dir", type=Path, help="Directory containing paper materials.")
     wizard_parser.add_argument("-o", "--output-dir", type=Path, default=Path("outputs/review_package"), help="Directory to write output files.")
     wizard_parser.add_argument("--dry-run", action="store_true", help="Preview the wizard plan without running detectors.")
+    wizard_parser.add_argument("--view", action="store_true", help="Open the generated local dashboard after a successful run.")
     # pv-ruleset-export
     ruleset_export_parser = subparsers.add_parser(
         "pv-ruleset-export",
@@ -429,12 +466,15 @@ def _run_wizard(args: argparse.Namespace) -> int:
 
     from integrity_agent.workflows.review_package import run_review_package
 
-    run_review_package(
+    summary = run_review_package(
         package_dir=str(package_dir),
         output_dir=str(args.output_dir),
         locale=args.lang,
     )
-    dashboard = args.output_dir / "review_package_dashboard.html"
+    if summary.overall_status == "failed":
+        _print_failed_review_modules(summary)
+        print("ERROR: review package completed with failed modules.", file=sys.stderr)
+        return 2
     print(f"{manager.translate('wizard.next_step')}: integrity-agent view {display_path(args.output_dir)}")
 
     if args.view:
@@ -505,6 +545,25 @@ def main(argv: Sequence[str] | None = None) -> int:
         meta_path, summary_path = run_reader_intake(args.doi, allow_network=args.allow_network)
         print(f"Wrote metadata: {display_path(meta_path)}")
         print(f"Wrote summary: {display_path(summary_path)}")
+        return 0
+
+    if args.command == "document-claim-intake":
+        from integrity_agent.workflows.document_claim_intake import (
+            DocumentClaimIntakeError,
+            run_document_claim_intake,
+        )
+
+        try:
+            claims_path, manifest_path = run_document_claim_intake(
+                args.input,
+                output_dir=args.output_dir,
+            )
+        except DocumentClaimIntakeError as exc:
+            for issue in exc.issues:
+                print(f"ERROR: {issue}", file=sys.stderr)
+            return 2
+        print(f"Wrote normalized document claims: {display_path(claims_path)}")
+        print(f"Wrote document claim intake manifest: {display_path(manifest_path)}")
         return 0
 
     if args.command == "batch-intake":
@@ -606,7 +665,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         from integrity_agent.workflows.table_numeric_review import run_table_numeric_review
         findings_jsonl, summary_md = run_table_numeric_review(
             args.input,
-            output_dir=args.output
+            output_dir=args.output,
+            column_profiles_path=args.column_profiles,
         )
         print(f"Wrote table numeric findings: {display_path(findings_jsonl)}")
         print(f"Wrote table numeric summary: {display_path(summary_md)}")
@@ -656,16 +716,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
 
     if args.command == "init-package":
+        from integrity_agent.workflows.package_scaffold import (
+            initialize_review_package,
+        )
+
         pkg_dir = Path(args.package_dir)
-        for sub in ["metadata", "images", "tables", "pv", "raw_pv", "references"]:
-            (pkg_dir / sub).mkdir(parents=True, exist_ok=True)
-        doi_file = pkg_dir / "metadata" / "doi.txt"
-        if not doi_file.exists():
-            doi_file.write_text("", encoding="utf-8")
-        example_doi_file = pkg_dir / "metadata" / "doi.example.txt"
-        if not example_doi_file.exists():
-            example_doi_file.write_text("10.1038/s41563-020-0000-0\n", encoding="utf-8")
+        initialize_review_package(pkg_dir)
         print(f"Initialized local review package structure at: {display_path(pkg_dir)}")
+        print("Start with PACKAGE_GUIDE.md, then confirm only the templates you need.")
         print("Safety & Privacy Notice:")
         print("- All analysis is local-first. Source data is not uploaded to external services.")
         print("- Findings are risk signals only and do not prove research misconduct.")
@@ -685,6 +743,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("Audit run complete.")
         print(f"Unified evidence index: {display_path(Path(args.output_dir) / 'unified_evidence_index.jsonl')}")
         print("Notice: Signals are advisory risk markers for manual review, not misconduct proof.")
+        if summary.overall_status == "failed":
+            _print_failed_review_modules(summary)
+            print("ERROR: audit modules or final ledger validation failed.", file=sys.stderr)
+            return 2
         return 0
 
     if args.command == "validate-report":
@@ -809,7 +871,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.command == "review-package":
         from integrity_agent.workflows.review_package import run_review_package
-        run_review_package(
+        summary = run_review_package(
             package_dir=str(args.package_dir),
             skip_images=args.skip_images,
             skip_tables=args.skip_tables,
@@ -819,6 +881,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_dir=str(args.output_dir),
             locale=args.lang,
         )
+        if summary.overall_status == "failed":
+            _print_failed_review_modules(summary)
+            print(
+                "ERROR: review-package modules or final ledger validation failed.",
+                file=sys.stderr,
+            )
+            return 2
         if args.view:
             from integrity_agent.workflows.report_viewer import start_server_and_open_browser
             viewer = start_server_and_open_browser(

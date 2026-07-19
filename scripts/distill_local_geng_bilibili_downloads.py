@@ -16,16 +16,14 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from integrity_agent.workflows.geng_video_distillation import (
+from integrity_agent.workflows.geng_video_distillation import (  # noqa: E402
     PUBLIC_PRIVATE_NOTE_REDACTION,
     PUBLIC_TITLE_REDACTION_REASON,
-    RULE_CANDIDATE_LIBRARY,
     generate_geng_video_rule_candidates,
     safety_check_geng_video_cases,
     validate_geng_video_case_card,
 )
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PRIVATE_ROOT = PROJECT_ROOT / "private_video_corpora" / "geng_bilibili"
 PUBLIC_CASE_DIR = PROJECT_ROOT / "knowledge_base" / "cases" / "geng_video_cases"
 PUBLIC_INDEX = PROJECT_ROOT / "knowledge_base" / "video_index" / "geng_video_index.yml"

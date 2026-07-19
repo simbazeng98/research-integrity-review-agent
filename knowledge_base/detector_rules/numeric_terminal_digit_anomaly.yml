@@ -1,5 +1,5 @@
 rule_id: numeric_terminal_digit_anomaly
-status: draft_spec_only
+status: active
 linked_cases:
 - geng_tongji_numeric_anomaly_2026
 input_required:
@@ -8,12 +8,13 @@ fields_required:
 - numeric_values
 - row_labels
 - column_labels
-risk_signal: terminal digits or decimal-place endings are implausibly concentrated
-  relative to measurement context
+risk_signal: terminal digits are strongly concentrated in an eligible measurement
+  column and require context-aware review
 detection_idea:
 - profile last digits by column and measurement type
-- compare against expected precision and rounding policy
-- flag only when sample size and context are sufficient
+- consume the existing column precision profile and declared rounding context
+- exclude identifiers, row indices, formulas, derived values and normalizations
+- keep samples below 15 values low risk or suppress them regardless of fixture name
 manual_verification:
 - raw measurements
 - rounding/significant-figure policy
@@ -24,8 +25,8 @@ false_positive_risks:
 - rounded values
 - instrument precision constraints
 - derived or normalized data
-safe_report_language: Candidate numeric terminal-digit risk signal; requires raw-data
-  and rounding-policy verification.
+safe_report_language: Candidate numeric terminal-digit consistency signal; verify
+  sample size, column role, instrument precision, and rounding policy before interpretation.
 runtime_status: active
 execution_mode: offline
 toy_fixture: toy_terminal_digit_anomaly.csv
@@ -37,8 +38,18 @@ risk_ceiling: medium
 accepted_input_types: ["csv", "tsv", "xlsx_sheet", "markdown_table", "table_manifest"]
 minimum_sample_size: 5
 field_requirements:
-  - "numeric values"
+  - "eligible numeric measurement values"
 known_false_positive_contexts:
   - "small samples"
   - "binned measurements"
   - "instrument rounding policies"
+  - "identifier or row-index columns"
+  - "declared formula, derived, or normalized columns"
+traceability:
+  - file
+  - sheet
+  - column
+  - sample_size
+  - precision_hint
+  - column_role
+  - correlation_group

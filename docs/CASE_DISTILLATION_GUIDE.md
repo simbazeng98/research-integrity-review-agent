@@ -30,6 +30,47 @@ safe_report_language:
 
 `confirmed_misconduct` requires `official_or_institutional_source`. `allegation` requires the limitation `not independently verified`.
 
+### Paper-specific public-method provenance
+
+A paper-specific social source is a discovery or method example, not a formal
+status source. Use `source_type: public_method` and include:
+
+```yaml
+target_doi: 10.0000/example
+source_accessed_at: '2026-07-11'  # ISO-8601
+source_snapshot_hash: null        # optional non-secret content hash
+evidence_tier: E1
+counter_sources:
+  - url: https://example.org/public-response
+    source_type: author_response
+    observed_at: '2026-07-11'
+resolution_status: partially_explained
+version_timeline:
+  - source_url: https://example.org/public-response
+    source_type: author_response
+    observed_at: '2026-07-11'
+    status: response_observed
+```
+
+Evidence tiers describe provenance strength, not whether a claim is true:
+
+- `E0`: unverified lead; no source artifact checked by this workflow.
+- `E1`: source-anchored public observation without independent reproduction.
+- `E2`: deterministic check reproduced against a provided or public artifact.
+- `E3`: counter-evidence or current-version evidence has been compared.
+- `E4`: formal publisher or institutional status evidence.
+
+Allowed counter-source types are `author_response`, `publisher_update`,
+`correction`, `raw_data_offer`, and `other`. Resolution values are `open`,
+`partially_explained`, `resolved_by_version`, `formally_corrected`, and
+`unresolved`.
+
+An author response is counter-evidence and can support
+`partially_explained`; it cannot by itself establish `resolved_by_version` or
+`formally_corrected`. Those two states require a public `publisher_update` or
+`correction` source. The distillation workflow carries these fields into ledger
+`provenance` so later review steps can preserve the timeline.
+
 ## Source-Specific Distillation
 
 ### News articles
@@ -73,6 +114,17 @@ Bilibili videos can be used only as allegation-level discovery unless an officia
 - safe reporting language.
 
 If a local subtitle file was used, record it in private notes or ignored local outputs, not under `knowledge_base/`.
+
+### Public social-method examples
+
+Keep only a clean public source URL and feed identifier, DOI, access date,
+brief method summary, evidence-pattern labels, false-positive risks, manual
+verification requests, and structured counter-evidence/version state. Do not
+store login material, raw post or comment dumps, commenter identities, local
+paths, screenshots, or article/SI text. Mark social claims and commenter
+identities as not independently verified. Paper-specific cards must use
+`public_method_example` or `unresolved`, never a formal status inferred from
+social discussion.
 
 ### PubPeer discussions
 

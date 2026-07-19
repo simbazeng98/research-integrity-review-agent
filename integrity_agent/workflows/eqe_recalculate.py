@@ -8,7 +8,7 @@ from pathlib import Path
 from integrity_agent.core.path_display import display_path
 import sys
 
-from integrity_agent.domains.photovoltaics.raw_measurements.schema import EQESpectrum, EQEIntegrationResult, JVMetrics, RawPVConsistencyFinding
+from integrity_agent.domains.photovoltaics.raw_measurements.schema import JVMetrics, RawPVConsistencyFinding
 from integrity_agent.domains.photovoltaics.raw_measurements.eqe_spectrum_reader import read_eqe_spectrum_file
 from integrity_agent.domains.photovoltaics.raw_measurements.am15g_reference import load_reference_spectrum
 from integrity_agent.domains.photovoltaics.raw_measurements.eqe_integration import integrate_eqe_jsc

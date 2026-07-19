@@ -3,13 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from integrity_agent.core.evidence.scope import split_public_records
+from integrity_agent.core.safety import find_runtime_safety_issues
 from integrity_agent.workflows.run_rules import iter_rule_findings
 
 
 DEFAULT_REPORT = Path("outputs") / "reader_review_report.md"
 
 
-def _display_path(path_like: object) -> str:
+def _display_path(path_like: object, *, root: Path | None = None) -> str:
     """Render user-facing paths as repo-relative POSIX paths when possible."""
     if path_like is None:
         return ""
@@ -20,9 +22,11 @@ def _display_path(path_like: object) -> str:
     if not path.is_absolute():
         return raw.replace("\\", "/")
     try:
-        return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
-    except ValueError:
-        return raw.replace("\\", "/")
+        base = Path.cwd() if root is None else root
+        return path.resolve().relative_to(base.resolve()).as_posix()
+    except (OSError, ValueError):
+        # Do not persist machine-specific absolute paths in reader-facing reports.
+        return path.name
 
 
 def _bullet(items: list[str]) -> str:
@@ -41,17 +45,136 @@ def _resolve_str(val: Any) -> str:
     return str(val)
 
 
+def _record_value(record: dict[str, Any], key: str) -> Any:
+    for container in (
+        record,
+        record.get("provenance"),
+        record.get("metadata"),
+    ):
+        if isinstance(container, dict) and container.get(key) not in (None, ""):
+            return container[key]
+    return None
+
+
+def _counter_evidence_text(value: Any) -> str:
+    if not value:
+        return "None recorded."
+    if not isinstance(value, list):
+        value = [value]
+    rendered: list[str] = []
+    for item in value:
+        if not isinstance(item, dict):
+            rendered.append(_resolve_str(item))
+            continue
+        parts = [
+            f"{key}={item[key]}"
+            for key in (
+                "event_id",
+                "source_type",
+                "source_version",
+                "source_url",
+            )
+            if item.get(key)
+        ]
+        rendered.append(", ".join(parts) or str(item))
+    return "; ".join(rendered)
+
+
+def _structured_context_lines(record: dict[str, Any]) -> list[str]:
+    evidence_tier = _record_value(record, "evidence_tier")
+    source_version = _record_value(record, "source_version")
+    resolution_status = _record_value(record, "resolution_status")
+    counter_evidence = _record_value(record, "counter_evidence")
+    do_not_overclaim = _record_value(record, "do_not_overclaim")
+    if not any(
+        value
+        for value in (
+            evidence_tier,
+            source_version,
+            resolution_status,
+            counter_evidence,
+            do_not_overclaim,
+        )
+    ):
+        return []
+
+    evidence = record.get("evidence") or record.get("evidence_items") or []
+    source_fact = "None recorded."
+    if evidence and isinstance(evidence[0], dict):
+        source = _display_path(evidence[0].get("source") or "")
+        location = evidence[0].get("location") or ""
+        source_fact = f"{source} at {location}".strip()
+    manual = record.get("manual_verification") or []
+    if isinstance(manual, dict):
+        manual = manual.get("requests") or []
+    verification = _resolve_str(manual[0]) if manual else "None recorded."
+    mechanism = _record_value(record, "mechanism_interpretation") or (
+        "No mechanism, intent, or responsibility is inferred from this signal."
+    )
+    detector_result = _resolve_str(
+        record.get("safe_report_language") or record.get("summary") or ""
+    )
+    return [
+        f"### `{record.get('finding_id') or record.get('rule_id') or 'finding'}`",
+        f"- Source fact: {source_fact}",
+        f"- Detector/recomputation result: {detector_result or 'None recorded.'}",
+        f"- Mechanism interpretation: {_resolve_str(mechanism)}",
+        f"- Transferability/verification request: {verification}",
+        f"- Evidence tier: {evidence_tier or 'Not assigned.'}",
+        f"- Source version: {source_version or 'Not recorded.'}",
+        f"- Resolution status: {resolution_status or 'open'}",
+        f"- Counter-evidence: {_counter_evidence_text(counter_evidence)}",
+        f"- Do-not-overclaim: {_resolve_str(do_not_overclaim) or 'Treat as a candidate signal requiring human review.'}",
+        "",
+    ]
+
+
+def _pv_source_context(record: dict[str, Any]) -> tuple[str, str]:
+    source = record.get("source_file") or record.get("relative_path")
+    table_id = record.get("table_id")
+    evidence = record.get("evidence") or record.get("evidence_items") or []
+    for item in evidence:
+        if not isinstance(item, dict):
+            continue
+        source = source or item.get("source") or item.get("relative_path")
+        metadata = item.get("metadata")
+        if isinstance(metadata, dict):
+            table_id = table_id or metadata.get("table_id") or metadata.get("table")
+        table_id = table_id or item.get("table")
+    provenance = record.get("provenance") or record.get("metadata") or {}
+    if isinstance(provenance, dict):
+        source = source or provenance.get("source_file") or provenance.get("source")
+        table_id = table_id or provenance.get("table_id") or provenance.get("table")
+    return _display_path(source or "unknown_file"), str(table_id or "not recorded")
+
+
 def write_reader_review_report(
-    findings_path: Path, output_path: Path = DEFAULT_REPORT
+    findings_path: Path | str,
+    output_path: Path | str = DEFAULT_REPORT,
+    *,
+    artifact_root: Path | str | None = None,
 ) -> Path:
+    findings_path = Path(findings_path)
     findings_path = findings_path.expanduser()
     if not findings_path.is_absolute():
         findings_path = Path.cwd() / findings_path
     findings = list(iter_rule_findings(findings_path))
+    safety_issues = find_runtime_safety_issues(findings)
+    if safety_issues:
+        raise ValueError(
+            "unsafe findings content: "
+            + "; ".join(sorted(set(safety_issues)))
+        )
 
+    output_path = Path(output_path)
     if not output_path.is_absolute():
         output_path = Path.cwd() / output_path
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    has_explicit_artifact_root = artifact_root is not None
+    artifact_root = Path.cwd() / "outputs" if artifact_root is None else Path(artifact_root)
+    if not artifact_root.is_absolute():
+        artifact_root = Path.cwd() / artifact_root
+    findings_display_root = artifact_root if has_explicit_artifact_root else Path.cwd()
 
     # Dedup findings loaded from findings_path
     processed_finding_ids = set()
@@ -72,7 +195,7 @@ def write_reader_review_report(
         processed_finding_ids.add(composite)
         deduped_findings.append(finding)
 
-    findings = deduped_findings
+    findings, engineering_findings = split_public_records(deduped_findings)
 
     risk_lines = []
     for finding in findings:
@@ -81,12 +204,22 @@ def write_reader_review_report(
             safe_lang = safe_lang.get("en") or safe_lang.get("zh") or next(iter(safe_lang.values()), "")
         risk_lines.append(f"`{finding['rule_id']}` ({finding['risk_level']}): {safe_lang}")
 
+    engineering_lines = []
+    for question in engineering_findings:
+        safe_lang = _resolve_str(
+            question.get("safe_report_language") or question.get("summary") or ""
+        )
+        rule_id = question.get("rule_id") or question.get("type") or "engineering_question"
+        engineering_lines.append(f"`{rule_id}`: {safe_lang}")
+
     evidence_lines = []
     alternatives: list[str] = []
     missing: list[str] = []
     questions: list[str] = []
     limitations: list[str] = []
+    structured_context: list[str] = []
     for finding in findings:
+        structured_context.extend(_structured_context_lines(finding))
         ev_items = finding.get("evidence_items") or finding.get("evidence") or []
         for item in ev_items:
             evidence_lines.append(
@@ -122,9 +255,7 @@ def write_reader_review_report(
 
     # Load exact duplicate image findings if present
     import json
-    image_findings_path = Path("outputs/image_intake/image_findings.jsonl")
-    if not image_findings_path.is_absolute():
-        image_findings_path = Path.cwd() / image_findings_path
+    image_findings_path = artifact_root / "image_intake/image_findings.jsonl"
 
     if image_findings_path.exists():
         try:
@@ -156,9 +287,7 @@ def write_reader_review_report(
             pass
 
     # Load visual similarity image candidates if present
-    similarity_candidates_path = Path("outputs/image_intake/image_similarity_candidates.jsonl")
-    if not similarity_candidates_path.is_absolute():
-        similarity_candidates_path = Path.cwd() / similarity_candidates_path
+    similarity_candidates_path = artifact_root / "image_intake/image_similarity_candidates.jsonl"
 
     if similarity_candidates_path.exists():
         try:
@@ -196,9 +325,7 @@ def write_reader_review_report(
             pass
 
     # Load table numeric findings if present
-    table_findings_path = Path("outputs/table_intake/table_numeric_findings.jsonl")
-    if not table_findings_path.is_absolute():
-        table_findings_path = Path.cwd() / table_findings_path
+    table_findings_path = artifact_root / "table_intake/table_numeric_findings.jsonl"
 
     if table_findings_path.exists():
         try:
@@ -235,9 +362,7 @@ def write_reader_review_report(
         except Exception:
             pass
 
-    metadata_path = Path("outputs/paper_case/metadata.json")
-    if not metadata_path.is_absolute():
-        metadata_path = Path.cwd() / metadata_path
+    metadata_path = artifact_root / "paper_case/metadata.json"
 
     metadata_summary = []
     if metadata_path.exists():
@@ -267,18 +392,18 @@ def write_reader_review_report(
         "# Reader Review Report",
         "",
         "## Metadata and source status",
-        f"- Findings source: `{_display_path(findings_path)}`",
+        f"- Findings source: `{_display_path(findings_path, root=findings_display_root)}`",
         f"- Finding count: {len(findings)}",
         "- Runtime mode: local toy/stub rule execution.",
     ]
+    if engineering_findings:
+        metadata_section.append(f"- Engineering question count: {len(engineering_findings)}")
     if metadata_summary:
         metadata_section.extend(metadata_summary)
     metadata_section.append("")
 
     # Load PV findings if present
-    pv_findings_path = Path("outputs/pv_domain/pv_findings.jsonl")
-    if not pv_findings_path.is_absolute():
-        pv_findings_path = Path.cwd() / pv_findings_path
+    pv_findings_path = artifact_root / "pv_domain/pv_findings.jsonl"
 
     pv_section_lines = []
     pv_findings = []
@@ -304,75 +429,78 @@ def write_reader_review_report(
         pv_findings = [f for f in findings if f.get("rule_id") in pv_rules]
 
     if pv_findings:
-            pce_s = []
-            eqe_s = []
-            voc_s = []
-            rep_s = []
-            stab_s = []
-            tan_s = []
-            mat_s = []
-            questions_s = []
+        pce_s = []
+        eqe_s = []
+        voc_s = []
+        rep_s = []
+        stab_s = []
+        tan_s = []
+        mat_s = []
+        questions_s = []
 
-            for f in pv_findings:
-                rule_id = f["rule_id"]
-                risk_level = f["risk_level"]
-                safe_lang = f["safe_report_language"]
-                source_file = _display_path(f["source_file"])
-                table_id = f["table_id"]
-                row_idx = f.get("row_index")
-                row_str = f" (Row {row_idx})" if row_idx else ""
+        for finding in pv_findings:
+            rule_id = finding["rule_id"]
+            risk_level = finding["risk_level"]
+            safe_lang = finding["safe_report_language"]
+            source_file, table_id = _pv_source_context(finding)
+            row_idx = finding.get("row_index")
+            row_str = f" (Row {row_idx})" if row_idx else ""
 
-                finding_str = f"`{f['finding_id']}` ({risk_level}): {safe_lang} [File: `{source_file}` / Table: `{table_id}`{row_str}]"
+            finding_str = (
+                f"`{finding['finding_id']}` ({risk_level}): {safe_lang} "
+                f"[File: `{source_file}` / Table: `{table_id}`{row_str}]"
+            )
 
-                if rule_id == "pv_pce_consistency":
-                    pce_s.append(finding_str)
-                elif rule_id == "pv_eqe_jv_jsc_consistency":
-                    eqe_s.append(finding_str)
-                elif rule_id == "pv_voc_loss_consistency":
-                    voc_s.append(finding_str)
-                elif rule_id == "pv_reporting_completeness":
-                    rep_s.append(finding_str)
-                elif rule_id == "pv_stability_reporting_completeness":
-                    stab_s.append(finding_str)
-                elif rule_id == "pv_tandem_current_matching":
-                    tan_s.append(finding_str)
-                elif rule_id == "pv_materials_characterization_metadata":
-                    mat_s.append(finding_str)
+            if rule_id == "pv_pce_consistency":
+                pce_s.append(finding_str)
+            elif rule_id == "pv_eqe_jv_jsc_consistency":
+                eqe_s.append(finding_str)
+            elif rule_id == "pv_voc_loss_consistency":
+                voc_s.append(finding_str)
+            elif rule_id == "pv_reporting_completeness":
+                rep_s.append(finding_str)
+            elif rule_id == "pv_stability_reporting_completeness":
+                stab_s.append(finding_str)
+            elif rule_id == "pv_tandem_current_matching":
+                tan_s.append(finding_str)
+            elif rule_id == "pv_materials_characterization_metadata":
+                mat_s.append(finding_str)
 
-                questions_s.extend(f.get("manual_verification", []))
+            manual = finding.get("manual_verification", [])
+            if isinstance(manual, dict):
+                manual = manual.get("requests", [])
+            questions_s.extend(manual)
 
-            pv_section_lines.extend([
-                "## Photovoltaics / materials domain evidence signals",
-                "### PV metric consistency signals",
-                _bullet(pce_s).rstrip(),
-                "",
-                "### EQE/J–V current-density signals",
-                _bullet(eqe_s).rstrip(),
-                "",
-                "### Voc-loss / bandgap signals",
-                _bullet(voc_s).rstrip(),
-                "",
-                "### Solar-cell reporting completeness gaps",
-                _bullet(rep_s).rstrip(),
-                "",
-                "### Stability reporting gaps",
-                _bullet(stab_s).rstrip(),
-                "",
-                "### Tandem PV consistency signals",
-                _bullet(tan_s).rstrip(),
-                "",
-                "### Materials characterization metadata gaps",
-                _bullet(mat_s).rstrip(),
-                "",
-                "### PV/materials verification questions",
-                _bullet(sorted(list(set(questions_s)))).rstrip(),
-                ""
-            ])
+        pv_section_lines.extend([
+            "## Photovoltaics / materials domain evidence signals",
+            "### PV metric consistency signals",
+            _bullet(pce_s).rstrip(),
+            "",
+            "### EQE/J–V current-density signals",
+            _bullet(eqe_s).rstrip(),
+            "",
+            "### Voc-loss / bandgap signals",
+            _bullet(voc_s).rstrip(),
+            "",
+            "### Solar-cell reporting completeness gaps",
+            _bullet(rep_s).rstrip(),
+            "",
+            "### Stability reporting gaps",
+            _bullet(stab_s).rstrip(),
+            "",
+            "### Tandem PV consistency signals",
+            _bullet(tan_s).rstrip(),
+            "",
+            "### Materials characterization metadata gaps",
+            _bullet(mat_s).rstrip(),
+            "",
+            "### PV/materials verification questions",
+            _bullet(sorted(list(set(questions_s)))).rstrip(),
+            ""
+        ])
 
     # Load raw PV findings if present
-    raw_pv_findings_path = Path("outputs/raw_pv/raw_pv_findings.jsonl")
-    if not raw_pv_findings_path.is_absolute():
-        raw_pv_findings_path = Path.cwd() / raw_pv_findings_path
+    raw_pv_findings_path = artifact_root / "raw_pv/raw_pv_findings.jsonl"
 
     raw_pv_section_lines = []
     raw_pv_findings = []
@@ -448,10 +576,26 @@ def write_reader_review_report(
                 ""
             ])
 
+    engineering_section = []
+    if engineering_lines:
+        engineering_section = [
+            "## Engineering plausibility questions (outside integrity MRPI)",
+            _bullet(engineering_lines).rstrip(),
+            "",
+        ]
+
+    structured_context_section: list[str] = []
+    if structured_context:
+        structured_context_section = [
+            "## Structured review context",
+            *structured_context,
+        ]
+
     body_list = metadata_section + [
         "## Detected risk signals",
         _bullet(risk_lines).rstrip(),
         "",
+    ] + engineering_section + structured_context_section + [
         "## Evidence locations",
         _bullet(evidence_lines).rstrip(),
         "",

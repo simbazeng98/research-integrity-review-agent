@@ -1,139 +1,217 @@
-# Research Integrity Evidence Review Agent
+<p align="center">
+  <img src="docs/assets/evidence-dossier-hero.svg" alt="Evidence dossier: traceable sources, candidate signals, counter-evidence, and human verification" width="100%">
+</p>
 
-[![CI](https://github.com/simbazeng98/research-integrity-review-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/simbazeng98/research-integrity-review-agent/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
+<h1 align="center">Research Integrity Evidence Review Agent</h1>
 
-Local-first tooling for turning research papers, source data, figures, tables,
-metadata, and policy context into a reviewable evidence ledger.
+<p align="center"><strong>Evidence before conclusion. Traceable by design. Human reviewed.</strong></p>
+<p align="center">证据先行 · 可追溯 · 可反证 · 人工复核</p>
+<p align="center">
+  <a href="https://github.com/simbazeng98/research-integrity-review-agent/actions/workflows/ci.yml">CI</a>
+  · <a href="LICENSE">MIT License</a>
+  · <a href="pyproject.toml">Python 3.10+</a>
+  · Offline-first
+</p>
 
-This project is not an automatic misconduct detector. It does not decide that an
-author committed fraud or research misconduct. It produces risk signals,
-traceable evidence items, alternative benign explanations, missing-evidence
-notes, and verification questions for human review.
+## 30-Second Overview
 
-## What It Produces
+This local-first toolkit turns DOI metadata, human-confirmed claims, source
+tables, figures, and raw photovoltaic measurements into a reviewable package:
 
-```text
-Input:  DOI / PDF package / source tables / figures / raw PV measurements
-Output: evidence ledger + risk signals + verification questions + reader report
-```
+- a traceable **evidence ledger**;
+- **candidate risk signals** with evidence locations;
+- counter-evidence, alternative benign explanations, and limitations;
+- **manual verification requests** and safe reader-facing reports.
 
-Every finding is designed to preserve:
+It **does not determine research misconduct**, infer intent, or replace a
+journal, institution, or qualified human reviewer. Social-media material is
+treated as methodology or discovery context, never as a formal finding.
 
-- input provenance;
-- rule or workflow ID;
-- evidence location;
-- manual verification requirements;
-- false-positive risks and benign alternatives;
-- safe report language.
+### Two ways to use it
 
-## Modes
+| Route | Best for | Start here |
+| --- | --- | --- |
+| Local CLI | Reproducible package review with local files and structured outputs | [Install and run locally](#install-and-run-locally) |
+| No-install agent workflow | Giving an AI agent a bounded method or a ready-made review task | [Use agent skills](skills/) · [Paste ready-to-use prompts](prompts/) · [No-install guide](docs/USING_WITHOUT_INSTALLATION.md) |
 
-- Self-Audit Mode: helps authors and groups check a paper package before
-  submission, reduce false positives, and improve source-data completeness.
-- Reader Review Mode: helps readers, reviewers, and research-integrity bloggers
-  organize visible risk signals without overclaiming.
+## What the Review Preserves
+
+| Evidence | Context | Countercheck | Handoff |
+| --- | --- | --- | --- |
+| Source file, DOI, page, figure, table, or row | Rule ID, measurement context, and source version | Benign explanations, counter-evidence, and false-positive risks | Verification questions, limitations, and do-not-overclaim language |
+
+The result is a structured review queue, not a verdict. High-priority signals
+remain requests for source-data and methodological verification.
 
 ## Current Capabilities
 
-- DOI and batch metadata intake, including offline-safe Crossref adapters.
-- Rule runtime for detector specs and toy/stub execution.
-- Image intake and same-package similarity candidates.
-- Table/source-data intake with numeric anomaly routing.
-- Reader review report and unified evidence package runner.
-- Photovoltaics/materials plugin for PCE, EQE/J-V, Voc loss, stability,
-  materials-characterization metadata, tandem checks, and raw PV recalculation.
-- Bilibili-derived methodology cards with private transcript boundaries and
-  public safe-language validation.
+### Cross-document and version review
 
-No cloud service is used by default, and user papers are not uploaded.
+- Human-confirmed atomic claims with explicit sample, device, measurement, and
+  source-version context.
+- Cross-document claim consistency checks across manuscript, supplement,
+  source-data, and response versions.
+- Version reconciliation that distinguishes open, partially explained, and
+  formally corrected records.
+- Publisher-level evidence is required before a record is treated as formally
+  corrected; author responses alone remain explanatory context.
 
-## Quick Start
+### Numeric and photovoltaic review
 
-```bash
-# Install the package locally
+- Fixed-delta, terminal-digit, and **quantization-grid** candidate detection
+  with precision, derived-column, ID-column, rounding, and unit-conversion
+  controls.
+- PCE consistency checks for multiscan data, non-1-sun intensity, rounding,
+  and stabilized-versus-scan measurements.
+- EQE/J-V, voltage-loss, stability, tandem, and raw-measurement reconciliation.
+- **TRPL/TPV** unit and dual-exponential lifetime review with
+  amplitude-weighted, intensity-weighted, and undeclared-formula handling.
+- Curve-source coverage and opt-in **curve-segment similarity** review for
+  human-confirmed, independently labelled CSV/XLSX columns; no image
+  digitization is performed.
+- **Materials process lineage** questions for sample-stage handling.
+
+### Images, references, and reporting
+
+- Image intake and same-package visual-similarity candidates.
+- Source-table intake, citation/reference anomaly review, and DOI status
+  enrichment.
+- One **review-package** runner that produces a validated unified evidence
+  index, reader report, and bilingual local dashboard.
+- Correlation-aware Manual Review Priority Index (MRPI) grouping so repeated
+  signals from the same source/table/method family are not simply stacked.
+- A scope firewall: **engineering plausibility** questions are shown
+  separately and contribute zero to integrity MRPI; unsupported motive claims
+  are excluded from public findings.
+
+Automatic PDF/LLM extraction cannot directly create a finding. Claims must be
+confirmed by a human or supplied through an explicit structured intake.
+
+## Install and Run Locally
+
+~~~bash
+# Install the package in this checkout
 python -m pip install -e .
 
-# Run the test suite
-python -m pytest -q
-
-# Convert a case note draft into a unified ledger entry
-python -m integrity_agent case-distill examples/toy_case.md
-
-# Run the paper-level evidence review package scanner
-python -m integrity_agent review-package examples/toy_review_package
-
-# Or run it with bilingual/Chinese output localization
+# Review the synthetic example package in Chinese
 python -m integrity_agent review-package examples/toy_review_package --lang zh
 
-# Serve and open the generated local HTML review dashboard in a browser
+# Validate the unified evidence ledger
+python -m integrity_agent validate-ledger outputs/review_package/unified_evidence_index.jsonl
+
+# Open the generated local HTML dashboard
 python -m integrity_agent view outputs/review_package
+~~~
 
-# Start the bilingual interactive onboarding wizard
-python -m integrity_agent wizard --lang zh
-```
+Run the test suite with:
 
-The case-distill command writes `outputs/evidence_ledger.jsonl` unless `--output` is
-provided. The review-package command writes to `outputs/review_package/` unless
-`--output-dir` is provided.
+~~~bash
+python -m pytest -q
+~~~
 
-## Toy Benchmark Snapshot
+The default workflows are offline. Network access is available only on commands
+that expose an explicit **--allow-network** option. User papers and source data
+are not uploaded by default.
 
-The current benchmark snapshot uses only synthetic fixtures:
+For every command and output path, see the
+[CLI reference](docs/CLI_REFERENCE.md) and
+[review-package guide](docs/REVIEW_PACKAGE_RUNNER.md).
 
-| Suite | Input | Observed output |
-| --- | --- | --- |
-| Rule runtime | `examples/toy_rule_package` | 3 rule findings |
-| Image intake + similarity | `examples/toy_image_package/images` | 6 image rows, 2 similarity candidates |
-| Table numeric review | `examples/toy_table_package` | 5 table rows, 5 numeric findings |
-| PV domain plugin | `examples/toy_pv_package` | 9 table rows, 22 PV findings |
-| Raw PV reconciliation | `examples/toy_raw_pv_package` | 13 raw PV findings |
-| Unified review package | `examples/toy_review_package` | 44 unified evidence records |
+## Outputs
 
-See `docs/BENCHMARKS.md` and
-`benchmarks/results/v0.1.0_toy_benchmarks.yml`. These are workflow-contract
-benchmarks, not claims about real-world misconduct detection accuracy.
+~~~text
+Input
+  DOI metadata / review package / source tables / figures / raw PV data
 
-## CLI and Release Docs
+Review
+  provenance + deterministic checks + counter-evidence + scope firewall
 
-- `docs/CLI_REFERENCE.md` lists supported CLI commands, default outputs, and network boundaries.
-- `docs/RELEASE_READINESS.md` gives the release readiness checklist (originally created for v0.12 boundary fixes, updated for v0.2.0).
-- `docs/GIT_FIRST_CHECKPOINT_GUIDE.md` explains the first git checkpoint procedure. This directory is intentionally not initialized as git by the toolchain.
+Output
+  unified_evidence_index.jsonl
+  review_package_summary.md
+  review_package_dashboard.html
+  module_status.jsonl
+  review_package_manifest.json
+~~~
 
-Default workflows are offline and local-first. `--allow-network` is available only for commands that need explicit metadata lookups. Generated artifacts default to `outputs/...`; writing curated artifacts into `knowledge_base/...` requires explicit paths or a curated script.
+Generated artifacts default to **outputs/**. Curated knowledge-base changes
+require explicit paths or a curated workflow.
 
-## Project Layout
+## Synthetic Examples and Benchmarks
 
-```text
-.github/workflows/    CI for pytest and offline CLI smoke checks
-benchmarks/           synthetic benchmark result snapshots
-docs/                 ethics, architecture, and reporting language
-knowledge_base/       cases, policies, detector specs, domain rules
-integrity_agent/      CLI, core schema, workflows, detectors, domains
-examples/             toy-only examples
-tests/                regression tests
-outputs/              generated local outputs, ignored by git
-papers/               local paper workspaces, ignored by git
-```
+All committed examples are synthetic. They verify workflow contracts and
+regression behavior; they are not claims about real-world detection accuracy.
 
-## Policy Anchors
+- [Toy examples](examples/)
+- [Benchmark methodology](docs/BENCHMARKS.md)
+- [Archived v0.1.0 synthetic snapshot](benchmarks/results/v0.1.0_toy_benchmarks.yml)
 
-The repo uses public policy sources as anchors, including ORI's definition of
-research misconduct, COPE retraction guidance, Nature Portfolio image integrity
-standards, and Crossref Retraction Watch metadata access. See
-`knowledge_base/policies/example_policy.yml`.
+Use a fresh local run for current output counts rather than treating an
+archived snapshot as a live product metric.
 
-## Prior Art
+## Method Inspiration and Credits
 
-This project may learn from tools such as `academic-integrity-skill`,
-`Anti-Autoresearch`, `PubPeer Zotero plugin`, and `imagededup`, but it is not a
-fork of those projects. The distinguishing goal is a case-driven taxonomy plus
-traceable evidence ledger and safe reporting language.
+We gratefully credit public research-review method discussions by:
+
+- Xiaohongshu creator **「钙钛矿纠察队长」**;
+- Bilibili creator **「耿同学讲故事」**.
+
+These public discussions are **method and discovery leads only**. Every
+candidate finding produced from a reused method still requires **independent verification**
+against the paper, supplied source data, and authoritative version or publisher
+evidence.
+
+This repository is an **independent open-source implementation** with **no affiliation or endorsement**
+by either creator or platform. Credit does not confirm any post-, video-,
+person-, or case-level claim.
+
+The repository does not republish account identifiers, avatars, screenshots,
+post text, complete comments, complete transcripts, private messages, or
+private research material. Public traceability is limited to short structured
+summaries and curated source links:
+
+- [Perovskite public method cards](knowledge_base/cases/perovskite_public_methods/)
+- [Geng video method cards](knowledge_base/cases/geng_video_cases/)
 
 ## Safety Boundary
 
-This repository intentionally does not include real paper PDFs, real source
-data, complete Bilibili transcripts, screenshots, comments, danmaku, private
-notes, or private communications. Public Bilibili-derived cards keep raw titles
-and transcripts out of the repo and preserve only method/risk-signal summaries.
+- Prefer “candidate risk signal”, “needs manual review”, and “verification
+  request”.
+- Preserve alternative benign explanations, missing evidence, and limitations.
+- Keep engineering feasibility separate from research-integrity scoring.
+- Do not infer author intent, responsibility, or motive from a detector output.
+- Treat social posts, videos, comments, and blogs as discovery context, not
+  formal status evidence.
+- Do not commit real PDFs, full supplementary packages, complete social
+  content, credentials, or private paths.
+
+Read the full [ethics and scope](docs/ETHICS_AND_SCOPE.md),
+[reporting language](docs/REPORTING_LANGUAGE.md), and
+[repository hygiene](docs/REPOSITORY_HYGIENE.md) contracts before applying the
+tool to real material.
+
+## Project Layout
+
+~~~text
+.github/workflows/    CI and offline CLI smoke checks
+benchmarks/           synthetic benchmark snapshots
+docs/                 ethics, architecture, usage, and reporting guidance
+examples/             toy-only review packages
+integrity_agent/      CLI, schemas, workflows, detectors, and domain plugins
+knowledge_base/       public case cards, policies, and detector specifications
+prompts/              ready-to-paste review prompts
+skills/               portable agent skills
+tests/                regression and safety contracts
+~~~
+
+## Policy Anchors and Prior Art
+
+The project uses public research-integrity and publication-correction policies
+as cautious reporting anchors. See
+[the example policy record](knowledge_base/policies/example_policy.yml).
+
+It may learn from public tools and workflows such as
+**academic-integrity-skill**, **Anti-Autoresearch**,
+**PubPeer Zotero plugin**, and **imagededup**, but it is not a fork of those
+projects. Its distinguishing contract is case-driven review, traceable
+evidence, explicit counterchecks, and safe reporting language.

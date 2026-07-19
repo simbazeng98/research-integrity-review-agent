@@ -1,37 +1,62 @@
 rule_id: measurement_precision_anomaly
-status: draft_spec_only
+status: active
 linked_cases:
-- geng_tongji_numeric_anomaly_2026
-- ranga_dias_superconductivity_data_reliability
+  - geng_tongji_numeric_anomaly_2026
+  - ranga_dias_superconductivity_data_reliability
+  - perovskite_public_method_ne_quantization_grid_2026
 input_required:
-- numeric_table
-- methods_or_instrument_precision_note
+  - numeric_source_table
+  - column_profile
+  - methods_or_instrument_resolution_note_optional
 fields_required:
-- reported_values
-- units
-- measurement_context
-risk_signal: reported precision is inconsistent with instrument resolution, replicate
-  variance, or stated calculation pipeline
+  - reported_values
+  - precision_hint
+  - declared_resolution
+  - measurement_context
+risk_signal: >
+  Repeated values and a coarse candidate lattice remain after accounting for
+  displayed precision, sample size, and any declared acquisition or export resolution.
 detection_idea:
-- extract decimal places by column
-- compare precision to methods/instrument notes
-- flag abrupt precision changes across related values
+  - Reuse ColumnProfile.precision_hint instead of inferring significance from a named case.
+  - Measure repetition, run lengths, positive steps, lattice residual, and grid overlap.
+  - Suppress a lattice explained by declared instrument or export resolution.
+  - Keep normalized, derived, and small-sample series low-risk or suppressed.
 manual_verification:
-- instrument export files
-- uncertainty calculations
-- rounding protocol
-- lab notebook context
+  - Obtain the supplied source-data table or original instrument export.
+  - Confirm acquisition, export, and displayed precision or resolution.
+  - Check rounding, normalization, binning, smoothing, and derived-column steps.
 false_positive_risks:
-- software default formatting
-- post-hoc significant figure cleanup
-- mixed measured and calculated quantities
-safe_report_language: Candidate measurement-precision risk signal; requires methods
-  and raw-export verification.
-runtime_status: draft_spec_only
+  - Instrument or software export resolution can create a legitimate value grid.
+  - Rounding and displayed precision can increase repeated values.
+  - Normalization, binning, smoothing, or shared preprocessing can align grids.
+  - Small samples and missing grid levels can exaggerate apparent repetition.
+safe_report_language: >
+  Candidate quantization-grid risk signal requiring source-data, instrument-resolution,
+  rounding, and preprocessing review; this pattern does not determine its cause.
+runtime_status: active
 execution_mode: offline
-toy_fixture: null
-detector_module: null
-detector_function: null
+toy_fixture: examples/toy_table_package/toy_quantized_timeseries.csv
+detector_module: integrity_agent.detectors.numeric.quantization_grid
+detector_function: detect_quantization_grid
 requires_network: false
 requires_private_data: false
 risk_ceiling: medium
+traceability:
+  - source_file
+  - column_name
+  - row_count
+  - precision_hint
+  - declared_resolution
+  - lattice_step
+  - lattice_residual
+accepted_input_types:
+  - csv
+minimum_sample_size: 8
+field_requirements:
+  - numeric_measurement_column
+  - repository_relative_source_label
+known_false_positive_contexts:
+  - declared_instrument_resolution
+  - displayed_rounding
+  - normalized_or_derived_series
+  - small_sample

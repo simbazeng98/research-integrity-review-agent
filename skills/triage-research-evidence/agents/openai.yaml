@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Evidence Triage"
+  short_description: "Inventory evidence before making findings"
+  default_prompt: "Use $triage-research-evidence to inventory my supplied paper package safely."

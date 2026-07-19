@@ -9,7 +9,8 @@ from integrity_agent.core.tables.adapters.tsv_table import parse_tsv_table
 from integrity_agent.core.tables.adapters.xlsx_table import get_xlsx_sheets, parse_xlsx_sheet
 from integrity_agent.core.tables.adapters.markdown_table import parse_markdown_table
 from integrity_agent.core.tables.column_profiler import profile_column
-from integrity_agent.core.tables.table_schema import TableManifestItem, ColumnProfile
+from integrity_agent.core.tables.table_schema import TableManifestItem
+from integrity_agent.core.output_safety import sanitize_csv_cell
 
 DEFAULT_OUTPUT_DIR = Path("outputs") / "table_intake"
 
@@ -227,17 +228,22 @@ def run_table_intake(
             "warnings",
         ])
         for item in manifest_items:
-            writer.writerow([
-                item.table_id,
-                item.source_file,
-                item.relative_path,
-                item.source_format,
-                item.sheet_name or "",
-                item.row_count,
-                item.column_count,
-                ", ".join(item.columns),
-                ", ".join(item.warnings),
-            ])
+            writer.writerow(
+                [
+                    sanitize_csv_cell(value)
+                    for value in [
+                        item.table_id,
+                        item.source_file,
+                        item.relative_path,
+                        item.source_format,
+                        item.sheet_name or "",
+                        item.row_count,
+                        item.column_count,
+                        ", ".join(item.columns),
+                        ", ".join(item.warnings),
+                    ]
+                ]
+            )
 
     # 3. Write Column Profiles JSONL
     _write_jsonl(profiles_jsonl, profile_records)

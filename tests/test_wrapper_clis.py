@@ -24,6 +24,7 @@ def test_init_package_cli(tmp_path):
     assert (pkg_dir / "pv").exists()
     assert (pkg_dir / "raw_pv").exists()
     assert (pkg_dir / "references").exists()
+    assert (pkg_dir / "documents").exists()
     assert (pkg_dir / "metadata" / "doi.txt").exists()
 
 

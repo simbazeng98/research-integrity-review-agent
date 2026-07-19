@@ -7,7 +7,6 @@ from integrity_agent.core.images.image_schema import ImageManifestItem
 from integrity_agent.core.images.perceptual_hash import compute_dhash, compute_phash_fallback
 from integrity_agent.core.images.similarity_schema import (
     ImageHashEncoding,
-    ImageSimilarityCandidate,
     ImageSimilarityRunSummary,
 )
 from integrity_agent.detectors.image.perceptual_similarity import detect_perceptual_similarity

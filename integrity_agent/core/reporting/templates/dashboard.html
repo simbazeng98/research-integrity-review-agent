@@ -1,165 +1,486 @@
 <!DOCTYPE html>
-<html lang="en" data-default-locale="__DEFAULT_LOCALE__">
+<html lang="__DEFAULT_LOCALE__" data-default-locale="__DEFAULT_LOCALE__">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
   <title>Unified Research Integrity Review Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23101513'/%3E%3Cpath d='M17 18h30v6H17zm0 12h21v6H17zm0 12h30v6H17z' fill='%23B48838'/%3E%3C/svg%3E">
   <style>
     :root {
-      --bg: #f7f8fb;
-      --panel: #ffffff;
-      --ink: #172033;
-      --muted: #5e6a7d;
-      --line: #d9deea;
-      --blue: #2563eb;
-      --amber: #b45309;
-      --red: #b91c1c;
-      --green: #047857;
+      --bg: #f3f0e8;
+      --panel: #fffdf8;
+      --ink: #101513;
+      --muted: #5c625d;
+      --line: #c9c1af;
+      --line-strong: #817968;
+      --blue: #1c4b3d;
+      --amber: #b48838;
+      --red: #b43d32;
+      --green: #1c4b3d;
+      --emerald: #2e6a55;
+      --paper-warm: #eee7d8;
+      --focus: #8b641f;
+      --shadow: 0 18px 45px rgba(16, 21, 19, 0.09);
     }
+
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      padding: 24px;
-      background: var(--bg);
+      min-height: 100vh;
       color: var(--ink);
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.45;
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(rgba(16, 21, 19, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16, 21, 19, 0.025) 1px, transparent 1px);
+      background-size: 38px 38px;
+      font-family: Aptos, "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.55;
     }
-    main { max-width: 1180px; margin: 0 auto; }
-    header {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 18px;
-      margin-bottom: 18px;
+
+    button, input { font: inherit; }
+    button:focus-visible, input:focus-visible, a:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
     }
-    h1 { margin: 0 0 6px; font-size: clamp(1.6rem, 2.5vw, 2.4rem); letter-spacing: 0; }
-    .subtitle { color: var(--muted); margin: 0; max-width: 760px; }
-    .language-switch {
-      display: inline-flex;
-      border: 1px solid var(--line);
-      border-radius: 8px;
+
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 12px;
+      left: 12px;
+      transform: translateY(-160%);
+      padding: 10px 14px;
+      color: var(--panel);
+      background: var(--ink);
+      border: 2px solid var(--amber);
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    main {
+      width: min(1280px, calc(100% - 48px));
+      margin: 28px auto 72px;
+    }
+
+    .case-header {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: stretch;
+      color: var(--panel);
+      background: var(--ink);
+      border-top: 6px solid var(--amber);
+      box-shadow: var(--shadow);
       overflow: hidden;
-      background: var(--panel);
-      flex-shrink: 0;
+    }
+
+    .case-mark {
+      display: grid;
+      place-items: center;
+      min-height: 174px;
+      color: var(--amber);
+      border-right: 1px solid rgba(255, 253, 248, 0.2);
+      background: rgba(255, 255, 255, 0.025);
+    }
+    .case-mark svg { width: 40px; height: 40px; }
+
+    .case-title {
+      align-self: center;
+      padding: 30px 0;
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: #d8c69e;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    h1, h2, h3 {
+      font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
+    }
+    h1 {
+      max-width: 840px;
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4.1vw, 3.65rem);
+      line-height: 1.03;
+      letter-spacing: -0.035em;
+    }
+    .subtitle {
+      max-width: 760px;
+      margin: 0;
+      color: #ddd9ce;
+      font-size: 1rem;
+    }
+    .docket-number {
+      margin: 12px 0 0;
+      color: #aaa596;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.74rem;
+      letter-spacing: 0.1em;
+    }
+
+    .language-switch {
+      display: flex;
+      align-self: start;
+      margin: 24px 24px 0 0;
+      border: 1px solid rgba(255, 253, 248, 0.35);
     }
     .language-switch button {
+      min-width: 52px;
       border: 0;
-      padding: 8px 12px;
+      padding: 9px 12px;
+      color: var(--panel);
       background: transparent;
-      color: var(--ink);
       cursor: pointer;
-      font-weight: 700;
+      font-weight: 800;
     }
-    .language-switch button.active { background: var(--blue); color: #fff; }
+    .language-switch button + button { border-left: 1px solid rgba(255, 253, 248, 0.25); }
+    .language-switch button.active { color: var(--ink); background: var(--amber); }
+
     .notice {
-      border: 1px solid #f1c27d;
-      background: #fff7ed;
-      color: #7c2d12;
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin: 18px 0;
-      font-weight: 700;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      margin: 0 0 22px 92px;
+      padding: 15px 18px;
+      color: #f8eadf;
+      background: var(--red);
+      border-left: 8px solid #7f241d;
+      font-weight: 750;
+      box-shadow: 0 9px 25px rgba(92, 26, 22, 0.16);
     }
+    .notice-symbol {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      font-family: Georgia, serif;
+      font-weight: 900;
+    }
+
     .stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin: 18px 0;
+      grid-template-columns: 1.35fr 0.85fr 1fr;
+      gap: 14px;
+      margin: 24px 0 18px;
     }
     .stat {
+      min-height: 142px;
+      padding: 20px;
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-top: 4px solid var(--line-strong);
+      box-shadow: 0 10px 25px rgba(16, 21, 19, 0.04);
+    }
+    .stat:first-child { transform: translateY(-9px); border-top-color: var(--amber); }
+    .stat:nth-child(2) { border-top-color: var(--green); }
+    .stat:nth-child(3) { border-top-color: var(--red); }
+    .stat-label {
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+    .stat-value {
+      font-family: Georgia, "Noto Serif SC", serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      line-height: 1;
+    }
+    .stat-note { margin-top: 9px; color: var(--muted); font-size: 0.76rem; line-height: 1.3; }
+    .mrpi-bar {
+      height: 10px;
+      margin-top: 14px;
+      overflow: hidden;
+      background: #ded7c8;
+      border: 1px solid #c6bda9;
+    }
+    .mrpi-fill { height: 100%; width: __MRPI_WIDTH__%; background: var(--amber); }
+
+    .review-controls {
+      position: sticky;
+      z-index: 20;
+      top: 10px;
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto auto;
+      gap: 14px;
+      align-items: center;
+      margin: 18px 0 26px;
       padding: 14px;
+      background: rgba(255, 253, 248, 0.96);
+      border: 1px solid var(--line-strong);
+      box-shadow: 0 12px 28px rgba(16, 21, 19, 0.08);
+      backdrop-filter: blur(12px);
     }
-    .stat-label { color: var(--muted); font-size: 0.85rem; margin-bottom: 6px; }
-    .stat-value { font-size: 2rem; font-weight: 800; }
-    .mrpi-bar { height: 12px; background: #e8edf6; border-radius: 99px; overflow: hidden; margin-top: 8px; }
-    .mrpi-fill { height: 100%; width: __MRPI_WIDTH__%; background: var(--blue); }
-    .findings { display: grid; gap: 12px; margin-top: 18px; }
+    .search-field { position: relative; display: block; }
+    .search-field svg {
+      position: absolute;
+      top: 50%;
+      left: 13px;
+      width: 18px;
+      height: 18px;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+    .search-field input {
+      width: 100%;
+      min-height: 44px;
+      padding: 9px 12px 9px 42px;
+      color: var(--ink);
+      background: #f9f6ee;
+      border: 1px solid var(--line);
+      border-radius: 0;
+    }
+    .risk-filters { display: flex; flex-wrap: wrap; gap: 7px; }
+    .risk-filters button {
+      min-height: 38px;
+      padding: 7px 11px;
+      color: var(--ink);
+      background: transparent;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+    .risk-filters button[aria-pressed="true"] { color: var(--panel); background: var(--ink); border-color: var(--ink); }
+    .visible-count {
+      margin: 0;
+      color: var(--muted);
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .findings { display: grid; gap: 14px; margin-top: 18px; }
     article {
+      position: relative;
+      padding: 18px;
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
+      border-left: 5px solid var(--line-strong);
+      box-shadow: 0 8px 24px rgba(16, 21, 19, 0.045);
     }
-    .finding-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
-    h2 { margin: 0; font-size: 1.1rem; }
-    .meta { color: var(--muted); font-size: 0.86rem; margin-top: 2px; }
-    .badge { border-radius: 999px; padding: 4px 9px; color: #fff; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+    article[data-risk="high"] { border-left-color: var(--red); }
+    article[data-risk="medium"] { border-left-color: var(--amber); }
+    article[data-risk="low"] { border-left-color: var(--green); }
+    article::after {
+      content: attr(data-risk);
+      position: absolute;
+      right: 15px;
+      bottom: 9px;
+      color: rgba(16, 21, 19, 0.09);
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.64rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+    .finding-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 12px; padding-right: 2px; }
+    h2 { margin: 0; font-size: 1.16rem; line-height: 1.3; }
+    h3 { margin: 0 0 8px; color: var(--muted); font-size: 0.9rem; }
+    .meta { margin-top: 5px; color: var(--muted); font-size: 0.8rem; }
+    .badge {
+      padding: 5px 9px;
+      color: var(--panel);
+      border-radius: 0;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
     .risk-high { background: var(--red); }
-    .risk-medium { background: var(--amber); }
+    .risk-medium { color: var(--ink); background: var(--amber); }
     .risk-low { background: var(--green); }
-    .summary { border-left: 4px solid var(--blue); background: #eff6ff; padding: 10px 12px; border-radius: 0 8px 8px 0; margin-bottom: 10px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-    section.box { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: #fbfcff; }
-    h3 { margin: 0 0 8px; font-size: 0.9rem; color: var(--muted); }
-    ul { margin: 0; padding-left: 18px; }
-    li { margin: 3px 0; }
-    code { background: #eef2f7; padding: 1px 4px; border-radius: 4px; word-break: break-word; }
+    .summary {
+      margin-bottom: 12px;
+      padding: 11px 13px;
+      background: var(--paper-warm);
+      border-left: 4px solid var(--amber);
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(235px, 1fr)); gap: 10px; }
+    section.box { padding: 12px; background: #faf7ef; border: 1px solid var(--line); }
+    ul { margin: 0; padding-left: 19px; }
+    li { margin: 4px 0; }
+    code {
+      padding: 1px 4px;
+      color: #24362f;
+      background: #e7e2d5;
+      border: 1px solid #d5cebd;
+      border-radius: 2px;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.88em;
+      word-break: break-word;
+    }
+    #no-findings {
+      padding: 38px;
+      text-align: center;
+      background: var(--panel);
+      border: 1px dashed var(--line-strong);
+    }
+
     [data-lang] { display: none; }
     body.locale-en [data-lang="en"], body.locale-zh [data-lang="zh"] { display: inline; }
-    @media (max-width: 700px) {
-      body { padding: 14px; }
-      header { display: block; }
-      .language-switch { margin-top: 12px; }
+
+    @media (max-width: 900px) {
+      main { width: min(100% - 28px, 760px); margin-top: 14px; }
+      .case-header { grid-template-columns: 70px minmax(0, 1fr); }
+      .language-switch { grid-column: 2; margin: 0 18px 18px 0; justify-self: start; }
+      .case-title { padding-right: 18px; }
+      .notice { margin-left: 0; }
+      .stats { grid-template-columns: 1fr; }
+      .stat:first-child { transform: none; }
+      .review-controls { position: static; grid-template-columns: 1fr; }
+      .visible-count { white-space: normal; }
+    }
+
+    @media (max-width: 580px) {
+      .case-header { grid-template-columns: 1fr; }
+      .case-mark { display: none; }
+      .case-title { padding: 24px 20px 8px; }
+      .language-switch { grid-column: 1; margin: 0 20px 20px; }
+      h1 { font-size: 2.1rem; }
       .finding-head { display: block; }
-      .badge { display: inline-block; margin-top: 8px; }
+      .badge { display: inline-block; margin-top: 9px; }
+      article { padding: 14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
     }
   </style>
 </head>
 <body class="locale-__DEFAULT_LOCALE__">
-  <main>
-    <header>
-      <div>
-        <h1><span data-lang="en">Unified Research Integrity Review Dashboard</span><span data-lang="zh">研究诚信证据复核看板</span></h1>
-        <p class="subtitle"><span data-lang="en">Local evidence-ledger dashboard for candidate risk signals and manual verification requests.</span><span data-lang="zh">本地证据台账看板，用于汇总候选风险信号和人工复核请求。</span></p>
+  <a class="skip-link" href="#review-controls"><span data-lang="en">Skip to review controls</span><span data-lang="zh">跳到复核工具</span></a>
+  <main id="evidence-docket">
+    <header class="case-header">
+      <div class="case-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none">
+          <path d="M12 8h24v32H12z" stroke="currentColor" stroke-width="2"/>
+          <path d="M17 16h14M17 23h14M17 30h9" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+          <path d="M8 13h4M8 24h4M8 35h4" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="case-title">
+        <p class="eyebrow"><span data-lang="en">Local evidence docket</span><span data-lang="zh">本地证据案卷</span></p>
+        <h1><span data-lang="en">Research Integrity Evidence Review</span><span data-lang="zh">研究诚信证据复核看板</span></h1>
+        <p class="subtitle"><span data-lang="en">Traceable candidate signals, counter-evidence, and manual verification requests in one offline record.</span><span data-lang="zh">把候选风险信号、反证与人工复核请求收进同一份可追溯、离线案卷。</span></p>
+        <p class="docket-number">DOSSIER / LOCAL-FIRST / RECORDS __TOTAL_FINDINGS__</p>
       </div>
       <div class="language-switch" aria-label="Language">
-        <button type="button" data-set-locale="en">EN</button>
-        <button type="button" data-set-locale="zh">中文</button>
+        <button type="button" data-set-locale="en" aria-pressed="__EN_ACTIVE__">EN</button>
+        <button type="button" data-set-locale="zh" aria-pressed="__ZH_ACTIVE__">中文</button>
       </div>
     </header>
-    <div class="notice"><span data-lang="en">This dashboard aggregates evidence signals only and does not determine research misconduct.</span><span data-lang="zh">此看板只汇总证据风险信号，不判定科研不端。</span></div>
-    <div class="stats">
+
+    <div class="notice">
+      <span class="notice-symbol" aria-hidden="true">!</span>
+      <span><span data-lang="en">This dashboard aggregates evidence signals only and does not determine research misconduct.</span><span data-lang="zh">本看板只汇总证据信号并安排人工复核，不判定科研不端。</span></span>
+    </div>
+
+    <section class="stats" aria-label="Review summary">
       <div class="stat">
         <div class="stat-label"><span data-lang="en">Manual Review Priority Index</span><span data-lang="zh">人工复核优先指数</span></div>
         <div class="stat-value">__MRPI__%</div>
-        <div class="mrpi-bar"><div class="mrpi-fill"></div></div>
-        <div style="font-size: 0.72rem; color: var(--muted); margin-top: 6px; line-height: 1.2;">
-          <span data-lang="en">* Estimated density of candidate signals for manual review, NOT misconduct probability.</span>
-          <span data-lang="zh">* 人工审核候选信号的估算密度，并非科研不端的概率。</span>
-        </div>
+        <div class="mrpi-bar" role="progressbar" aria-label="Manual Review Priority Index" aria-valuemin="0" aria-valuemax="100" aria-valuenow="__MRPI__"><div class="mrpi-fill"></div></div>
+        <div class="stat-note"><span data-lang="en">Candidate-signal density for triage, never a probability.</span><span data-lang="zh">用于排序的候选信号密度，不是概率。</span></div>
       </div>
-      <div class="stat"><div class="stat-label"><span data-lang="en">Total Findings</span><span data-lang="zh">风险信号总数</span></div><div class="stat-value">__TOTAL_FINDINGS__</div></div>
+      <div class="stat"><div class="stat-label"><span data-lang="en">Total Findings</span><span data-lang="zh">候选记录总数</span></div><div class="stat-value">__TOTAL_FINDINGS__</div></div>
       <div class="stat"><div class="stat-label"><span data-lang="en">High / Medium / Low</span><span data-lang="zh">高 / 中 / 低</span></div><div class="stat-value">__RISK_COUNTS__</div></div>
-    </div>
+    </section>
+
+    <section class="review-controls" id="review-controls" aria-label="Review controls">
+      <label class="search-field" for="finding-search">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="2"/></svg>
+        <input id="finding-search" type="search" autocomplete="off" data-placeholder-en="Search rule, source, or evidence text" data-placeholder-zh="搜索规则、来源或证据文本" placeholder="搜索规则、来源或证据文本">
+      </label>
+      <div class="risk-filters" role="group" aria-label="Risk filter">
+        <button type="button" data-filter-risk="all" aria-pressed="true"><span data-lang="en">All</span><span data-lang="zh">全部</span></button>
+        <button type="button" data-filter-risk="high" aria-pressed="false"><span data-lang="en">High</span><span data-lang="zh">高</span></button>
+        <button type="button" data-filter-risk="medium" aria-pressed="false"><span data-lang="en">Medium</span><span data-lang="zh">中</span></button>
+        <button type="button" data-filter-risk="low" aria-pressed="false"><span data-lang="en">Low</span><span data-lang="zh">低</span></button>
+      </div>
+      <p class="visible-count" id="visible-findings" aria-live="polite">__TOTAL_FINDINGS__ records shown</p>
+    </section>
+
 __STATUS_ENRICHMENT_HTML__
 __REFERENCE_ANOMALIES_HTML__
 __PV_COMPLETENESS_HTML__
-    <div class="findings">
+    <div class="findings" data-review-section>
 __FINDINGS_HTML__
     </div>
+    <p id="no-findings" hidden><span data-lang="en">No evidence records match this filter.</span><span data-lang="zh">没有符合当前筛选条件的证据记录。</span></p>
   </main>
   <script>
     (function () {
       var root = document.documentElement;
       var body = document.body;
       var locale = root.getAttribute("data-default-locale") || "en";
+      var activeRisk = "all";
+      var searchInput = document.getElementById("finding-search");
+      var countOutput = document.getElementById("visible-findings");
+      var emptyState = document.getElementById("no-findings");
+      var cards = Array.prototype.slice.call(document.querySelectorAll("[data-finding-card]"));
+
       function setLocale(next) {
         locale = next === "zh" ? "zh" : "en";
+        root.lang = locale;
         body.classList.remove("locale-en", "locale-zh");
         body.classList.add("locale-" + locale);
         Array.prototype.forEach.call(document.querySelectorAll("[data-set-locale]"), function (button) {
-          button.classList.toggle("active", button.getAttribute("data-set-locale") === locale);
+          var active = button.getAttribute("data-set-locale") === locale;
+          button.classList.toggle("active", active);
+          button.setAttribute("aria-pressed", active ? "true" : "false");
         });
+        if (searchInput) {
+          searchInput.placeholder = searchInput.getAttribute("data-placeholder-" + locale) || "";
+        }
+        applyFilters();
       }
+
+      function applyFilters() {
+        var query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+        var visible = 0;
+        cards.forEach(function (card) {
+          var riskMatch = activeRisk === "all" || card.getAttribute("data-risk") === activeRisk;
+          var searchMatch = !query || card.textContent.toLowerCase().indexOf(query) !== -1;
+          card.hidden = !(riskMatch && searchMatch);
+          if (!card.hidden) visible += 1;
+        });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-review-section]"), function (section) {
+          var sectionCards = section.querySelectorAll("[data-finding-card]");
+          section.hidden = sectionCards.length > 0 && !Array.prototype.some.call(sectionCards, function (card) { return !card.hidden; });
+        });
+        if (countOutput) {
+          countOutput.textContent = locale === "zh" ? "显示 " + visible + " 条记录" : visible + " records shown";
+        }
+        if (emptyState) emptyState.hidden = visible !== 0;
+      }
+
       Array.prototype.forEach.call(document.querySelectorAll("[data-set-locale]"), function (button) {
         button.addEventListener("click", function () { setLocale(button.getAttribute("data-set-locale")); });
       });
+      Array.prototype.forEach.call(document.querySelectorAll("[data-filter-risk]"), function (button) {
+        button.addEventListener("click", function () {
+          activeRisk = button.getAttribute("data-filter-risk") || "all";
+          Array.prototype.forEach.call(document.querySelectorAll("[data-filter-risk]"), function (candidate) {
+            candidate.setAttribute("aria-pressed", candidate === button ? "true" : "false");
+          });
+          applyFilters();
+        });
+      });
+      if (searchInput) searchInput.addEventListener("input", applyFilters);
       setLocale(locale);
     })();
   </script>

@@ -3,10 +3,14 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import sys
 from pathlib import Path
 
 from integrity_agent.core.path_display import display_path
-import sys
+
+
+def _escape(value: object) -> str:
+    return html.escape(str(value), quote=True)
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Generate raw PV measurement recalculation HTML dashboard.")
@@ -80,14 +84,13 @@ def run_report_raw_pv_html(findings_jsonl: str, output_path: str = "outputs/raw_
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Raw Photovoltaic &amp; Materials Measurement Recalculation Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Outfit:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
     <style>
         :root {{
             --bg-color: #0b0f19;
             --card-bg: rgba(17, 24, 39, 0.7);
             --border-color: rgba(255, 255, 255, 0.08);
             --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
+            --accent-copper: #b48838;
             --accent-yellow: #f59e0b;
             --accent-red: #ef4444;
             --text-main: #f3f4f6;
@@ -103,7 +106,7 @@ def run_report_raw_pv_html(findings_jsonl: str, output_path: str = "outputs/raw_
         body {{
             background-color: var(--bg-color);
             color: var(--text-main);
-            font-family: 'Inter', sans-serif;
+            font-family: Aptos, "Noto Sans SC", "Microsoft YaHei", sans-serif;
             line-height: 1.5;
             padding: 2rem;
         }}
@@ -115,10 +118,10 @@ def run_report_raw_pv_html(findings_jsonl: str, output_path: str = "outputs/raw_
         }}
 
         h1 {{
-            font-family: 'Outfit', sans-serif;
+            font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
             font-size: 2.2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #60a5fa, #c084fc);
+            background: linear-gradient(135deg, #f3f0e8, var(--accent-copper));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -168,14 +171,14 @@ def run_report_raw_pv_html(findings_jsonl: str, output_path: str = "outputs/raw_
         }}
 
         .stat-card p {{
-            font-family: 'Outfit', sans-serif;
+            font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
             font-size: 2.5rem;
             font-weight: 700;
             color: #ffffff;
         }}
 
         .section-title {{
-            font-family: 'Outfit', sans-serif;
+            font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
             font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 1.5rem;
@@ -218,7 +221,7 @@ def run_report_raw_pv_html(findings_jsonl: str, output_path: str = "outputs/raw_
         }}
 
         .finding-title {{
-            font-family: 'Outfit', sans-serif;
+            font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
             font-size: 1.2rem;
             font-weight: 600;
             color: #ffffff;
@@ -269,7 +272,7 @@ def run_report_raw_pv_html(findings_jsonl: str, output_path: str = "outputs/raw_
 
         .safe-lang-box {{
             background: rgba(255, 255, 255, 0.02);
-            border-left: 3px solid var(--accent-purple);
+            border-left: 3px solid var(--accent-copper);
             padding: 1rem;
             border-radius: 0 8px 8px 0;
             font-style: italic;
@@ -299,7 +302,7 @@ def run_report_raw_pv_html(findings_jsonl: str, output_path: str = "outputs/raw_
 
         .list-box li::before {{
             content: '•';
-            color: var(--accent-purple);
+            color: var(--accent-copper);
             position: absolute;
             left: 0;
         }}
@@ -364,26 +367,27 @@ def run_report_raw_pv_html(findings_jsonl: str, output_path: str = "outputs/raw_
         """
 
     for f in findings:
-        fid = f.get("finding_id", "")
-        rule_id = f.get("rule_id", "")
-        det_id = f.get("detector_id", "")
-        risk = f.get("risk_level", "low")
-        dev_id = f.get("device_id") or "N/A"
-        src_file = f.get("source_file", "")
+        fid = _escape(f.get("finding_id", ""))
+        rule_id = _escape(f.get("rule_id", ""))
+        det_id = _escape(f.get("detector_id", ""))
+        risk_value = str(f.get("risk_level", "low"))
+        risk = _escape(risk_value)
+        dev_id = _escape(f.get("device_id") or "N/A")
+        src_file = _escape(f.get("source_file", ""))
         
         obs_str = json.dumps(f.get("observed_values", {}), indent=2)
         recomp_str = json.dumps(f.get("recomputed_values", {}), indent=2)
         tol_str = json.dumps(f.get("tolerance", {}), indent=2) if f.get("tolerance") else "N/A"
         
-        safe_lang = html.escape(f.get("safe_report_language", ""))
+        safe_lang = _escape(f.get("safe_report_language", ""))
         
         # Build checklist / explanations lists
-        alt_exp_html = "".join(f"<li>{html.escape(item)}</li>" for item in f.get("alternative_explanations", []))
-        fp_risks_html = "".join(f"<li>{html.escape(item)}</li>" for item in f.get("false_positive_risks", []))
-        m_verif_html = "".join(f"<li>{html.escape(item)}</li>" for item in f.get("manual_verification", []))
-        limits_html = "".join(f"<li>{html.escape(item)}</li>" for item in f.get("limitations", []))
+        alt_exp_html = "".join(f"<li>{_escape(item)}</li>" for item in f.get("alternative_explanations", []))
+        fp_risks_html = "".join(f"<li>{_escape(item)}</li>" for item in f.get("false_positive_risks", []))
+        m_verif_html = "".join(f"<li>{_escape(item)}</li>" for item in f.get("manual_verification", []))
+        limits_html = "".join(f"<li>{_escape(item)}</li>" for item in f.get("limitations", []))
 
-        badge_class = "badge-medium" if risk == "medium" else "badge-low"
+        badge_class = "badge-medium" if risk_value.lower() == "medium" else "badge-low"
 
         html_content += f"""
             <div class="finding-card">

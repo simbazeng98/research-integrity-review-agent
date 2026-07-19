@@ -1,0 +1,38 @@
+case_id: perovskite_public_method_afm_manufacturability_boundary_2026
+priority: P1
+field: engineering_plausibility
+scope: engineering_plausibility
+source_type: public_method
+source_url: https://www.xiaohongshu.com/explore/6a426fb70000000016026d5c
+feed_id: 6a426fb70000000016026d5c
+source_accessed_at: '2026-07-11'
+target_doi: 10.1002/adfm.76623
+public_status: public_method_example
+summary: >
+  Distilled boundary method: route cost, supply, deposition feasibility,
+  scalability, and manufacturing-value questions to a separate engineering
+  review scope. They do not by themselves contribute to research-integrity risk.
+evidence_tier: E1
+evidence_patterns:
+  - manufacturability_or_cost_question_outside_integrity_scoring
+  - deposition_feasibility_requires_engineering_context
+  - supply_or_scale_claim_requires_separate_evidence
+detector_candidates:
+  - integrity_scope_firewall
+manual_verification_needed:
+  - Check the stated process conditions and material role against the paper and cited engineering sources.
+  - Keep feasibility, cost, scalability, and supply questions separate from evidence-integrity scoring.
+false_positive_risks:
+  - Laboratory demonstrations need not establish commercial scalability or cost competitiveness.
+  - Process feasibility depends on equipment, purity, throughput, and device architecture not captured by a price claim.
+alternative_explanations:
+  - A method can be scientifically reported while remaining commercially immature.
+  - Specialized equipment or low-throughput research conditions can explain an engineering limitation.
+safe_report_language: >
+  Engineering-plausibility question only; review process evidence separately and do not increase research-integrity risk from cost or manufacturability alone.
+limitations:
+  - Social claims and commenter identities are not independently verified.
+  - This card makes no inference about personal intent.
+counter_sources: []
+resolution_status: unresolved
+version_timeline: []

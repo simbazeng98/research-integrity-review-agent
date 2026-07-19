@@ -1,0 +1,62 @@
+rule_id: pv_decay_fit_consistency
+status: active
+linked_cases:
+  - perovskite_public_method_afm_decay_dls_2026
+input_required:
+  - human_confirmed_decay_fit_records
+  - same_sample_and_source_version_context
+fields_required:
+  - decay_type
+  - sample_id
+  - source_version
+  - source_document
+  - location
+  - reported_average_or_fit_components
+risk_signal: >
+  A declared TRPL or TPV average-lifetime value differs from a deterministic
+  recomputation using same-sample, same-version biexponential fit parameters.
+detection_idea:
+  - Normalize ns, us/μs, and ms before comparison.
+  - Recompute only the explicitly declared amplitude- or intensity-weighted formula.
+  - Compare figure annotations, fit tables, and source parameters in the same sample/version group.
+  - Emit only a low non-scoring ambiguity when the formula or matching parameters are missing.
+manual_verification:
+  - Verify the averaging formula in the methods, caption, or fit-table heading.
+  - Check amplitudes, component lifetimes, units, fit range, and preprocessing.
+  - Compare the current publisher figure, fit table, and supplied source-fit parameters.
+false_positive_risks:
+  - Amplitude-weighted and intensity-weighted averages are both valid when declared.
+  - Rounding or unit labels can create an apparent difference.
+  - The records may refer to another sample, fit range, or publication version.
+safe_report_language: >
+  Candidate decay-fit consistency signal requiring formula, unit, sample,
+  source-version, and fit-parameter verification; this check does not determine cause.
+runtime_status: active
+execution_mode: offline
+toy_fixture: null
+detector_module: integrity_agent.domains.photovoltaics.decay_fit_consistency
+detector_function: detect_pv_decay_fit_consistency
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+traceability:
+  - claim_id
+  - source
+  - location
+  - source_hash
+  - sample_id
+  - source_version
+  - declared_formula
+accepted_input_types:
+  - structured_mapping
+  - jsonl_record
+minimum_sample_size: 1
+field_requirements:
+  - human_confirmed
+  - repository_relative_source_label
+known_false_positive_contexts:
+  - alternate_valid_average_formula
+  - unit_conversion
+  - rounding
+  - different_fit_range
+  - stale_source_version

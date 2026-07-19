@@ -1,0 +1,64 @@
+rule_id: curve_point_coverage
+status: active
+linked_cases:
+  - perovskite_public_method_ees_cross_document_2026
+input_required:
+  - supplied_source_data_table
+  - supplied_plot_data_table
+  - explicit_column_mapping
+fields_required:
+  - source_x
+  - source_y
+  - plot_x
+  - plot_y
+  - sample_id
+  - source_version
+  - source_hash
+risk_signal: >
+  A contiguous internal voltage/time interval represented in a supplied source-data
+  table is not represented in the explicitly mapped supplied plot-data table.
+detection_idea:
+  - Compare only supplied CSV/XLSX source and plot-data columns.
+  - Match finite x-axis points under the declared tolerance.
+  - Exclude disclosed axis clipping, downsampling, filtering, and source NaNs.
+  - Treat smoothing as y-value context, not missing-x evidence.
+  - Emit only a low, non-scoring review question for unexplained contiguous intervals.
+manual_verification:
+  - Confirm the exact source-data and plot-data x/y column mapping.
+  - Retrieve plotting code or settings for axis limits, downsampling, smoothing, and filtering.
+  - Verify sample identity, source version, table locations, and file hashes.
+false_positive_risks:
+  - Axis limits may clip points outside the displayed range.
+  - A disclosed downsampling rule may intentionally retain only a subset.
+  - Source NaNs may be omitted by plotting software.
+  - A disclosed filter may exclude the interval.
+  - Smoothing can change y-values without changing point availability.
+safe_report_language: >
+  Candidate curve-coverage question: a contiguous internal x-axis interval from
+  the supplied source table is not represented in the supplied plot-data table;
+  verify mapping, axis limits, downsampling, smoothing, NaNs, and filtering.
+runtime_status: active
+execution_mode: offline
+toy_fixture: null
+detector_module: integrity_agent.workflows.curve_reconciliation
+detector_function: run_curve_point_coverage
+requires_network: false
+requires_private_data: false
+risk_ceiling: low
+traceability:
+  - source_label
+  - location
+  - source_hash
+  - sample_id
+  - source_version
+  - column_mapping
+  - missing_intervals
+accepted_input_types:
+  - csv
+  - xlsx
+known_false_positive_contexts:
+  - disclosed_axis_clipping
+  - disclosed_downsampling
+  - disclosed_filtering
+  - source_nan_values
+  - disclosed_smoothing

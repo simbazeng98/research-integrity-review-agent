@@ -30,15 +30,24 @@ mask_area_exact = [r"mask area", r"mask_area"]
 
 scan_dir_exact = [r"scan direction", r"scan_direction", r"reverse scan", r"forward scan"]
 scan_rate_exact = [r"scan rate", r"scan_rate", r"mv/s", r"scan speed"]
-stabilized_pce_exact = [r"stabilized pce", r"stabilized_pce", r"stabilized efficiency", r"stabilized_efficiency", r"spo\b", r"stabilized power output"]
+stabilized_pce_exact = [r"stabilized pce", r"stabilized_pce", r"stabilized efficiency", r"stabilized_efficiency"]
+stabilized_power_output_exact = [r"stabilized power output", r"stabilized_power_output", r"\bspo\b"]
 mpp_exact = [r"\bmpp\b", r"maximum power point", r"mpp tracking", r"mpp_tracking"]
+
+light_intensity_exact = [
+    r"light[-_ ]intensity",
+    r"illumination[-_ ]intensity",
+    r"incident[-_ ]power[-_ ]density",
+    r"\birradiance\b",
+]
 
 temp_exact = [r"\btemp\b", r"\btemperature\b"]
 humidity_exact = [r"\bhumidity\b", r"\brh\b"]
 encap_exact = [r"\bencapsulation\b", r"\bencapsulated\b"]
 isos_exact = [r"\bisos\b"]
 t80_exact = [r"\bt80\b", r"\bt-80\b"]
-dur_exact = [r"stability duration", r"duration", r"aging time", r"testing time", r"\bstability\b"]
+dur_exact = [r"stability duration", r"\bduration\b", r"aging time", r"testing time"]
+legacy_stability_exact = [r"^stability$"]
 
 def infer_pv_field_mapping(column_name: str) -> PVFieldMapping | None:
     col_clean = column_name.strip().lower()
@@ -59,7 +68,11 @@ def infer_pv_field_mapping(column_name: str) -> PVFieldMapping | None:
     elif re.search(r'\bv\b|\bvolt', col_clean):
         unit_hint = "v"
     
-    if re.search(r'ma/cm2|ma\s*cm-2|ma\s*cm\^-2|ma/cm\^2', col_clean):
+    if re.search(r'mw\s*/\s*cm(?:\^?2|-2)|mw\s*cm(?:\^?-?2|-2)', col_clean):
+        unit_hint = "mw/cm2"
+    elif re.search(r'w\s*/\s*m(?:\^?2|-2)|w\s*m(?:\^?-?2|-2)', col_clean):
+        unit_hint = "w/m2"
+    elif re.search(r'ma/cm2|ma\s*cm-2|ma\s*cm\^-2|ma/cm\^2', col_clean):
         unit_hint = "ma/cm2"
     elif re.search(r'a/m2|a\s*m-2|a\s*m\^-2', col_clean):
         unit_hint = "a/m2"
@@ -236,6 +249,24 @@ def infer_pv_field_mapping(column_name: str) -> PVFieldMapping | None:
             unit_hint=unit_hint
         )
 
+    # Illumination intensity
+    if matches_any(light_intensity_exact, col_clean):
+        return PVFieldMapping(
+            canonical_field="light_intensity_mw_cm2",
+            matched_column=column_name,
+            confidence=0.95,
+            unit_hint=unit_hint
+        )
+
+    # Stabilized power output
+    if matches_any(stabilized_power_output_exact, col_clean):
+        return PVFieldMapping(
+            canonical_field="stabilized_power_output_percent",
+            matched_column=column_name,
+            confidence=0.95,
+            unit_hint=unit_hint
+        )
+
     # Stabilized PCE
     if matches_any(stabilized_pce_exact, col_clean):
         return PVFieldMapping(
@@ -299,14 +330,25 @@ def infer_pv_field_mapping(column_name: str) -> PVFieldMapping | None:
             unit_hint=unit_hint
         )
 
-    # Stability Duration
-    if matches_any(dur_exact, col_clean):
+    # Preserve the legacy mapping for a bare, ambiguous "stability" header.
+    # Explicit duration headers below must not be promoted to a T80 endpoint.
+    if matches_any(legacy_stability_exact, col_clean):
         return PVFieldMapping(
             canonical_field="t80_h",
             matched_column=column_name,
-            confidence=0.65,
+            confidence=0.4,
             unit_hint=unit_hint,
-            notes="Mapped duration to t80_h as backup stability field"
+            notes="Legacy ambiguous stability header; verify the endpoint manually"
+        )
+
+    # Stability Duration
+    if matches_any(dur_exact, col_clean):
+        return PVFieldMapping(
+            canonical_field="stability_duration_h",
+            matched_column=column_name,
+            confidence=0.9,
+            unit_hint=unit_hint,
+            notes="Mapped reported test duration without inferring a T80 endpoint"
         )
 
     return None

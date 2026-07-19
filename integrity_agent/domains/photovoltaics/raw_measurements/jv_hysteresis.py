@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from integrity_agent.domains.photovoltaics.raw_measurements.schema import (
     JVCurve, JVMetrics, JVHysteresisPair, RawPVConsistencyFinding
 )

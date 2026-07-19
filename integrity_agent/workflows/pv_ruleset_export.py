@@ -58,7 +58,7 @@ def run_pv_ruleset_export(output_dir: Path | str | None = None) -> tuple[Path, P
             "",
             f"- **Category**: {item.category}",
             f"- **Risk Ceiling**: `{item.risk_ceiling}`",
-            f"- **Required Evidence fields**: " + ", ".join(f"`{e}`" for e in item.required_evidence),
+            "- **Required Evidence fields**: " + ", ".join(f"`{e}`" for e in item.required_evidence),
             f"- **Missing Evidence Signal**: {item.missing_evidence_signal}",
             "",
             "#### Safe Report Language",

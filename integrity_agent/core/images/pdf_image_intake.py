@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from importlib import import_module
 from pathlib import Path
 
 from integrity_agent.core.images.image_schema import ImageManifestItem
@@ -29,7 +30,7 @@ def extract_images_from_pdf(
     items: list[ImageManifestItem] = []
 
     try:
-        import fitz  # pytype: disable=import-error # pylint: disable=import-outside-toplevel
+        import_module("fitz")
     except ImportError:
         warnings.append("pymupdf_not_installed")
         return items, warnings

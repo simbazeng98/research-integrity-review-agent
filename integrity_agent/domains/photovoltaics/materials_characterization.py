@@ -1,6 +1,19 @@
 from __future__ import annotations
 
+import re
+
 from integrity_agent.domains.photovoltaics.schema import PVMetricRow, PVConsistencyFinding
+
+
+def _header_contains_alias(header: str, alias: str) -> bool:
+    """Return whether *alias* occurs as a complete token sequence in a header."""
+    header_tokens = re.findall(r"[a-z0-9]+", header.lower())
+    alias_tokens = re.findall(r"[a-z0-9]+", alias.lower())
+    alias_size = len(alias_tokens)
+    return bool(alias_tokens) and any(
+        header_tokens[index:index + alias_size] == alias_tokens
+        for index in range(len(header_tokens) - alias_size + 1)
+    )
 
 def run_materials_characterization_check(rows: list[PVMetricRow]) -> list[PVConsistencyFinding]:
     findings: list[PVConsistencyFinding] = []
@@ -14,19 +27,21 @@ def run_materials_characterization_check(rows: list[PVMetricRow]) -> list[PVCons
 
     for table_id, t_rows in tables_rows.items():
         source_file = t_rows[0].source_file
-        sheet_name = t_rows[0].sheet_name or ""
-        
-        # Check column names and filenames for characterization keywords
+        # A filename or sheet name can provide review context, but cannot by
+        # itself establish that a table contains characterization data. Only
+        # explicit column-header tokens/aliases may trigger a finding.
         raw_cols = list(t_rows[0].raw_values.keys())
         raw_cols_lower = [c.lower() for c in raw_cols]
-        text_context = (source_file + " " + sheet_name).lower()
 
-        # Helper to check if keyword is in columns or context
-        def has_keyword(k):
-            return k in text_context or any(k in col for col in raw_cols_lower)
+        def has_keyword(*aliases: str) -> bool:
+            return any(
+                _header_contains_alias(column, alias)
+                for column in raw_cols
+                for alias in aliases
+            )
 
         # XRD check
-        if has_keyword("xrd") or has_keyword("2theta") or has_keyword("2-theta") or has_keyword("diffraction"):
+        if has_keyword("xrd", "2theta", "2-theta", "diffraction"):
             has_source = any(any(k in col for k in ("source", "radiation", "cu", "ka", "wavelength")) for col in raw_cols_lower)
             has_rate = any(any(k in col for k in ("rate", "step", "speed")) for col in raw_cols_lower)
             missing = []
@@ -43,7 +58,7 @@ def run_materials_characterization_check(rows: list[PVMetricRow]) -> list[PVCons
                 finding_idx += 1
 
         # XPS check
-        if has_keyword("xps") or has_keyword("binding energy") or has_keyword("photoelectron"):
+        if has_keyword("xps", "binding energy", "photoelectron"):
             has_calib = any(any(k in col for k in ("calib", "reference", "charge", "c1s", "fitting")) for col in raw_cols_lower)
             missing = []
             if not has_calib:
@@ -57,7 +72,7 @@ def run_materials_characterization_check(rows: list[PVMetricRow]) -> list[PVCons
                 finding_idx += 1
 
         # PL/TRPL check
-        if has_keyword("pl") or has_keyword("trpl") or has_keyword("photoluminescence") or has_keyword("lifetime") or has_keyword("decay"):
+        if has_keyword("pl", "trpl", "photoluminescence", "lifetime", "decay"):
             has_exc = any(any(k in col for k in ("excitation", "laser", "fluence", "power")) for col in raw_cols_lower)
             missing = []
             if not has_exc:
@@ -71,7 +86,7 @@ def run_materials_characterization_check(rows: list[PVMetricRow]) -> list[PVCons
                 finding_idx += 1
 
         # UV-vis check
-        if has_keyword("uv-vis") or has_keyword("uv_vis") or has_keyword("absorbance") or has_keyword("absorption") or has_keyword("transmission"):
+        if has_keyword("uv-vis", "uv_vis", "absorbance", "absorption", "transmission"):
             has_baseline = any(any(k in col for k in ("baseline", "substrate", "reference", "blank")) for col in raw_cols_lower)
             missing = []
             if not has_baseline:
@@ -85,7 +100,7 @@ def run_materials_characterization_check(rows: list[PVMetricRow]) -> list[PVCons
                 finding_idx += 1
 
         # SEM/TEM check
-        if has_keyword("sem") or has_keyword("tem") or has_keyword("micrograph") or has_keyword("transmission electron"):
+        if has_keyword("sem", "tem", "micrograph", "transmission electron"):
             has_scale = any(any(k in col for k in ("scale", "bar", "magnification", "voltage", "kv")) for col in raw_cols_lower)
             missing = []
             if not has_scale:
@@ -99,7 +114,7 @@ def run_materials_characterization_check(rows: list[PVMetricRow]) -> list[PVCons
                 finding_idx += 1
 
         # AFM check
-        if has_keyword("afm") or has_keyword("roughness") or has_keyword("rms") or has_keyword("microscopy"):
+        if has_keyword("afm", "roughness", "rms", "microscopy"):
             has_size = any(any(k in col for k in ("size", "area", "roughness", "scan", "rms", "rq")) for col in raw_cols_lower)
             missing = []
             if not has_size:
@@ -113,7 +128,7 @@ def run_materials_characterization_check(rows: list[PVMetricRow]) -> list[PVCons
                 finding_idx += 1
 
         # GIWAXS check
-        if has_keyword("giwaxs") or has_keyword("grazing incidence"):
+        if has_keyword("giwaxs", "grazing incidence"):
             has_angle = any(any(k in col for k in ("angle", "incidence", "wavelength", "beam")) for col in raw_cols_lower)
             missing = []
             if not has_angle:

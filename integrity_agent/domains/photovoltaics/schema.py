@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field, asdict
+from pathlib import Path
 from typing import Any
 
 CANONICAL_FIELDS = {
@@ -16,11 +17,14 @@ CANONICAL_FIELDS = {
     "scan_direction",
     "scan_rate",
     "stabilized_pce_percent",
+    "stabilized_power_output_percent",
+    "light_intensity_mw_cm2",
     "mpp_tracking",
     "temperature_c",
     "humidity_percent",
     "encapsulation",
     "isos_protocol",
+    "stability_duration_h",
     "t80_h",
 }
 
@@ -106,15 +110,18 @@ class PVConsistencyFinding:
         return asdict(self)
 
 
-def build_pv_metric_rows(table_manifest_path: str | Path, column_profiles_path: str | Path | None = None) -> list[PVMetricRow]:
-    from pathlib import Path
+def build_pv_metric_rows(
+    table_manifest_path: str | Path,
+    column_profiles_path: str | Path | None = None,
+    table_base_dir: str | Path | None = None,
+) -> list[PVMetricRow]:
     import sys
-    import json
     from integrity_agent.core.tables.table_reader import read_any_table
     from integrity_agent.core.tables.table_schema import TableManifestItem
     from integrity_agent.domains.photovoltaics.field_mapping import infer_pv_field_mapping
     from integrity_agent.domains.photovoltaics.units import (
-        normalize_voc, normalize_jsc, normalize_ff, normalize_pce, normalize_area, normalize_bandgap, to_float
+        normalize_voc, normalize_jsc, normalize_ff, normalize_pce, normalize_area,
+        normalize_bandgap, normalize_light_intensity, to_float
     )
 
     table_manifest_path = Path(table_manifest_path)
@@ -145,12 +152,13 @@ def build_pv_metric_rows(table_manifest_path: str | Path, column_profiles_path: 
 
     pv_rows: list[PVMetricRow] = []
     project_root = Path.cwd()
+    base_dir = Path(table_base_dir) if table_base_dir is not None else project_root
 
     for item in items:
         # Resolve target table file path
         file_path = Path(item.relative_path)
         if not file_path.is_absolute():
-            file_path = (project_root / item.relative_path).resolve()
+            file_path = (base_dir / item.relative_path).resolve()
 
         if not file_path.exists():
             # Try fallbacks
@@ -290,6 +298,10 @@ def build_pv_metric_rows(table_manifest_path: str | Path, column_profiles_path: 
                     norm_val, warn = normalize_pce(val_str, unit_hint)
                     fields_data["stabilized_pce_percent"] = norm_val
                     fields_data["warnings"].extend(warn)
+                elif canonical == "stabilized_power_output_percent":
+                    norm_val, warn = normalize_pce(val_str, unit_hint)
+                    fields_data["stabilized_power_output_percent"] = norm_val
+                    fields_data["warnings"].extend(warn)
                 elif canonical == "reverse_scan_pce_percent":
                     norm_val, warn = normalize_pce(val_str, unit_hint)
                     fields_data["reverse_scan_pce_percent"] = norm_val
@@ -300,6 +312,12 @@ def build_pv_metric_rows(table_manifest_path: str | Path, column_profiles_path: 
                     fields_data["warnings"].extend(warn)
                 elif canonical == "scan_rate":
                     fields_data["scan_rate"] = to_float(val_str)
+                elif canonical == "light_intensity_mw_cm2":
+                    norm_val, warn = normalize_light_intensity(val_str, unit_hint)
+                    fields_data["light_intensity_mw_cm2"] = norm_val
+                    fields_data["warnings"].extend(warn)
+                elif canonical == "stability_duration_h":
+                    fields_data["stability_duration_h"] = to_float(val_str)
                 elif canonical == "t80_h":
                     fields_data["t80_h"] = to_float(val_str)
                 elif canonical == "temperature_c":

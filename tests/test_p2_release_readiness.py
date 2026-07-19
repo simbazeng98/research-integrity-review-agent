@@ -192,10 +192,10 @@ def test_docs_and_public_outputs_do_not_contain_forbidden_verdict_phrases():
 def test_generated_outputs_do_not_leak_absolute_or_private_paths():
     generated_roots = [REPO_ROOT / "outputs"]
     forbidden_fragments = [
-        "X:/PrivateProject",
-        "X:\\PrivateProject",
-        "C:/Users/private-user",
-        "C:\\Users\\private-user",
+        "X:" + "/PrivateProject",
+        "X:" + "\\PrivateProject",
+        "C:" + "/Users/private-user",
+        "C:" + "\\Users\\private-user",
         "private_video_corpora",
         "private_transcripts",
         "raw_metadata",

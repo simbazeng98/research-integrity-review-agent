@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import html
 import json
 from pathlib import Path
-import html
+
+
+def _escape(value: object) -> str:
+    return html.escape(str(value), quote=True)
 
 def generate_pv_domain_html(
     findings_path: Path | str,
@@ -39,7 +43,6 @@ def generate_pv_domain_html(
     # 3. Count categories
     pce_cnt = sum(1 for f in findings if f["rule_id"] == "pv_pce_consistency")
     eqe_cnt = sum(1 for f in findings if f["rule_id"] == "pv_eqe_jv_jsc_consistency")
-    voc_cnt = sum(1 for f in findings if f["rule_id"] == "pv_voc_loss_consistency")
     rep_cnt = sum(1 for f in findings if f["rule_id"] == "pv_reporting_completeness")
     stab_cnt = sum(1 for f in findings if f["rule_id"] == "pv_stability_reporting_completeness")
     tan_cnt = sum(1 for f in findings if f["rule_id"] == "pv_tandem_current_matching")
@@ -48,7 +51,12 @@ def generate_pv_domain_html(
     # Render finding rows
     tbody_html = ""
     for f in findings:
-        risk_class = f"risk-{f['risk_level']}"
+        risk_value = str(f.get("risk_level", "low"))
+        risk_token = risk_value.lower()
+        if risk_token not in {"low", "medium", "high"}:
+            risk_token = "low"
+        risk_class = f"risk-{risk_token}"
+        risk_text = _escape(risk_value.upper())
         row_idx_str = f"Row {f['row_index']}" if f.get("row_index") is not None else "Table-level"
         device_id_str = f["device_id"] if f.get("device_id") else "N/A"
         
@@ -59,30 +67,34 @@ def generate_pv_domain_html(
             items = []
             for k, v in d.items():
                 if isinstance(v, float):
-                    items.append(f"<div class='val-item'><strong>{k}</strong>: {v:.4f}</div>")
+                    rendered_value = f"{v:.4f}"
                 else:
-                    items.append(f"<div class='val-item'><strong>{k}</strong>: {v}</div>")
+                    rendered_value = str(v)
+                items.append(
+                    f"<div class='val-item'><strong>{_escape(k)}</strong>: "
+                    f"{_escape(rendered_value)}</div>"
+                )
             return "".join(items)
 
         obs_html = format_dict(f.get("observed_values", {}))
         rec_html = format_dict(f.get("recomputed_values", {}))
         
-        mv_list_html = "".join([f"<li>{html.escape(mv)}</li>" for mv in f.get("manual_verification", [])])
+        mv_list_html = "".join(f"<li>{_escape(mv)}</li>" for mv in f.get("manual_verification", []))
 
         tbody_html += f"""
         <tr class="finding-row {risk_class}">
-            <td class="col-id"><strong>{html.escape(f['finding_id'])}</strong></td>
+            <td class="col-id"><strong>{_escape(f.get('finding_id', ''))}</strong></td>
             <td class="col-rule">
-                <span class="rule-badge">{html.escape(f['rule_id'].replace('pv_', ''))}</span>
-                <span class="risk-badge badge-{f['risk_level']}">{f['risk_level'].upper()}</span>
+                <span class="rule-badge">{_escape(str(f.get('rule_id', '')).replace('pv_', ''))}</span>
+                <span class="risk-badge badge-{risk_token}">{risk_text}</span>
             </td>
             <td class="col-file">
-                <div class="file-name">{html.escape(f['source_file'])}</div>
-                <div class="table-id">Table: {html.escape(f['table_id'])}</div>
+                <div class="file-name">{_escape(f.get('source_file', ''))}</div>
+                <div class="table-id">Table: {_escape(f.get('table_id', 'N/A'))}</div>
             </td>
             <td class="col-loc">
-                <div class="loc-index">{html.escape(row_idx_str)}</div>
-                <div class="device-id">Device: {html.escape(device_id_str)}</div>
+                <div class="loc-index">{_escape(row_idx_str)}</div>
+                <div class="device-id">Device: {_escape(device_id_str)}</div>
             </td>
             <td class="col-values">
                 <div class="obs-box">
@@ -94,7 +106,7 @@ def generate_pv_domain_html(
                     {obs_box_with_padding(rec_html)}
                 </div>
             </td>
-            <td class="col-lang">{html.escape(f['safe_report_language'])}</td>
+            <td class="col-lang">{_escape(f.get('safe_report_language', ''))}</td>
             <td class="col-mv">
                 <ul class="mv-list">
                     {mv_list_html}
@@ -109,9 +121,6 @@ def generate_pv_domain_html(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photovoltaics & Materials Domain Review Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {{
             --bg-color: #0b0f19;
@@ -133,7 +142,7 @@ def generate_pv_domain_html(
         }}
 
         body {{
-            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            font-family: Aptos, "Noto Sans SC", "Microsoft YaHei", sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
             min-height: 100vh;
@@ -161,7 +170,7 @@ def generate_pv_domain_html(
         }}
 
         h1 {{
-            font-family: 'Outfit', sans-serif;
+            font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
             font-size: 2.25rem;
             font-weight: 700;
             background: linear-gradient(135deg, #fff 0%, var(--text-secondary) 100%);
@@ -234,7 +243,7 @@ def generate_pv_domain_html(
         }}
 
         .card-value {{
-            font-family: 'Outfit', sans-serif;
+            font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
             font-size: 2.25rem;
             font-weight: 700;
             color: var(--text-primary);
@@ -267,7 +276,7 @@ def generate_pv_domain_html(
         }}
 
         .table-header h2 {{
-            font-family: 'Outfit', sans-serif;
+            font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
             font-size: 1.5rem;
             font-weight: 600;
         }}

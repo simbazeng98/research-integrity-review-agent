@@ -213,9 +213,9 @@ def run_tandem_consistency_check(rows: list[PVMetricRow]) -> list[PVConsistencyF
                     }
                     
                     safe_lang = (
-                        f"PV tandem reporting completeness gap: 2T tandem context detected but subcell current density "
-                        f"data or measurement bias illumination/voltage parameters are missing from the parsed tables. "
-                        f"Verify subcell EQE protocols and filtered calibration details in the manuscript methods or SI."
+                        "PV tandem reporting completeness gap: 2T tandem context detected but subcell current density "
+                        "data or measurement bias illumination/voltage parameters are missing from the parsed tables. "
+                        "Verify subcell EQE protocols and filtered calibration details in the manuscript methods or SI."
                     )
                     
                     evidence_items = [{

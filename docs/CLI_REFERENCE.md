@@ -7,7 +7,7 @@ Generated artifacts default to `outputs/...`. Writing curated artifacts into `kn
 | Command | Purpose | Default output | Network default |
 |---|---|---|---|
 | `run-rules examples/toy_rule_package` | Run toy/stub detector rules | `outputs/rule_findings.jsonl` | Offline; `--allow-network` exists for metadata rules only |
-| `validate-ledger <findings.jsonl>` | Validate evidence-ledger JSONL schema, safe language, and private-path boundaries | stdout status; optional `--schema-output` writes JSON Schema | Offline |
+| `validate-ledger <findings.jsonl>` | Validate evidence-ledger JSONL schema, safe language, local-path boundaries, and authentication/session material | stdout status; optional `--schema-output` writes JSON Schema | Offline |
 | `reader-intake --doi <doi>` | Normalize DOI and write paper metadata summary | `outputs/paper_case/` | Offline fixture/stub; `--allow-network` queries Crossref |
 | `batch-intake <input>` | Batch DOI/CSL/BibTeX/RIS intake | `outputs/batch_intake/` | Offline fixture/stub; `--allow-network` queries Crossref |
 | `status-enrich <input>` | Enrich DOI status with Crossref metadata | `outputs/status_enrich/` | Offline fixture/stub; `--allow-network` queries Crossref |
@@ -30,7 +30,7 @@ Generated artifacts default to `outputs/...`. Writing curated artifacts into `kn
 | `report-raw-pv-html <raw_pv_findings.jsonl>` | Render raw PV dashboard | `outputs/raw_pv/raw_pv_dashboard.html` | Offline |
 | `pv-ruleset-export` | Export the PV Evidence Ruleset v1 taxonomy to JSON and MD | `outputs/pv_ruleset_v1/` | Offline |
 | `pv-ruleset-review <input>` | Run photovoltaics and materials evidence ruleset completeness review | `outputs/pv_ruleset_review/` | Offline |
-| `review-package examples/toy_review_package` | Run unified evidence package runner | `outputs/review_package/` | Offline; `--allow-network` only for metadata checks |
+| `review-package examples/toy_review_package` | Run unified evidence package runner with final-ledger validation | `outputs/review_package/` | Offline; `--allow-network` only for metadata checks |
 | `report-review-package-html <unified_evidence_index.jsonl>` | Render unified review dashboard | `outputs/review_package/review_package_dashboard.html` | Offline |
 | `graph-export <unified_evidence_index.jsonl>` | Export a provenance graph of nodes and edges | `outputs/graph_export/` | Offline |
 | `init-package <package_dir>` | Initialize a local review package directory structure | None | Offline |
@@ -43,6 +43,17 @@ Generated artifacts default to `outputs/...`. Writing curated artifacts into `kn
 | `geng-video-verify <case_dir>` | Alias for Geng case-card safety validation | stdout status | Offline |
 | `geng-video-safety-check <case_dir>` | Validate Geng case-card safety boundaries | stdout status | Offline |
 | `geng-video-rule-candidates <case_dir>` | Generate detector rule candidate drafts | `outputs/geng_video_distillation/rule_candidates/` | Offline |
+
+## Structured review-package sidecars
+
+The runner automatically consumes these optional repository-safe files:
+
+- `documents/claims.jsonl` and `documents/version_manifest.yml` for human-confirmed cross-document claims and version state;
+- `documents/decay_fit_records.jsonl` for declared TRPL/TPV formulas, units, averages, and fit components;
+- `documents/curve_reconciliations.yml` for supplied CSV/XLSX source-to-plot mappings;
+- `documents/materials_process_lineage.yml` for sample-stage, filtration, and DLS context.
+
+Curve table paths must be package-relative. Structured records require explicit human confirmation and never trigger PDF/OCR extraction. If a child ledger is malformed, the final ledger fails validation, or any module has `failed` status, `review-package` and `run-audit` return a nonzero exit code and do not render a new report from that invalid ledger.
 
 ## Bilingual Localization and Local Dashboard Options
 

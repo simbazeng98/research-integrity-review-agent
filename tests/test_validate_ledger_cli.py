@@ -89,7 +89,7 @@ def test_validate_ledger_cli_blocks_private_path_leak(tmp_path):
     bad = _valid_record()
     bad["evidence"] = [
         {
-            "source": "C:\\Users\\private-user\\paper.pdf",
+            "source": "C:" + "\\Users\\private-user\\paper.pdf",
             "location": "local source",
         }
     ]
@@ -99,6 +99,41 @@ def test_validate_ledger_cli_blocks_private_path_leak(tmp_path):
 
     assert result.returncode == 2
     assert "private path" in result.stderr.lower()
+    assert "line 1" in result.stderr.lower()
+
+
+def test_validate_ledger_cli_blocks_posix_private_path_leak(tmp_path):
+    ledger = tmp_path / "ledger.jsonl"
+    bad = _valid_record()
+    bad["evidence"] = [
+        {
+            "source": "/" + "home/private-user/paper.pdf",
+            "location": "local source",
+        }
+    ]
+    ledger.write_text(json.dumps(bad, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    result = _run_validate(ledger)
+
+    assert result.returncode == 2
+    assert "private" in result.stderr.lower()
+    assert "line 1" in result.stderr.lower()
+
+
+def test_validate_ledger_cli_blocks_sensitive_auth_fields(tmp_path):
+    ledger = tmp_path / "ledger.jsonl"
+    bad = _valid_record()
+    sensitive_key = "xsec_" + "token"
+    bad["provenance"] = {
+        "workflow": "synthetic-negative-fixture",
+        sensitive_key: "synthetic-redacted-value",
+    }
+    ledger.write_text(json.dumps(bad, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    result = _run_validate(ledger)
+
+    assert result.returncode == 2
+    assert "sensitive" in result.stderr.lower() or "auth" in result.stderr.lower()
     assert "line 1" in result.stderr.lower()
 
 

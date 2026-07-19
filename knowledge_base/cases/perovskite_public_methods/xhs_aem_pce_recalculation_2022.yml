@@ -1,0 +1,39 @@
+case_id: perovskite_public_method_aem_pce_recalculation_2022
+priority: P1
+field: photovoltaic_metric_consistency
+scope: research_integrity
+source_type: public_method
+source_url: https://www.xiaohongshu.com/explore/6a48c03b0000000017029e9c
+feed_id: 6a48c03b0000000017029e9c
+source_accessed_at: '2026-07-11'
+target_doi: 10.1002/aenm.202103674
+public_status: public_method_example
+summary: >
+  Distilled review method: recompute scan PCE from Voc, Jsc, fill factor, and
+  the reported illumination basis, while keeping stabilized output distinct
+  from scan efficiency and allowing documented rounding tolerances.
+evidence_tier: E1
+evidence_patterns:
+  - reported_pce_vs_context_aware_recalculation
+  - scan_vs_stabilized_output_must_remain_distinct
+  - illumination_basis_and_rounding_require_review
+detector_candidates:
+  - pv_pce_consistency
+  - pv_stability_reporting
+manual_verification_needed:
+  - Verify Voc, Jsc, fill factor, units, illumination intensity, and reported PCE from the same device row.
+  - Check whether each value is a scan metric, stabilized output, rounded summary, or a different device statistic.
+false_positive_risks:
+  - Rounding of component metrics can create a small recalculation difference.
+  - Non-1-sun illumination or mixing scan and stabilized metrics can invalidate a naive comparison.
+alternative_explanations:
+  - The component values may be rounded while PCE was calculated from higher-precision measurements.
+  - The reported percentage may describe stabilized output rather than a J-V scan.
+safe_report_language: >
+  Candidate PCE consistency signal requiring same-row metric, illumination-basis, rounding, and scan-versus-stabilized review.
+limitations:
+  - Social claims and commenter identities are not independently verified.
+  - This card retains only distilled method metadata and no raw post or comment content.
+counter_sources: []
+resolution_status: unresolved
+version_timeline: []

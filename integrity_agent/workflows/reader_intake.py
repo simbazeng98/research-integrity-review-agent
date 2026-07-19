@@ -31,7 +31,7 @@ def run_reader_intake(
     # 1. Normalize DOI
     try:
         normalized_doi = normalize_doi(doi_input)
-    except ValueError as e:
+    except ValueError:
         # Fallback to stripped value if invalid
         normalized_doi = str(doi_input).strip().lower()
 
@@ -63,7 +63,7 @@ def run_reader_intake(
                 "related_doi": item.related_doi,
             })
             
-    except CrossrefClientError as e:
+    except CrossrefClientError:
         status = "metadata_unavailable"
         raw_payload = {}
 

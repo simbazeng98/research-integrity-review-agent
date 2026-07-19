@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import html
 import json
 import re
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from integrity_agent.core.evidence.ledger_schema import (
     EvidenceLocation,
@@ -484,8 +483,6 @@ def run_reference_scan(
                         summary_zh = f"参考文献引用 DOI '{normalized_doi}' 在 Crossref 元数据中被解析为 '修正/勘误' 状态。"
 
                     finding_id = f"ref_anomaly_{rule_id}_{ref['index']}"
-
-                    status_zh = STATUS_ZH_MAP.get(overall_status, overall_status)
 
                     records.append(build_anomaly_record(
                         finding_id=finding_id,

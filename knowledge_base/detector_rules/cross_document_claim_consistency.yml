@@ -1,0 +1,61 @@
+rule_id: cross_document_claim_consistency
+status: active
+linked_cases:
+  - perovskite_public_method_ees_cross_document_2026
+  - perovskite_public_method_afm_response_version_drift_2026
+input_required:
+  - human_confirmed_atomic_claims
+fields_required:
+  - claim_type
+  - device_variant
+  - sample_id
+  - measurement_context
+  - source_document
+  - source_version
+  - location
+  - source_hash
+risk_signal: >
+  Two reviewer-confirmed source locations in the same publication version and
+  exact device, sample, and measurement context show incompatible claim values.
+detection_idea:
+  - Compare only claims explicitly marked human_confirmed and eligible for findings.
+  - Match the complete comparison key including source_version before comparing values.
+  - Normalize only compatible units from the atomic-claim whitelist using decimal arithmetic.
+  - Route missing context or unsupported units to low verification questions with scoring disabled.
+manual_verification:
+  - Verify both cited source locations and hashes against the supplied documents.
+  - Confirm that device variant, sample identity, measurement context, and source version match.
+  - Check units, conversions, rounding, and disclosed derivation before scoring the issue.
+  - Check the publisher-hosted version history before treating an older mismatch as open.
+false_positive_risks:
+  - The records may refer to different device or sample variants.
+  - A typographical error may explain the visible difference.
+  - A stale supplementary information version may remain in circulation.
+  - A disclosed unit conversion, rounding step, or derived-value convention may explain the difference.
+safe_report_language: >
+  A human-confirmed visible consistency issue is present across two source
+  locations in the same publication version and comparison context; verify the
+  source files, units, and version history before interpretation.
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_review_package/documents/claims.jsonl
+detector_module: integrity_agent.detectors.claims.cross_document
+detector_function: run_cross_document_claim_consistency
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+traceability:
+  - claim_id
+  - source_document
+  - source_version
+  - location
+  - source_hash
+  - comparison_key
+  - logical_context_key
+accepted_input_types:
+  - jsonl
+known_false_positive_contexts:
+  - device_or_sample_variant_mismatch
+  - typographical_error
+  - stale_supplementary_information
+  - disclosed_unit_conversion_or_rounding

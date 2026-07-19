@@ -1,0 +1,55 @@
+rule_id: materials_sample_lineage
+status: active
+linked_cases:
+  - perovskite_public_method_afm_decay_dls_2026
+input_required:
+  - human_curated_process_lineage_records
+fields_required:
+  - sample_id
+  - measurement_stage
+  - distribution_basis
+  - nominal_pore_nm
+  - hydrodynamic_diameter_nm
+risk_signal: >
+  A human-curated post-filtration DLS record reports a hydrodynamic diameter
+  substantially larger than the nominal filter pore rating and needs sample-stage review.
+detection_idea:
+  - Preserve the declared preparation-to-deposition process stages.
+  - Compare values only when the DLS sample stage and distribution basis are known.
+  - Emit a non-scoring verification question rather than a material-behavior verdict.
+manual_verification:
+  - Confirm whether the DLS aliquot was taken before or after filtration.
+  - Verify the filter material, nominal pore rating, and effective retention context.
+  - Inspect the full DLS distribution and its intensity, volume, number, or Z-average basis.
+  - Check storage time and handling between filtration and DLS measurement.
+false_positive_risks:
+  - A filter's nominal pore rating can differ from effective retention behavior.
+  - Soft or deformable particles can pass through a smaller nominal pore.
+  - Intensity-weighted DLS can emphasize rare larger aggregates.
+  - Aggregation can occur after filtration during storage or sample handling.
+safe_report_language: >
+  Materials sample-stage verification question only; verify filtration context,
+  DLS distribution basis, storage, and sample handling before interpretation.
+runtime_status: active
+execution_mode: offline
+toy_fixture: null
+detector_module: integrity_agent.domains.materials_characterization.process_lineage
+detector_function: run_materials_process_lineage_detector
+requires_network: false
+requires_private_data: false
+risk_ceiling: low
+traceability:
+  - source_file
+  - location
+  - sample_id
+  - measurement_stage
+  - distribution_basis
+  - nominal_pore_nm
+  - hydrodynamic_diameter_nm
+accepted_input_types:
+  - structured_record
+known_false_positive_contexts:
+  - nominal_vs_effective_pore_behavior
+  - deformable_soft_particles
+  - intensity_weighted_rare_aggregates
+  - post_filtration_aggregation

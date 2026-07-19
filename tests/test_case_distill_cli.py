@@ -76,7 +76,7 @@ def test_case_distill_cli_preserves_relative_source_path(tmp_path):
     assert record["evidence"][0]["source"] == "examples/toy_case.md"
 
 
-def test_case_distill_cli_warns_on_yaml_missing_source_url_and_marks_allegation(tmp_path):
+def test_case_distill_cli_allows_explicit_toy_relaxation_and_marks_allegation(tmp_path):
     project_root = Path(__file__).resolve().parents[1]
     case_yaml = tmp_path / "allegation_case.yml"
     output_path = tmp_path / "ledger.jsonl"
@@ -86,6 +86,7 @@ def test_case_distill_cli_warns_on_yaml_missing_source_url_and_marks_allegation(
                 "case_id": "toy_allegation_without_source_url",
                 "source_type": "toy_case",
                 "public_status": "allegation",
+                "validation_mode": "toy",
                 "safe_report_language": "candidate risk signal requiring review",
             },
             sort_keys=False,
@@ -110,10 +111,47 @@ def test_case_distill_cli_warns_on_yaml_missing_source_url_and_marks_allegation(
     )
 
     assert result.returncode == 0, result.stderr
-    assert "WARNING" in result.stderr
-    assert "missing source_url" in result.stderr
     record = json.loads(output_path.read_text(encoding="utf-8"))
     assert "not independently verified" in record["limitations"]
+
+
+def test_case_distill_cli_rejects_incomplete_production_case_without_writing_ledger(tmp_path):
+    project_root = Path(__file__).resolve().parents[1]
+    case_yaml = tmp_path / "incomplete_production_case.yml"
+    output_path = tmp_path / "ledger.jsonl"
+    case_yaml.write_text(
+        yaml.safe_dump(
+            {
+                "case_id": "incomplete_production_case",
+                "source_type": "public_case",
+                "public_status": "allegation",
+            },
+            sort_keys=False,
+        ),
+        encoding="utf-8",
+    )
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "integrity_agent",
+            "case-distill",
+            str(case_yaml),
+            "--output",
+            str(output_path),
+        ],
+        check=False,
+        cwd=project_root,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode == 2
+    assert "ERROR" in result.stderr
+    assert "source_url" in result.stderr
+    assert "evidence_patterns" in result.stderr
+    assert not output_path.exists()
 
 
 def test_case_distill_cli_errors_on_invalid_public_status(tmp_path):

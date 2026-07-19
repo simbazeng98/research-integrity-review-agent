@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 
 from integrity_agent.core.path_display import display_path
-import sys
 
 from integrity_agent.domains.photovoltaics.raw_measurements.schema import ExcelFormulaAuditItem, RawPVConsistencyFinding
 from integrity_agent.domains.photovoltaics.raw_measurements.excel_formula_audit import audit_excel_formulas
@@ -84,8 +83,8 @@ def run_excel_formula_audit(excel_folder: str, output_dir: str = "outputs/raw_pv
             )
         elif item.audit_type == "xlsm_not_supported_for_formula_audit_safety":
             safe_lang = (
-                f"Spreadsheet formula audit safety warning: macro-enabled workbook (.xlsm) is not supported for formula audit safety. "
-                f"Verify spreadsheet formulas, raw data provenance, and analysis workflow."
+                "Spreadsheet formula audit safety warning: macro-enabled workbook (.xlsm) is not supported for formula audit safety. "
+                "Verify spreadsheet formulas, raw data provenance, and analysis workflow."
             )
         else:
             safe_lang = (

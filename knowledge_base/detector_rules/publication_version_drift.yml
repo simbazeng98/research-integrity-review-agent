@@ -1,0 +1,51 @@
+rule_id: publication_version_drift
+status: active
+linked_cases:
+  - perovskite_public_method_afm_response_version_drift_2026
+input_required:
+  - human_confirmed_claim_findings
+  - version_manifest
+fields_required:
+  - source_version
+  - source_type
+  - observed_at
+  - status
+risk_signal: >
+  A human-confirmed visible consistency issue may refer to a stale publication
+  version or may have later counter-evidence that needs explicit reconciliation.
+detection_idea:
+  - Preserve the observed mismatch as historical evidence.
+  - Link author responses as counter-evidence without treating them as publisher status.
+  - Close open scoring only for explicitly linked publisher-hosted resolution evidence.
+manual_verification:
+  - Verify the current article and supplementary versions on the publisher site.
+  - Confirm that any update resolves the same claims, sample, and measurement context.
+  - Retain the originally observed source location and version identifier.
+false_positive_risks:
+  - The compared records may refer to different device variants or sample stages.
+  - A stale supplementary version may remain visible in a local archive.
+  - An author response may clarify context without constituting a formal correction.
+safe_report_language: >
+  Publication-version candidate signal; preserve the original observation and
+  verify explicitly linked publisher status before changing open-review scoring.
+runtime_status: active
+execution_mode: offline
+toy_fixture: examples/toy_review_package/documents/version_manifest.yml
+detector_module: integrity_agent.workflows.version_reconciliation
+detector_function: run_version_reconciliation_detector
+requires_network: false
+requires_private_data: false
+risk_ceiling: medium
+traceability:
+  - target_doi
+  - event_id
+  - source_version
+  - source_url
+  - observed_at
+  - related_claim_ids
+accepted_input_types:
+  - yml
+  - yaml
+known_false_positive_contexts:
+  - author_response_without_publisher_confirmation
+  - stale_local_supplementary_copy

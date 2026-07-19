@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
 from integrity_agent.domains.photovoltaics.raw_measurements.schema import JVCurve, JVMetrics
 
 def interpolate_linear(x_list: list[float], y_list: list[float], target_x: float) -> float | None:

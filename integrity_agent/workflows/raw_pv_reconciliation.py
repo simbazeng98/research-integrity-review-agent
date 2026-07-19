@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from pathlib import Path
 
 from integrity_agent.core.path_display import display_path
-import sys
 
 from integrity_agent.domains.photovoltaics.raw_measurements.schema import RawPVConsistencyFinding
 from integrity_agent.workflows.raw_pv_intake import run_raw_pv_intake
@@ -89,7 +87,6 @@ def run_raw_pv_reconciliation(package_dir: str, output_dir: str = "outputs/raw_p
             f.write(json.dumps(finding.to_dict()) + "\n")
 
     # Group findings for summary
-    jv_recalc = [f for f in all_findings if f.rule_id == "pv_jv_metric_recalculation"] # None directly, but we have hysteresis or source rec
     jv_hyst = [f for f in all_findings if f.rule_id == "pv_jv_hysteresis_candidate"]
     eqe_int = [f for f in all_findings if f.rule_id == "pv_eqe_spectrum_integration"]
     excel_audit = [f for f in all_findings if f.rule_id == "pv_excel_formula_audit"]

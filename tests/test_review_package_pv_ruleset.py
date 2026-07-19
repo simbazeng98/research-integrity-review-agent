@@ -75,3 +75,14 @@ def test_review_package_pv_ruleset_integration(tmp_path):
 
     pv_completeness_no_pv = [f for f in unified_findings_no_pv if f.get("finding_category") == "pv_evidence_completeness"]
     assert len(pv_completeness_no_pv) == 0
+
+    pv_status = next(
+        status.to_dict()
+        for status in summary_no_pv.module_statuses
+        if status.module_name == "pv-domain-review"
+    )
+    assert pv_status["status"] == "skipped"
+    assert pv_status["input_artifact_count"] == 0
+    assert pv_status["parsed_row_count"] == 0
+    assert pv_status["finding_count"] == 0
+    assert pv_status["skip_reason"] == "missing_input_directory"
